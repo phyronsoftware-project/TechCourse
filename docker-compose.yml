@@ -1,0 +1,56 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: techcourse_app
+    ports:
+      - "8080:80"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: false
+      APP_URL: http://localhost:8080
+      APP_LOCALE: km
+      APP_FALLBACK_LOCALE: en
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: system_techcourse
+      DB_USERNAME: techcourse
+      DB_PASSWORD: techcourse
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      FILESYSTEM_DISK: public
+      MAIL_MAILER: smtp
+      MAIL_SCHEME: null
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: phyronsoftware@gmail.com
+      MAIL_PASSWORD: CHANGE_ME_GMAIL_APP_PASSWORD
+      MAIL_FROM_ADDRESS: phyronsoftware@gmail.com
+      MAIL_FROM_NAME: TechCourse
+    depends_on:
+      - mysql
+    volumes:
+      - app_storage:/var/www/html/storage
+      - app_bootstrap_cache:/var/www/html/bootstrap/cache
+
+  mysql:
+    image: mysql:8.4
+    container_name: techcourse_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: system_techcourse
+      MYSQL_USER: techcourse
+      MYSQL_PASSWORD: techcourse
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+  app_storage:
+  app_bootstrap_cache:

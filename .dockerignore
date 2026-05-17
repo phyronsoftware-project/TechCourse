@@ -1,0 +1,12 @@
+.git
+.history
+node_modules
+vendor
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+.env
+npm-debug.log
+yarn-error.log
+docker/mysql/data

@@ -1,0 +1,96 @@
+<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
+
+#[Fillable(['name', 'email', 'phone', 'avatar', 'role', 'status', 'password', 'email_verified_at'])]
+#[Hidden(['password', 'remember_token'])]
+class User extends Authenticatable
+{
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, Notifiable;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
+    public function createdCourses(): HasMany
+    {
+        return $this->hasMany(Course::class, 'created_by');
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(CourseReview::class);
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(CourseFavorite::class);
+    }
+
+    public function saves(): HasMany
+    {
+        return $this->hasMany(CourseSave::class);
+    }
+
+    public function lessonComments(): HasMany
+    {
+        return $this->hasMany(LessonComment::class);
+    }
+
+    protected function avatarUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (! filled($this->avatar)) {
+                    return null;
+                }
+
+                if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+                    return $this->avatar;
+                }
+
+                if (str_starts_with($this->avatar, 'storage/')) {
+                    return asset($this->avatar);
+                }
+
+                return Storage::url($this->avatar);
+            },
+        );
+    }
+}
