@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\CourseCategory;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Throwable;
 
@@ -23,6 +24,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         View::composer('web.components.header', function ($view): void {
             $categories = collect();
 
