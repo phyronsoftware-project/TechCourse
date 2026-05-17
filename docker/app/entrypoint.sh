@@ -3,6 +3,10 @@ set -e
 
 cd /var/www/html
 
+PORT="${PORT:-80}"
+sed "s/__PORT__/${PORT}/g" /etc/nginx/http.d/default.conf > /tmp/default.conf
+mv /tmp/default.conf /etc/nginx/http.d/default.conf
+
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 chmod 755 public/logo || true
