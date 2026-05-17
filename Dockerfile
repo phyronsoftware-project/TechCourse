@@ -12,7 +12,7 @@ COPY public ./public
 COPY vite.config.js ./
 RUN npm run build
 
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 RUN apk add --no-cache \
     bash \
@@ -41,6 +41,8 @@ COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 COPY docker/app/entrypoint.sh /usr/local/bin/app-entrypoint
 
 RUN chmod +x /usr/local/bin/app-entrypoint \
+    && rm -f bootstrap/cache/*.php \
+    && php artisan package:discover --ansi \
     && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && php artisan vendor:publish --tag=laravel-assets --force || true
