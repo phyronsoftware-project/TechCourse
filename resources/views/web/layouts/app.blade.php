@@ -435,20 +435,21 @@
             }
 
             .header-auth-btn-register {
-                background: #ffffff;
+                background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
                 border: 1px solid #d7e3f0;
                 color: #173f87;
-                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
-                width: 56px;
-                min-width: 56px;
-                min-height: 40px;
-                padding: 6px 10px;
-                gap: 0;
-                border-radius: 24px;
+                box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+                min-width: 122px;
+                min-height: 46px;
+                padding: 6px 16px 6px 10px;
+                gap: 10px;
+                border-radius: 18px;
+                font-weight: 700;
             }
 
             .header-auth-btn-register:hover {
-                background: #f4f8fd;
+                background: linear-gradient(180deg, #ffffff 0%, #eaf3ff 100%);
+                transform: translateY(-1px);
             }
 
             .header-auth-btn i {
@@ -459,9 +460,19 @@
                 height: 20px;
             }
 
+            .header-auth-btn-register i {
+                width: auto;
+                height: auto;
+                border-radius: 0;
+                background: transparent;
+                color: #2563eb;
+                box-shadow: none;
+                font-size: 16px;
+            }
+
             .header-auth-btn__label {
                 font-size: 13px;
-                font-weight: 500;
+                font-weight: 600;
                 line-height: 1;
                 white-space: nowrap;
             }
@@ -1795,12 +1806,11 @@
                 }
 
                 .header-auth-btn-register {
-                    width: 56px;
-                    min-width: 56px;
-                    min-height: 40px;
-                    padding: 6px 10px;
-                    gap: 0;
-                    border-radius: 24px;
+                    min-width: 112px;
+                    min-height: 44px;
+                    padding: 6px 12px 6px 10px;
+                    gap: 8px;
+                    border-radius: 18px;
                 }
 
                 .scroll-top-btn {
@@ -2027,20 +2037,19 @@
             }
 
             .header-auth-btn-register {
-                background: #ffffff;
+                background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
                 border: 1px solid #d7e3f0;
                 color: #0f172a;
-                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
-                width: 56px;
-                min-width: 56px;
-                min-height: 40px;
-                padding: 6px 10px;
-                gap: 0;
-                border-radius: 24px;
+                box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+                min-width: 122px;
+                min-height: 46px;
+                padding: 6px 16px 6px 10px;
+                gap: 10px;
+                border-radius: 18px;
             }
 
             .header-auth-btn-register:hover {
-                background: #eff4fa;
+                background: linear-gradient(180deg, #ffffff 0%, #eaf3ff 100%);
             }
 
             .lang-toggle {

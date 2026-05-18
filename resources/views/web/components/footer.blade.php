@@ -19,7 +19,7 @@
     <div class="footer-content">
         <div class="fo">
             <h3>{{ __('About') }}</h3>
-            <p>{{ __('LearnTogether is a modern learning space for sharing knowledge, projects, and practical tech content for students.') }}</p>
+            <p>{{ __('TechCourse is a modern learning space for sharing knowledge, projects, and practical tech content for students.') }}</p>
         </div>
 
         <div class="fo1">
@@ -75,6 +75,6 @@
     </div>
 
     <p class="copyright-text">
-        &copy; {{ now()->year }} {{ __('All rights reserved by') }} Learn<span style="color: #027bff; font-weight: 700;">Together</span>.
+        &copy; {{ now()->year }} {{ __('All rights reserved by') }} Tech<span style="color: #027bff; font-weight: 700;">Course</span>.
     </p>
 </footer>

@@ -130,6 +130,7 @@
                         @guest
                             <a href="{{ route('web.login') }}" class="header-auth-btn header-auth-btn-register" data-web-menu-close aria-label="{{ __('Login / Register') }}" title="{{ __('Login / Register') }}">
                                 <i class="fa-solid fa-user-plus"></i>
+                                <span class="header-auth-btn__label">{{ __('Login') }}</span>
                             </a>
                         @endguest
                     </div>

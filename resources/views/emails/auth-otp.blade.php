@@ -9,10 +9,10 @@
         <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #dbe6f1;border-radius:20px;padding:32px;">
             <div style="font-size:28px;font-weight:800;color:#173f87;margin-bottom:10px;">TechCourse</div>
             <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;">
-                {{ $mode === 'register' ? 'Verify your email address' : 'Verify your login' }}
+                {{ $mode === 'register' ? 'Verify your email address' : ($mode === 'password_reset' ? 'Verify your password reset request' : 'Verify your login') }}
             </h1>
             <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#52637a;">
-                Hello {{ $name }}, use the code below to {{ $mode === 'register' ? 'activate your account' : 'complete your login' }}.
+                Hello {{ $name }}, use the code below to {{ $mode === 'register' ? 'activate your account' : ($mode === 'password_reset' ? 'continue resetting your password' : 'complete your login') }}.
             </p>
             <div style="margin:20px 0;padding:20px;border-radius:18px;background:#eff6ff;border:1px solid #cfe0fb;text-align:center;">
                 <div style="font-size:34px;font-weight:800;letter-spacing:8px;color:#155eef;">{{ $code }}</div>

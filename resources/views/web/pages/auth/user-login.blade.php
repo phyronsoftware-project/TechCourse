@@ -275,7 +275,8 @@
                 font-family: var(--font-heading);
                 font-size: 14px;
                 font-weight: 700;
-                cursor: default;
+                cursor: pointer;
+                text-decoration: none;
             }
 
             .auth-social i {
@@ -439,6 +440,11 @@
         </style>
     </head>
     <body class="{{ app()->getLocale() === 'km' ? 'locale-km' : 'locale-en' }}">
+        @php
+            $googleRoute = route('web.google.redirect', array_filter(['redirect' => $redirectTo ?? null]));
+            $facebookRoute = route('web.facebook.redirect', array_filter(['redirect' => $redirectTo ?? null]));
+            $githubRoute = route('web.github.redirect', array_filter(['redirect' => $redirectTo ?? null]));
+        @endphp
         <main class="auth-page">
             <section class="auth-card">
                 <div class="auth-panel">
@@ -515,18 +521,18 @@
                         <div class="auth-divider">{{ __('or') }}</div>
 
                         <div class="auth-social-stack">
-                            <button type="button" class="auth-social auth-social--google">
+                            <a href="{{ $googleRoute }}" class="auth-social auth-social--google">
                                 <i class="fa-brands fa-google"></i>
                                 <span>Google</span>
-                            </button>
-                            <button type="button" class="auth-social auth-social--facebook">
+                            </a>
+                            <a href="{{ $facebookRoute }}" class="auth-social auth-social--facebook">
                                 <i class="fa-brands fa-facebook-f"></i>
                                 <span>Facebook</span>
-                            </button>
-                            <button type="button" class="auth-social auth-social--github">
+                            </a>
+                            <a href="{{ $githubRoute }}" class="auth-social auth-social--github">
                                 <i class="fa-brands fa-github"></i>
                                 <span>Github</span>
-                            </button>
+                            </a>
                         </div>
 
                         <div class="auth-switch">
@@ -569,11 +575,11 @@
 
                                 <div class="auth-helper-row">
                                     <label class="auth-remember">
-                                        <input type="checkbox" name="remember" value="1">
+                                        <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
                                         <span>{{ __('Remember me') }}</span>
                                     </label>
 
-                                    <a href="#" class="auth-link">{{ __('Forgot password?') }}</a>
+                                    <a href="{{ route('password.request') }}" class="auth-link">{{ __('Forgot password?') }}</a>
                                 </div>
 
                                 <button type="submit" class="auth-submit">{{ __('Login') }}</button>
@@ -583,18 +589,18 @@
                         <div class="auth-divider">{{ __('or') }}</div>
 
                         <div class="auth-social-stack">
-                            <button type="button" class="auth-social auth-social--google">
+                            <a href="{{ $googleRoute }}" class="auth-social auth-social--google">
                                 <i class="fa-brands fa-google"></i>
                                 <span>Google</span>
-                            </button>
-                            <button type="button" class="auth-social auth-social--facebook">
+                            </a>
+                            <a href="{{ $facebookRoute }}" class="auth-social auth-social--facebook">
                                 <i class="fa-brands fa-facebook-f"></i>
                                 <span>Facebook</span>
-                            </button>
-                            <button type="button" class="auth-social auth-social--github">
+                            </a>
+                            <a href="{{ $githubRoute }}" class="auth-social auth-social--github">
                                 <i class="fa-brands fa-github"></i>
                                 <span>Github</span>
-                            </button>
+                            </a>
                         </div>
 
                         <div class="auth-switch">

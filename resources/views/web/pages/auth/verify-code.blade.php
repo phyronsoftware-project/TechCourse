@@ -3,7 +3,15 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{{ __('Verify Code') }} | TechCourse</title>
+        @php
+            $verifyMode = $mode ?? 'login';
+            $verifyTitle = $verifyMode === 'password_reset' ? 'Reset Password Verification' : __('Code Verification');
+            $verifyButton = $verifyMode === 'password_reset' ? 'Verify Code' : __('Verify Account');
+            $verifyCopy = $verifyMode === 'password_reset'
+                ? 'We sent a 6-digit verification code to your email for password reset.'
+                : __('We sent a 6-digit verification code to your email address.');
+        @endphp
+        <title>{{ $verifyTitle }} | TechCourse</title>
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;800&family=Noto+Sans+Khmer:wght@400;500;700&display=swap" rel="stylesheet">
@@ -52,24 +60,23 @@
             }
 
             .verify-orb {
-                width: 68px;
-                height: 68px;
+                width: 88px;
+                height: 88px;
                 margin: 0 auto 18px;
-                border-radius: 999px;
+                border-radius: 24px;
                 display: grid;
                 place-items: center;
                 border: 1px solid #dbeafe;
                 background: rgba(255, 255, 255, 0.95);
                 box-shadow: 0 18px 40px rgba(37, 99, 235, 0.12);
+                overflow: hidden;
             }
 
-            .verify-orb::before {
-                content: "";
-                width: 20px;
-                height: 20px;
-                border-radius: 999px;
-                background: radial-gradient(circle, #2563eb 0%, rgba(37, 99, 235, 0.28) 68%, rgba(37, 99, 235, 0.08) 100%);
-                box-shadow: 0 0 28px rgba(37, 99, 235, 0.4);
+            .verify-orb img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                display: block;
             }
 
             .verify-title {
@@ -283,11 +290,13 @@
     </head>
     <body class="{{ app()->getLocale() === 'km' ? 'locale-km' : 'locale-en' }}">
         <section class="verify-shell">
-            <div class="verify-orb"></div>
+            <div class="verify-orb">
+                <img src="{{ asset('logo/logo.png') }}" alt="TechCourse logo">
+            </div>
 
-            <h1 class="verify-title">{{ __('Code Verification') }}</h1>
+            <h1 class="verify-title">{{ $verifyTitle }}</h1>
             <p class="verify-copy">
-                {{ __('We sent a 6-digit verification code to your email address.') }}
+                {{ $verifyCopy }}
                 <strong>{{ $emailMask }}</strong>
             </p>
 
@@ -329,7 +338,7 @@
                         @endfor
                     </div>
 
-                    <button type="submit" class="verify-submit" data-verify-submit>{{ __('Verify Account') }}</button>
+                    <button type="submit" class="verify-submit" data-verify-submit>{{ $verifyButton }}</button>
                 </form>
 
                 <div class="verify-footer">
@@ -353,10 +362,20 @@
                 const verifyForm = document.querySelector('[data-verify-form]');
                 const verifySubmit = document.querySelector('[data-verify-submit]');
                 const resendSubmit = document.querySelector('[data-resend-submit]');
+                let hasSubmitted = false;
 
                 if (!hiddenInput || !digitInputs.length) {
                     return;
                 }
+
+                const submitIfComplete = () => {
+                    if (hasSubmitted || hiddenInput.value.length !== 6 || !verifyForm) {
+                        return;
+                    }
+
+                    hasSubmitted = true;
+                    verifyForm.requestSubmit();
+                };
 
                 const syncHiddenValue = () => {
                     hiddenInput.value = digitInputs.map((input) => input.value.replace(/\D/g, '')).join('');
@@ -384,6 +403,8 @@
                         if (event.target.value && digitInputs[index + 1]) {
                             digitInputs[index + 1].focus();
                         }
+
+                        submitIfComplete();
                     });
 
                     input.addEventListener('keydown', (event) => {
@@ -412,6 +433,8 @@
                         if (nextInput) {
                             nextInput.focus();
                         }
+
+                        submitIfComplete();
                     });
                 });
 
@@ -419,6 +442,8 @@
                 syncHiddenValue();
 
                 verifyForm?.addEventListener('submit', () => {
+                    hasSubmitted = true;
+
                     if (verifySubmit) {
                         verifySubmit.disabled = true;
                         verifySubmit.innerHTML = '<span class="verify-loading"></span>';

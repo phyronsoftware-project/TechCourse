@@ -37,6 +37,16 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [UserAuthController::class, 'login'])->name('web.login.store');
     Route::get('/register', [UserAuthController::class, 'createRegister'])->name('web.register');
     Route::post('/register', [UserAuthController::class, 'register'])->name('web.register.store');
+    Route::get('/forgot-password', [UserAuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [UserAuthController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password', [UserAuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password', [UserAuthController::class, 'resetPassword'])->name('password.update');
+    Route::get('/auth/google/redirect', [UserAuthController::class, 'redirectToGoogle'])->name('web.google.redirect');
+    Route::get('/auth/google/callback', [UserAuthController::class, 'handleGoogleCallback'])->name('web.google.callback');
+    Route::get('/auth/facebook/redirect', [UserAuthController::class, 'redirectToFacebook'])->name('web.facebook.redirect');
+    Route::get('/auth/facebook/callback', [UserAuthController::class, 'handleFacebookCallback'])->name('web.facebook.callback');
+    Route::get('/auth/github/redirect', [UserAuthController::class, 'redirectToGithub'])->name('web.github.redirect');
+    Route::get('/auth/github/callback', [UserAuthController::class, 'handleGithubCallback'])->name('web.github.callback');
     Route::get('/verify-code', [UserAuthController::class, 'showVerifyCode'])->name('web.verify.code.notice');
     Route::post('/verify-code', [UserAuthController::class, 'verifyCode'])->name('web.verify.code.store');
     Route::post('/verify-code/resend', [UserAuthController::class, 'resendCode'])->name('web.verify.code.resend');

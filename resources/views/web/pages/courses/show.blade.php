@@ -199,31 +199,32 @@
         .comment-composer {
             width: 100%;
             min-height: 130px;
-            padding: 16px 88px 16px 18px;
-            border-radius: 18px;
+            padding: 16px 72px 16px 18px;
+            border-radius: 22px;
             border: 1px solid #dbe6f1;
-            background: #f8fafc;
+            background: #ffffff;
             color: #0f172a;
             font: inherit;
             resize: vertical;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
 
         .comment-send-btn {
             position: absolute;
-            right: 12px;
-            bottom: 12px;
-            width: 56px;
-            height: 56px;
+            right: 16px;
+            bottom: 16px;
+            width: 42px;
+            height: 42px;
             border: 1px solid #dbe6f1;
-            border-radius: 16px;
-            background: #1d4ed8;
-            color: #fff;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #1d4ed8;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 14px 24px rgba(29, 78, 216, 0.22);
+            box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
         }
 
         .comment-empty {
@@ -244,7 +245,7 @@
 
         .comment-item {
             padding: 14px 16px;
-            border-radius: 16px;
+            border-radius: 18px;
             border: 1px solid #e2eaf3;
             background: #fbfdff;
         }
@@ -256,9 +257,40 @@
             gap: 12px;
         }
 
+        .comment-item__identity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .comment-item__avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1d4ed8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 800;
+            box-shadow: inset 0 0 0 1px #bfdbfe;
+        }
+
+        .comment-item__avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
         .comment-item__meta {
             display: grid;
             gap: 4px;
+            min-width: 0;
         }
 
         .comment-item__head strong {
@@ -272,7 +304,7 @@
         }
 
         .comment-item p {
-            margin: 8px 0 0;
+            margin: 12px 0 0 56px;
             color: #475569;
             font-size: 13px;
             line-height: 1.7;
@@ -688,11 +720,20 @@
                             @foreach ($courseComments as $comment)
                                 <article class="comment-item">
                                     <div class="comment-item__head">
-                                        <div class="comment-item__meta">
-                                            <strong>{{ $comment->user?->name ?: __('User') }}</strong>
-                                            <span>{{ optional($comment->created_at)->format('d M Y h:i A') ?: '-' }}</span>
+                                        <div class="comment-item__identity">
+                                            <span class="comment-item__avatar">
+                                                @php
+                                                    $commentUserName = $comment->user?->name ?: __('User');
+                                                    $commentAvatar = $comment->user?->avatar_url
+                                                        ?: 'https://ui-avatars.com/api/?name=' . rawurlencode($commentUserName) . '&background=dbeafe&color=1d4ed8&bold=true';
+                                                @endphp
+                                                <img src="{{ $commentAvatar }}" alt="{{ $commentUserName }}">
+                                            </span>
+                                            <div class="comment-item__meta">
+                                                <strong>{{ $commentUserName }}</strong>
+                                                <span>{{ optional($comment->created_at)->format('d M Y h:i A') ?: '-' }}</span>
+                                            </div>
                                         </div>
-
                                         @if (auth()->id() === $comment->user_id)
                                             <div class="comment-item__actions">
                                                 <button type="button" class="comment-action-btn" data-comment-edit-toggle="course-{{ $comment->id }}">{{ __('Edit') }}</button>
@@ -778,7 +819,11 @@
                                     ? (auth()->check() ? $checkoutRoute : $loginRedirectRoute)
                                     : route('learning.show', [$course->slug ?: $course->id, $lesson->slug ?: $lesson->id]);
                             @endphp
-                            <a href="{{ $lessonRoute }}" class="learning-lesson-item {{ $previewLesson && $previewLesson->id === $lesson->id ? 'is-active' : '' }}">
+                            <a
+                                href="{{ $lessonRoute }}"
+                                class="learning-lesson-item {{ $previewLesson && $previewLesson->id === $lesson->id ? 'is-active' : '' }}"
+                                data-lesson-link="{{ $lessonRoute }}"
+                            >
                                 <div class="learning-lesson-thumb">
                                     @if ($course->thumbnail_url)
                                         <img src="{{ $course->thumbnail_url }}" alt="{{ $lesson->title }}">
@@ -816,6 +861,16 @@
                     const url = card.getAttribute('data-card-link');
 
                     if (url) {
+                        window.location.href = url;
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-lesson-link]').forEach((item) => {
+                item.addEventListener('click', () => {
+                    const url = item.getAttribute('data-lesson-link');
+
+                    if (url && item.getAttribute('href') !== url) {
                         window.location.href = url;
                     }
                 });

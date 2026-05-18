@@ -8,11 +8,13 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
+use Laravel\Socialite\Facades\Socialite;
 use Throwable;
 
 class UserAuthController extends Controller
@@ -134,6 +136,36 @@ class UserAuthController extends Controller
             ->with('success', 'Your account has been created successfully. Please enter the verification code from your email.');
     }
 
+    public function redirectToGoogle(Request $request): RedirectResponse
+    {
+        return $this->redirectToSocialProvider('google');
+    }
+
+    public function handleGoogleCallback(Request $request): RedirectResponse
+    {
+        return $this->handleSocialProviderCallback('google');
+    }
+
+    public function redirectToFacebook(Request $request): RedirectResponse
+    {
+        return $this->redirectToSocialProvider('facebook');
+    }
+
+    public function handleFacebookCallback(Request $request): RedirectResponse
+    {
+        return $this->handleSocialProviderCallback('facebook');
+    }
+
+    public function redirectToGithub(Request $request): RedirectResponse
+    {
+        return $this->redirectToSocialProvider('github');
+    }
+
+    public function handleGithubCallback(Request $request): RedirectResponse
+    {
+        return $this->handleSocialProviderCallback('github');
+    }
+
     public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
@@ -141,6 +173,123 @@ class UserAuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('home');
+    }
+
+    public function showForgotPassword(): View|RedirectResponse
+    {
+        if (Auth::check()) {
+            return $this->redirectByRole();
+        }
+
+        return view('web.pages.auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $user = User::query()->where('email', $data['email'])->first();
+
+        if (! $user) {
+            return back()
+                ->withErrors(['email' => 'We could not find a user with that email address.'])
+                ->onlyInput('email');
+        }
+
+        if (($user->status ?? 'active') !== 'active') {
+            return back()
+                ->withErrors(['email' => 'This account is not active.'])
+                ->onlyInput('email');
+        }
+
+        try {
+            $this->startEmailVerification(
+                request: $request,
+                user: $user,
+                mode: 'password_reset',
+                remember: false,
+                redirectTo: null,
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withErrors(['email' => 'Unable to send verification code right now. Please check mail configuration and try again.'])
+                ->onlyInput('email');
+        }
+
+        return redirect()
+            ->route('web.verify.code.notice')
+            ->with('success', 'We sent a verification code to your email.');
+    }
+
+    public function showResetPassword(Request $request): View|RedirectResponse
+    {
+        if (Auth::check()) {
+            return $this->redirectByRole();
+        }
+
+        $pending = $request->session()->get('password_reset_verified');
+
+        if (! is_array($pending) || empty($pending['user_id']) || empty($pending['email'])) {
+            return redirect()->route('password.request');
+        }
+
+        return view('web.pages.auth.reset-password', [
+            'email' => (string) $pending['email'],
+        ]);
+    }
+
+    public function resetPassword(Request $request): RedirectResponse
+    {
+        $pending = $request->session()->get('password_reset_verified');
+
+        if (! is_array($pending) || empty($pending['user_id']) || empty($pending['email'])) {
+            return redirect()->route('password.request');
+        }
+
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ]);
+
+        if (now()->timestamp > (int) ($pending['expires_at'] ?? 0)) {
+            $request->session()->forget('password_reset_verified');
+
+            return back()
+                ->withErrors(['email' => 'Your password reset session has expired. Please try again.'])
+                ->withInput($request->except('password', 'password_confirmation'));
+        }
+
+        if ((string) $pending['email'] !== $data['email']) {
+            return back()
+                ->withErrors(['email' => 'The email does not match the verified reset request.'])
+                ->withInput($request->except('password', 'password_confirmation'));
+        }
+
+        $user = User::query()->find($pending['user_id']);
+
+        if (! $user) {
+            $request->session()->forget('password_reset_verified');
+
+            return redirect()->route('password.request');
+        }
+
+        $user->forceFill([
+            'password' => Hash::make($data['password']),
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        Auth::login($user, true);
+        $request->session()->regenerate();
+        $request->session()->forget('password_reset_verified');
+        $request->session()->forget('auth_email_otp');
+
+        return redirect()
+            ->route('home')
+            ->with('success', __('Your password has been reset successfully.'));
     }
 
     public function showVerifyCode(Request $request): View|RedirectResponse
@@ -153,6 +302,7 @@ class UserAuthController extends Controller
 
         return view('web.pages.auth.verify-code', [
             'emailMask' => $this->maskEmail((string) $pending['email']),
+            'mode' => (string) ($pending['mode'] ?? 'login'),
         ]);
     }
 
@@ -171,9 +321,15 @@ class UserAuthController extends Controller
         if (now()->timestamp > (int) ($pending['expires_at'] ?? 0)) {
             $request->session()->forget('auth_email_otp');
 
+            $redirectRoute = ($pending['mode'] ?? 'login') === 'password_reset'
+                ? 'password.request'
+                : 'web.login';
+
             return redirect()
-                ->route('web.login')
-                ->with('warning', 'Your verification code has expired. Please login again.');
+                ->route($redirectRoute)
+                ->with('warning', ($pending['mode'] ?? 'login') === 'password_reset'
+                    ? 'Your verification code has expired. Please try forgot password again.'
+                    : 'Your verification code has expired. Please login again.');
         }
 
         if (! Hash::check($data['code'], (string) $pending['code'])) {
@@ -188,10 +344,23 @@ class UserAuthController extends Controller
             return redirect()->route('web.login');
         }
 
-        if (! $user->email_verified_at) {
+        if (($pending['mode'] ?? 'login') !== 'password_reset' && ! $user->email_verified_at) {
             $user->forceFill([
                 'email_verified_at' => now(),
             ])->save();
+        }
+
+        if (($pending['mode'] ?? 'login') === 'password_reset') {
+            $request->session()->put('password_reset_verified', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'expires_at' => now()->addMinutes(15)->timestamp,
+            ]);
+            $request->session()->forget('auth_email_otp');
+
+            return redirect()
+                ->route('password.reset')
+                ->with('success', 'Verification completed successfully. Please set your new password.');
         }
 
         Auth::login($user, (bool) ($pending['remember'] ?? false));
@@ -251,6 +420,102 @@ class UserAuthController extends Controller
         }
 
         return redirect()->route('home');
+    }
+
+    protected function redirectToSocialProvider(string $provider): RedirectResponse
+    {
+        $driver = Socialite::driver($provider);
+
+        if (in_array($provider, ['google', 'facebook'], true)) {
+            $driver->scopes(['email']);
+        }
+
+        if ($provider === 'google') {
+            $driver->with([
+                'prompt' => 'select_account',
+            ]);
+        }
+
+        return $driver->redirect();
+    }
+
+    protected function handleSocialProviderCallback(string $provider): RedirectResponse
+    {
+        try {
+            $socialUser = Socialite::driver($provider)->user();
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('web.login')
+                ->with('warning', ucfirst($provider) . ' login failed. Please try again.');
+        }
+
+        $email = (string) ($socialUser->getEmail() ?? '');
+
+        if (! filled($email)) {
+            return redirect()
+                ->route('web.login')
+                ->with('warning', ucfirst($provider) . ' account email is not available.');
+        }
+
+        $user = User::query()->firstWhere('email', $email);
+
+        if ($user && in_array($user->role, ['admin', 'super_admin'], true)) {
+            return redirect()
+                ->route('login')
+                ->with('warning', 'This ' . ucfirst($provider) . ' email belongs to an admin account. Please continue from the admin login form.');
+        }
+
+        if ($user && ($user->status ?? 'active') !== 'active') {
+            return redirect()
+                ->route('web.login')
+                ->with('warning', 'This account is not active.');
+        }
+
+        if (! $user) {
+            $payload = [
+                'name' => $socialUser->getName() ?: $socialUser->getNickname() ?: Str::before($email, '@'),
+                'email' => $email,
+                'password' => Hash::make(Str::random(40)),
+                'email_verified_at' => now(),
+            ];
+
+            if (Schema::hasColumn('users', 'avatar')) {
+                $payload['avatar'] = $socialUser->getAvatar();
+            }
+
+            if (Schema::hasColumn('users', 'role')) {
+                $payload['role'] = 'user';
+            }
+
+            if (Schema::hasColumn('users', 'status')) {
+                $payload['status'] = 'active';
+            }
+
+            $user = User::create($payload);
+        } else {
+            $updates = [];
+
+            if (! $user->email_verified_at) {
+                $updates['email_verified_at'] = now();
+            }
+
+            if (Schema::hasColumn('users', 'avatar') && filled($socialUser->getAvatar())) {
+                $updates['avatar'] = $socialUser->getAvatar();
+            }
+
+            if ($updates !== []) {
+                $user->forceFill($updates)->save();
+            }
+        }
+
+        Auth::login($user, true);
+        request()->session()->regenerate();
+
+        return redirect()
+            ->route('home')
+            ->with('success', ucfirst($provider) . ' login completed successfully.');
     }
 
     protected function validatedRedirect(?string $redirectTo): ?string
