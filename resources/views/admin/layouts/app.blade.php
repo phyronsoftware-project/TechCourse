@@ -939,35 +939,35 @@
                 .admin-pagination {
                     display: flex;
                     align-items: center;
-                    gap: 10px;
+                    gap: 8px;
                     flex-wrap: wrap;
                 }
 
                 .admin-page-btn {
-                    min-width: 46px;
-                    height: 46px;
-                    padding: 0 14px;
-                    border-radius: 14px;
+                    min-width: 38px;
+                    height: 38px;
+                    padding: 0 11px;
+                    border-radius: 12px;
                     background: #f4f7fc;
                     color: #2f3b52;
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
                     text-decoration: none;
-                    font-size: 13px;
+                    font-size: 12px;
                     font-weight: 700;
                     border: 1px solid transparent;
                 }
 
                 .admin-page-btn svg {
-                    width: 18px;
-                    height: 18px;
+                    width: 15px;
+                    height: 15px;
                 }
 
                 .admin-page-btn.is-active {
                     background: #4950d4;
                     color: #fff;
-                    box-shadow: 0 12px 24px rgba(73, 80, 212, 0.25);
+                    box-shadow: 0 10px 18px rgba(73, 80, 212, 0.22);
                 }
 
                 .admin-page-btn.is-muted,
@@ -1184,6 +1184,23 @@
 
                             reader.readAsDataURL(file);
                         });
+                    });
+
+                    const socialIconSelects = document.querySelectorAll('[data-social-icon-select]');
+
+                    socialIconSelects.forEach((select) => {
+                        const preview = document.querySelector('[data-social-icon-preview]');
+
+                        if (!preview) {
+                            return;
+                        }
+
+                        const updatePreview = () => {
+                            preview.innerHTML = `<i class="${select.value}"></i>`;
+                        };
+
+                        select.addEventListener('change', updatePreview);
+                        updatePreview();
                     });
                 });
             </script>

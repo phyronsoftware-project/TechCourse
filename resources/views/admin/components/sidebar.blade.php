@@ -46,17 +46,47 @@
                     ],
                 ],
                 [
-                    'label' => 'Sales',
+                    'label' => 'Shopping',
                     'icon' => 'ticket',
                     'children' => [
                         [
-                            'label' => 'Orders',
+                            'label' => 'Shop Categories',
+                            'icon' => 'grid',
+                            'route' => route('admin.shop-categories.index'),
+                            'active' => request()->routeIs('admin.shop-categories.*'),
+                        ],
+                        [
+                            'label' => 'Shop Products',
+                            'icon' => 'bag',
+                            'route' => route('admin.shop-products.index'),
+                            'active' => request()->routeIs('admin.shop-products.*'),
+                        ],
+                        [
+                            'label' => 'Shop Orders',
+                            'icon' => 'ticket',
+                            'route' => route('admin.shop-orders.index'),
+                            'active' => request()->routeIs('admin.shop-orders.*'),
+                        ],
+                        [
+                            'label' => 'Shop Payments',
+                            'icon' => 'wallet',
+                            'route' => route('admin.shop-payments.index'),
+                            'active' => request()->routeIs('admin.shop-payments.*'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Course Sales',
+                    'icon' => 'wallet',
+                    'children' => [
+                        [
+                            'label' => 'Course Orders',
                             'icon' => 'ticket',
                             'route' => route('admin.orders.index'),
                             'active' => request()->routeIs('admin.orders.*'),
                         ],
                         [
-                            'label' => 'Payments',
+                            'label' => 'Course Payments',
                             'icon' => 'wallet',
                             'route' => route('admin.payments.index'),
                             'active' => request()->routeIs('admin.payments.*'),
@@ -84,6 +114,12 @@
                             'icon' => 'image',
                             'route' => route('admin.banners.index', ['platform' => 'web']),
                             'active' => request()->routeIs('admin.banners.*') && request('platform', 'web') === 'web',
+                        ],
+                        [
+                            'label' => 'Social Media',
+                            'icon' => 'share',
+                            'route' => route('admin.social-media.index', ['platform' => 'web']),
+                            'active' => request()->routeIs('admin.social-media.*'),
                         ],
                     ],
                 ],
@@ -115,6 +151,24 @@
                             'route' => route('admin.settings.index'),
                             'active' => request()->routeIs('admin.settings.*'),
                         ],
+                        [
+                            'label' => 'Notifications',
+                            'icon' => 'bell',
+                            'route' => route('admin.notifications.index'),
+                            'active' => request()->routeIs('admin.notifications.*'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Business Tools',
+                    'icon' => 'toolbox',
+                    'children' => [
+                        [
+                            'label' => 'Sound Tool',
+                            'icon' => 'mic',
+                            'route' => route('admin.tools.sound'),
+                            'active' => request()->routeIs('admin.tools.sound'),
+                        ],
                     ],
                 ],
             ],
@@ -130,7 +184,7 @@
     data-sidebar>
     <div class="flex items-center justify-between border-b border-[#e5edf6] px-5 py-5">
         <a href="{{ route('admin.dashboard') }}" class="block">
-            <h1 class="text-[1.35rem] font-bold leading-none text-[#163f86]">TechCourse</h1>
+            <h1 class="text-[1.35rem] font-bold leading-none text-[#163f86]">Business System</h1>
             <p class="mt-1 text-[0.74rem] tracking-[0.08em] text-[#6b7c98]">ADMIN DASHBOARD</p>
         </a>
 
@@ -185,6 +239,9 @@
                                             @case('shield')
                                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5l-8-3Zm0 10.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5ZM8 17c.32-2.3 1.94-3.5 4-3.5s3.68 1.2 4 3.5H8Z"/></svg>
                                                 @break
+                                            @case('toolbox')
+                                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3a2 2 0 0 0-2 2v2H5.5A2.5 2.5 0 0 0 3 9.5v8A2.5 2.5 0 0 0 5.5 20h13a2.5 2.5 0 0 0 2.5-2.5v-8A2.5 2.5 0 0 0 18.5 7H17V5a2 2 0 0 0-2-2H9Zm6 4H9V5h6v2Zm-5 5H8v2h2v2h2v-2h2v-2h-2v-2h-2v2Z"/></svg>
+                                                @break
                                             @default
                                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.17 4 9v11h5v-6h6v6h5V9l-8-5.83Z"/></svg>
                                         @endswitch
@@ -219,17 +276,32 @@
                                                     @case('wallet')
                                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3 7a3 3 0 0 1 3-3h11v2H6a1 1 0 0 0 0 2h13a2 2 0 0 1 2 2v7a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7Zm13 6a1.5 1.5 0 1 0 0 3h3v-3h-3Z"/></svg>
                                                         @break
+                                                    @case('bag')
+                                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M6 7V6a6 6 0 1 1 12 0v1h1.5A1.5 1.5 0 0 1 21 8.5v10A2.5 2.5 0 0 1 18.5 21h-13A2.5 2.5 0 0 1 3 18.5v-10A1.5 1.5 0 0 1 4.5 7H6Zm2 0h8V6a4 4 0 1 0-8 0v1Z"/></svg>
+                                                        @break
+                                                    @case('grid')
+                                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z"/></svg>
+                                                        @break
                                                     @case('star')
                                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="m12 17.27 6.18 3.73-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
                                                         @break
                                                     @case('image')
                                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H5Zm2 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm12 10H5l4.5-5.5 3.2 3.8 2.3-2.8L19 17Z"/></svg>
                                                         @break
+                                                    @case('share')
+                                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16a3 3 0 0 0-2.39 1.2l-6.9-3.45a3.26 3.26 0 0 0 0-1.5l6.9-3.45A3 3 0 1 0 15 7a2.9 2.9 0 0 0 .08.67l-6.92 3.46a3 3 0 1 0 0 5.74l6.92 3.46A2.9 2.9 0 0 0 15 20a3 3 0 1 0 3-4Z"/></svg>
+                                                        @break
                                                     @case('gear')
                                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="m19.14 12.94.04-.94-.04-.94 2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.03 7.03 0 0 0-1.63-.94L14.4 2.8a.5.5 0 0 0-.49-.4h-3.82a.5.5 0 0 0-.49.4L9.25 5.32c-.57.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58-.04.94.04.94-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.05.71 1.63.94l.35 2.52a.5.5 0 0 0 .49.4h3.82a.5.5 0 0 0 .49-.4l.35-2.52c.57-.23 1.12-.54 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg>
                                                         @break
+                                                    @case('bell')
+                                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a6 6 0 0 0-6 6v2.16c0 .54-.14 1.08-.4 1.55L4.1 14.6A1.5 1.5 0 0 0 5.4 17h13.2a1.5 1.5 0 0 0 1.3-2.25l-1.5-2.89c-.26-.47-.4-1.01-.4-1.55V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.83-2H9.17A3 3 0 0 0 12 22Z"/></svg>
+                                                        @break
                                                     @case('chart')
                                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3h2v18H5V3Zm6 6h2v12h-2V9Zm6-4h2v16h-2V5Z"/></svg>
+                                                        @break
+                                                    @case('mic')
+                                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3Zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.92V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-3.08A7 7 0 0 1 5 11a1 1 0 1 1 2 0 5 5 0 1 0 10 0Z"/></svg>
                                                         @break
                                                     @default
                                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z"/></svg>

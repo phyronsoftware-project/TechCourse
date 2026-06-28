@@ -124,6 +124,15 @@ class DashboardController extends Controller
                     'icon' => 'ticket',
                     'route' => route('admin.orders.index'),
                 ],
+                [
+                    'label' => 'Notifications',
+                    'value' => $this->count('system_notifications'),
+                    'meta_primary' => $this->countWhere('system_notifications', 'is_active', 1) . ' active',
+                    'meta_secondary' => 'broadcast and user alerts',
+                    'icon_bg' => 'bg-blue',
+                    'icon' => 'bell',
+                    'route' => route('admin.notifications.index'),
+                ],
             ],
             'trendData' => $trendData,
             'courseBreakdown' => [

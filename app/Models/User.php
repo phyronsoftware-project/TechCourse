@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'email', 'phone', 'avatar', 'role', 'status', 'password', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'phone', 'address', 'city', 'province', 'postal_code', 'avatar', 'telegram_id', 'telegram_username', 'telegram_photo_url', 'role', 'status', 'password', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -68,9 +68,29 @@ class User extends Authenticatable
         return $this->hasMany(CourseSave::class);
     }
 
+    public function shopFavorites(): HasMany
+    {
+        return $this->hasMany(ShopFavorite::class);
+    }
+
+    public function shopCartItems(): HasMany
+    {
+        return $this->hasMany(ShopCartItem::class);
+    }
+
     public function lessonComments(): HasMany
     {
         return $this->hasMany(LessonComment::class);
+    }
+
+    public function systemNotifications(): HasMany
+    {
+        return $this->hasMany(SystemNotification::class);
+    }
+
+    public function notificationReads(): HasMany
+    {
+        return $this->hasMany(NotificationRead::class);
     }
 
     protected function avatarUrl(): Attribute

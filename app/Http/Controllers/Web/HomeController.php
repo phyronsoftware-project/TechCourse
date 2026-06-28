@@ -27,12 +27,23 @@ class HomeController extends Controller
                 ['label' => 'Categories', 'value' => $this->safeCount('course_categories')],
                 ['label' => 'Lessons', 'value' => $this->safeCount('course_lessons')],
             ],
+            'featuredCourses' => $this->featuredCourses()->take(3),
         ]);
     }
 
-    public function contact(): View
+    public function faq(): View
     {
-        return view('web.pages.home.contact');
+        return view('web.pages.home.faq');
+    }
+
+    public function privacy(): View
+    {
+        return view('web.pages.home.privacy');
+    }
+
+    public function terms(): View
+    {
+        return view('web.pages.home.terms');
     }
 
     protected function featuredCourses()

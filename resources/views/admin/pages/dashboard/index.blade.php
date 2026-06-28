@@ -84,7 +84,7 @@
 
         .tourism-analytics .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
             gap: 14px;
             margin-bottom: 16px;
         }
@@ -323,6 +323,69 @@
             text-decoration: none;
         }
 
+        .tourism-analytics .tool-shortcut-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 18px 20px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .tourism-analytics .tool-shortcut-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 22px 42px rgba(15, 23, 42, 0.1);
+        }
+
+        .tourism-analytics .tool-shortcut-card__label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #0b84a5;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .tourism-analytics .tool-shortcut-card__title {
+            margin: 12px 0 6px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #172b4d;
+        }
+
+        .tourism-analytics .tool-shortcut-card__copy {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .tourism-analytics .tool-shortcut-card__icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #0b84a5, #14b8a6);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 18px 30px rgba(11, 132, 165, 0.22);
+        }
+
+        .tourism-analytics .tool-shortcut-card__icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
         .tourism-analytics .destination-list {
             display: grid;
             gap: 12px;
@@ -476,6 +539,17 @@
     </style>
 
     <div class="tourism-analytics">
+        <a href="{{ route('admin.tools.sound') }}" class="panel tool-shortcut-card">
+            <div>
+                <span class="tool-shortcut-card__label">Business Tool</span>
+                <h3 class="tool-shortcut-card__title">Khmer / English Sound Tool</h3>
+                <p class="tool-shortcut-card__copy">Convert Khmer or English text to speech, and use browser microphone input to convert speech back to text for your other business workflow tools.</p>
+            </div>
+            <span class="tool-shortcut-card__icon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3Zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.92V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-3.08A7 7 0 0 1 5 11a1 1 0 1 1 2 0 5 5 0 1 0 10 0Z"/></svg>
+            </span>
+        </a>
+
         <div class="topbar">
             <h2>Statistics Cards</h2>
         </div>
@@ -495,6 +569,9 @@
                                     @break
                                 @case('ticket')
                                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5V10a2 2 0 1 0 0 4v2.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5V14a2 2 0 1 0 0-4V7.5Z"/></svg>
+                                    @break
+                                @case('bell')
+                                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a6 6 0 0 0-6 6v2.16c0 .54-.14 1.08-.4 1.55L4.1 14.6A1.5 1.5 0 0 0 5.4 17h13.2a1.5 1.5 0 0 0 1.3-2.25l-1.5-2.89c-.26-.47-.4-1.01-.4-1.55V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.83-2H9.17A3 3 0 0 0 12 22Z"/></svg>
                                     @break
                                 @default
                                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM8 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm8 1c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5ZM8 13c-2.67 0-8 1.34-8 4v2h7v-2.5c0-.95.36-1.82 1.02-2.56.13-.14.27-.28.42-.4-.48-.03-.95-.04-1.44-.04Z"/></svg>

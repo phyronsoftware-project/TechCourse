@@ -3,55 +3,63 @@
 @section('title', __('Course Checkout'))
 
 @php
-    $khqrPreviewUrl = null;
-    $paymentPayload = is_array($payment->response_payload) ? $payment->response_payload : [];
+    $khqrPreviewUrl = asset('ABA_Images/KHQR_Static.png');
     $courseDescription = $course->short_description ?: \Illuminate\Support\Str::limit(strip_tags((string) $course->description), 180);
-
-    if (!empty($payment->qr_image_url)) {
-        $khqrPreviewUrl = $payment->qr_image_url;
-    } elseif (!empty($paymentPayload['qrImage'])) {
-        $khqrPreviewUrl = $paymentPayload['qrImage'];
-    } elseif (!empty($payment->khqr_deeplink)) {
-        $khqrPreviewUrl = 'https://quickchart.io/qr?size=420&text=' . urlencode($payment->khqr_deeplink);
-    }
+    $paymentMethods = [
+        ['name' => 'ABA KHQR', 'copy' => __('Scan to pay with any banking app'), 'image' => asset('ABA_Images/ABA-BANK.svg'), 'actionable' => true],
+        [
+            'name' => __('Card'),
+            'copy' => __('Credit/Debit Card'),
+            'image' => asset('ABA_Images/card_icon.png'),
+            'logos' => [
+                ['type' => 'image', 'src' => asset('ABA_Images/VISA-Copy.png'), 'alt' => 'Visa'],
+                ['type' => 'mastercard'],
+                ['type' => 'image', 'src' => asset('ABA_Images/JCB.png'), 'alt' => 'JCB'],
+            ],
+        ],
+        ['name' => 'Alipay', 'copy' => __('Scan to pay with Alipay'), 'image' => asset('ABA_Images/Alipay.png')],
+        ['name' => 'WeChat', 'copy' => __('Scan to pay with WeChat'), 'image' => asset('ABA_Images/Wechat.png')],
+    ];
 @endphp
 
 @section('content')
     <style>
         .checkout-shell {
-            width: min(1160px, calc(100% - 40px));
+            width: min(1120px, calc(100% - 36px));
             margin: 0 auto;
-            padding-bottom: 52px;
+            padding-bottom: 48px;
         }
 
         .checkout-page-title {
-            margin: 0 0 34px;
-            color: #ffffff;
+            margin: 0 0 28px;
+            color: #000000;
             text-align: center;
-            font-family: var(--font-lato);
-            font-size: clamp(1.55rem, 2.2vw, 2rem);
-            line-height: 1.18;
-            font-weight: 600;
+            font-family: 'Gagalin', var(--font-lato);
+            font-size: clamp(1.18rem, 1.8vw, 1.45rem);
+            line-height: 1.25;
+            font-weight: 700;
+            letter-spacing: 0.01em;
         }
 
         .checkout-layout {
             display: grid;
-            grid-template-columns: minmax(0, 1.02fr) minmax(300px, 0.82fr);
-            gap: 24px;
+            grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.52fr);
+            gap: 22px;
             align-items: start;
         }
 
         .checkout-course-card {
             overflow: hidden;
-            border-radius: 0;
-            background: #edf2f7;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: none;
+            display: grid;
+            grid-template-columns: 350px minmax(0, 1fr);
+            background: #ffffff;
+            border: 1px solid #e5edf5;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
         }
 
         .checkout-course-media {
             position: relative;
-            aspect-ratio: 16 / 9;
+            min-height: 270px;
             background: linear-gradient(135deg, #19496d, #0d3556);
             overflow: hidden;
         }
@@ -83,221 +91,195 @@
         }
 
         .checkout-course-body {
-            padding: 22px 24px 24px;
+            padding: 24px 26px;
             color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .checkout-course-name {
             margin: 0;
             font-family: var(--font-lato);
-            font-size: 1.2rem;
-            line-height: 1.28;
-            font-weight: 700;
+            font-size: 1.05rem;
+            line-height: 1.32;
+            font-weight: 800;
         }
 
         .checkout-course-copy {
             margin: 12px 0 0;
             color: #475569;
-            font-size: 13px;
-            line-height: 1.7;
+            font-size: 12px;
+            line-height: 1.72;
         }
 
         .checkout-course-meta {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 18px;
+            gap: 8px;
+            margin-top: 16px;
         }
 
         .checkout-pill {
-            min-height: 32px;
-            padding: 0 14px;
+            min-height: 28px;
+            padding: 0 12px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             border-radius: 999px;
             background: #ffffff;
             color: #0f2345;
             border: 1px solid #d9e3ef;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
         }
 
-        .checkout-payment-list {
+        .checkout-side {
             display: grid;
-            gap: 18px;
-        }
-
-        .checkout-option {
-            width: 100%;
-            padding: 18px 18px;
-            border: 1px solid #e9eef5;
-            border-radius: 20px;
-            background: #ffffff;
-            display: grid;
-            grid-template-columns: 76px minmax(0, 1fr) 42px;
             gap: 16px;
-            align-items: center;
-            text-align: left;
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
-        .checkout-option.is-actionable {
-            cursor: pointer;
-        }
-
-        .checkout-option.is-actionable:hover {
-            transform: translateY(-1px);
-            border-color: #dde5ef;
-            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.07);
-        }
-
-        .checkout-option.is-disabled {
-            cursor: default;
-        }
-
-        .checkout-option__icon {
-            width: 72px;
-            height: 72px;
-            border-radius: 14px;
-            position: relative;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .checkout-option__icon--aba {
-            background: linear-gradient(180deg, #12718d 0 68%, #eb2f36 68% 100%);
-        }
-
-        .checkout-option__icon--aba::before {
-            content: "ABA";
-            position: absolute;
-            top: 10px;
-            left: 0;
-            right: 0;
-            color: #ffffff;
-            text-align: center;
-            font-family: var(--font-lato);
-            font-size: 21px;
-            font-weight: 800;
-            letter-spacing: 0.06em;
-        }
-
-        .checkout-option__icon--aba::after {
-            content: "KHQR";
-            position: absolute;
-            bottom: 7px;
-            left: 0;
-            right: 0;
-            color: #ffffff;
-            text-align: center;
-            font-family: var(--font-lato);
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-        }
-
-        .checkout-option__icon--card,
-        .checkout-option__icon--alipay,
-        .checkout-option__icon--wechat {
+        .checkout-payments {
+            padding: 16px;
             display: grid;
-            place-items: center;
-            color: #ffffff;
-            font-size: 30px;
+            gap: 12px;
+            align-content: start;
+            border-radius: 0;
+            background: #ffffff;
+            border: 1px solid #e5edf5;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
         }
 
-        .checkout-option__icon--card {
-            background: linear-gradient(135deg, #0d7b93, #06647f);
-        }
-
-        .checkout-option__icon--alipay {
-            background: linear-gradient(135deg, #1d9bf0, #1085d6);
-        }
-
-        .checkout-option__icon--wechat {
-            background: linear-gradient(135deg, #22c10b, #16a504);
-        }
-
-        .checkout-option__body {
-            min-width: 0;
-        }
-
-        .checkout-option__title {
-            margin: 0;
-            color: #0f2345;
+        .checkout-payments::before {
+            color: #0f172a;
+            font-size: 0.92rem;
+            font-weight: 850;
             font-family: var(--font-lato);
-            font-size: 1rem;
-            line-height: 1.18;
-            font-weight: 700;
+            margin-bottom: 2px;
         }
 
-        .checkout-option__subtitle {
-            margin: 4px 0 0;
-            color: #74849a;
-            font-size: 11px;
-            line-height: 1.45;
+        .checkout-payments::before {
+            content: "{{ __('Select Payment Method') }}";
         }
 
-        .checkout-option__badges,
-        .checkout-card-brands {
+        .checkout-pay-card {
+            display: grid;
+            grid-template-columns: 52px minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 18px;
+            border: 1px solid #ebf1f7;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+        }
+
+        .checkout-pay-card--button {
+            width: 100%;
+            background: #ffffff;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .checkout-pay-card--button:hover {
+            border-color: #dbe6f1;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+        }
+
+        .checkout-pay-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 8px;
-        }
-
-        .checkout-card-brand {
-            min-height: 18px;
-            padding: 0 6px;
-            border-radius: 3px;
-            display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: #ffffff;
-            font-family: var(--font-lato);
-            font-size: 8px;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        .checkout-pay-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .checkout-pay-name {
+            color: #10203c;
+            font-size: 0.82rem;
             font-weight: 800;
-            letter-spacing: 0.02em;
-            border: 0;
-            line-height: 1;
+            font-family: var(--font-lato);
+            line-height: 1.25;
         }
 
-        .checkout-card-brand--visa {
-            background: #1f5fbf;
+        .checkout-pay-copy {
+            color: #6c7d93;
+            font-size: 0.67rem;
+            line-height: 1.45;
+            margin-top: 1px;
         }
 
-        .checkout-card-brand--mastercard {
-            background: linear-gradient(90deg, #f59e0b 0 50%, #111827 50% 100%);
+        .checkout-pay-logos {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+            flex-wrap: wrap;
         }
 
-        .checkout-card-brand--unionpay {
-            background: linear-gradient(90deg, #d91f26 0 35%, #0f6bdc 35% 70%, #22a35a 70% 100%);
-        }
-
-        .checkout-card-brand--jcb {
-            background: linear-gradient(90deg, #179c52 0 33%, #1950b6 33% 66%, #d71f34 66% 100%);
-        }
-
-        .checkout-option__arrow {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+        .checkout-pay-logo {
+            height: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #f4f6fb;
-            color: #5a6779;
-            font-size: 16px;
         }
 
-        .checkout-page-note {
-            margin: 14px 4px 0;
-            color: rgba(255, 255, 255, 0.78);
-            font-size: 12px;
-            line-height: 1.6;
+        .checkout-pay-logo img {
+            height: 18px;
+            width: auto;
+            display: block;
+        }
+
+        .checkout-pay-logo--mastercard {
+            width: 34px;
+            height: 18px;
+            border-radius: 3px;
+            background: #000000;
+            gap: 0;
+            padding: 0 4px;
+        }
+
+        .checkout-pay-logo--mastercard span {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            display: block;
+        }
+
+        .checkout-pay-logo--mastercard span:first-child {
+            background: #eb001b;
+            margin-right: -4px;
+        }
+
+        .checkout-pay-logo--mastercard span:last-child {
+            background: #f79e1b;
+        }
+
+        .checkout-pay-arrow {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            background: #f3f7fc;
+            border: 1px solid #e1eaf3;
+            color: #66768d;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.76rem;
+            justify-self: end;
+            margin-right: 2px;
+            flex-shrink: 0;
         }
 
         .khqr-modal[hidden] {
@@ -307,7 +289,7 @@
         .khqr-modal {
             position: fixed;
             inset: 0;
-            z-index: 1000;
+            z-index: 1400;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -323,24 +305,19 @@
         .khqr-modal__backdrop {
             position: absolute;
             inset: 0;
-            background: rgba(9, 17, 32, 0.72);
-            backdrop-filter: blur(8px);
-            opacity: 0;
-            transition: opacity 0.28s ease;
-        }
-
-        .khqr-modal.is-open .khqr-modal__backdrop {
-            opacity: 1;
+            background: rgba(9, 17, 32, 0.52);
+            backdrop-filter: blur(5px);
         }
 
         .khqr-modal__dialog {
             position: relative;
-            width: min(440px, 100%);
-            border-radius: 28px;
+            width: min(355px, 100%);
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.28);
-            padding: 24px;
+            border-radius: 22px;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.26);
+            padding: 8px 0 8px;
+            overflow: hidden;
             transform: translateY(20px) scale(0.96);
             opacity: 0;
             transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.32s ease;
@@ -353,110 +330,96 @@
 
         .khqr-modal__close {
             position: absolute;
-            top: 14px;
+            top: 12px;
             right: 14px;
             width: 38px;
             height: 38px;
             border: 0;
             border-radius: 999px;
-            background: #f1f5f9;
-            color: #0f172a;
+            background: transparent;
+            color: #22c7ee;
             cursor: pointer;
+            font-size: 1.2rem;
         }
 
         .khqr-modal__top {
-            padding-right: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 0 46px 2px 18px;
         }
 
-        .khqr-modal__eyebrow {
-            margin: 0;
-            color: #12718d;
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+        .khqr-modal__brand-image {
+            width: 170px;
+            display: block;
+            object-fit: contain;
         }
 
         .khqr-modal__title {
-            margin: 10px 0 0;
-            color: #0f172a;
+            margin: 0;
+            color: #0f2a52;
             font-family: var(--font-lato);
-            font-size: 1.7rem;
+            font-size: 1.2rem;
             line-height: 1.2;
+            font-weight: 700;
         }
 
-        .khqr-modal__copy {
-            margin: 8px 0 0;
-            color: #64748b;
-            font-size: 14px;
-            line-height: 1.65;
+        .khqr-modal__card {
+            width: 100%;
+            margin: 0;
+            border-radius: 0;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: none;
+            border: 0;
         }
 
-        .khqr-modal__qr-wrap {
-            margin-top: 22px;
-            padding: 18px;
-            border-radius: 24px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
+        .khqr-modal__card-body {
+            padding: 0;
+            background: #ffffff;
         }
 
         .khqr-modal__qr {
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 280px;
-            border-radius: 18px;
-            background: #ffffff;
+            min-height: 100%;
             overflow: hidden;
+            background: #ffffff;
         }
 
         .khqr-modal__qr img {
-            width: min(290px, 100%);
+            width: 100%;
+            max-height: 500px;
             display: block;
             object-fit: contain;
         }
 
         .khqr-modal__empty {
-            padding: 28px 18px;
+            padding: 24px 18px;
             text-align: center;
             color: #64748b;
-            font-size: 13px;
+            font-size: 12px;
             line-height: 1.7;
         }
 
-        .khqr-modal__meta {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 18px;
-        }
-
-        .khqr-modal__stat {
-            padding: 14px 16px;
-            border-radius: 18px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-        }
-
-        .khqr-modal__label {
-            margin: 0;
-            color: #64748b;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .khqr-modal__value {
-            margin: 8px 0 0;
-            color: #0f172a;
-            font-family: var(--font-lato);
-            font-size: 1rem;
-            font-weight: 700;
-            line-height: 1.35;
-            word-break: break-word;
+        .khqr-modal__caption {
+            width: 100%;
+            margin: 4px 0 0;
+            padding: 0 12px;
+            text-align: center;
+            color: #8a94a6;
+            font-size: 11px;
+            line-height: 1.65;
         }
 
         @media (max-width: 980px) {
             .checkout-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .checkout-course-card {
                 grid-template-columns: 1fr;
             }
         }
@@ -474,44 +437,22 @@
                 padding: 18px 16px 18px;
             }
 
-            .checkout-option {
-                grid-template-columns: 60px minmax(0, 1fr) 36px;
-                gap: 10px;
-                padding: 12px;
-            }
-
-            .checkout-option__icon {
-                width: 56px;
-                height: 56px;
-                border-radius: 13px;
-            }
-
-            .checkout-option__icon--aba::before {
-                top: 10px;
-                font-size: 20px;
-            }
-
-            .checkout-option__icon--aba::after {
-                bottom: 7px;
-                font-size: 10px;
-            }
-
-            .checkout-option__title {
-                font-size: 0.95rem;
-            }
-
-            .checkout-option__subtitle {
-                font-size: 11px;
-            }
-
             .khqr-modal__dialog {
-                padding: 18px;
-                border-radius: 24px;
+                width: min(355px, 100%);
             }
 
-            .khqr-modal__meta {
-                grid-template-columns: 1fr;
+            .khqr-modal__top {
+                padding: 0 42px 2px 12px;
             }
+
+            .khqr-modal__brand-image {
+                width: 138px;
+            }
+
+            .khqr-modal__title {
+                font-size: 1.02rem;
+            }
+
         }
     </style>
 
@@ -540,77 +481,57 @@
                 </div>
             </article>
 
-            <div>
-                <div class="checkout-payment-list">
-                    <button type="button" class="checkout-option is-actionable" data-khqr-open>
-                        <span class="checkout-option__icon checkout-option__icon--aba" aria-hidden="true" style="width:56px;height:56px;border-radius:15px;"></span>
-
-                        <span class="checkout-option__body">
-                            <h3 class="checkout-option__title" style="font-size:0.92rem;line-height:1.2;">ABA KHQR</h3>
-                            <p class="checkout-option__subtitle">{{ __('Scan to pay with any banking app') }}</p>
-                        </span>
-
-                        <span class="checkout-option__arrow" style="width:32px;height:32px;border-radius:10px;font-size:14px;">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </span>
-                    </button>
-
-                    <button type="button" class="checkout-option is-disabled" aria-disabled="true">
-                        <span class="checkout-option__icon checkout-option__icon--card" aria-hidden="true">
-                            <i class="fa-regular fa-credit-card"></i>
-                        </span>
-
-                        <span class="checkout-option__body">
-                            <h3 class="checkout-option__title">Credit/Debit Card</h3>
-                            <p class="checkout-option__subtitle">{{ __('Scan to pay with card') }}</p>
-                            <span class="checkout-card-brands">
-                                <span class="checkout-card-brand checkout-card-brand--visa">VISA</span>
-                                <span class="checkout-card-brand checkout-card-brand--mastercard">MC</span>
-                                <span class="checkout-card-brand checkout-card-brand--unionpay">UnionPay</span>
-                                <span class="checkout-card-brand checkout-card-brand--jcb">JCB</span>
-                            </span>
-                        </span>
-
-                        <span class="checkout-option__arrow">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </span>
-                    </button>
-
-                    <button type="button" class="checkout-option is-disabled" aria-disabled="true">
-                        <span class="checkout-option__icon checkout-option__icon--alipay" aria-hidden="true">
-                            <i class="fa-solid fa-wallet"></i>
-                        </span>
-
-                        <span class="checkout-option__body">
-                            <h3 class="checkout-option__title">Alipay</h3>
-                            <p class="checkout-option__subtitle">{{ __('Scan to pay with Alipay') }}</p>
-                        </span>
-
-                        <span class="checkout-option__arrow">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </span>
-                    </button>
-
-                    <button type="button" class="checkout-option is-disabled" aria-disabled="true">
-                        <span class="checkout-option__icon checkout-option__icon--wechat" aria-hidden="true">
-                            <i class="fa-brands fa-weixin"></i>
-                        </span>
-
-                        <span class="checkout-option__body">
-                            <h3 class="checkout-option__title">WeChat</h3>
-                            <p class="checkout-option__subtitle">{{ __('Scan to pay with WeChat') }}</p>
-                        </span>
-
-                        <span class="checkout-option__arrow">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </span>
-                    </button>
+            <div class="checkout-side">
+                <div class="checkout-payments">
+                    @foreach ($paymentMethods as $method)
+                        @if (!empty($method['actionable']))
+                            <button type="button" class="checkout-pay-card checkout-pay-card--button" data-khqr-open>
+                                <span class="checkout-pay-icon">
+                                    <img src="{{ $method['image'] }}" alt="{{ $method['name'] }}">
+                                </span>
+                                <span>
+                                    <div class="checkout-pay-name">{{ $method['name'] }}</div>
+                                    <div class="checkout-pay-copy">{{ $method['copy'] }}</div>
+                                </span>
+                                <span class="checkout-pay-arrow">
+                                    <i class="fa-solid fa-angle-right"></i>
+                                </span>
+                            </button>
+                        @else
+                            <div class="checkout-pay-card">
+                                <span class="checkout-pay-icon">
+                                    <img src="{{ $method['image'] }}" alt="{{ $method['name'] }}">
+                                </span>
+                                <span>
+                                    <div class="checkout-pay-name">{{ $method['name'] }}</div>
+                                    <div class="checkout-pay-copy">{{ $method['copy'] }}</div>
+                                    @if (!empty($method['logos']))
+                                        <div class="checkout-pay-logos">
+                                            @foreach ($method['logos'] as $logo)
+                                                @if (($logo['type'] ?? '') === 'mastercard')
+                                                    <span class="checkout-pay-logo checkout-pay-logo--mastercard" aria-label="Mastercard">
+                                                        <span></span>
+                                                        <span></span>
+                                                    </span>
+                                                @else
+                                                    <span class="checkout-pay-logo">
+                                                        <img src="{{ $logo['src'] }}" alt="{{ $logo['alt'] }}">
+                                                    </span>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </span>
+                                <span class="checkout-pay-arrow">
+                                    <i class="fa-solid fa-angle-right"></i>
+                                </span>
+                            </div>
+                        @endif
+                    @endforeach
                 </div>
 
                 @if (!empty($khqrError))
-                    <p class="checkout-page-note">{{ $khqrError }}</p>
-                @else
-                    <p class="checkout-page-note">{{ __('KHQR is the only active payment UI for now. Other methods are prepared as interface only and can connect process later.') }}</p>
+                    <div class="checkout-pay-copy">{{ $khqrError }}</div>
                 @endif
             </div>
         </div>
@@ -625,45 +546,30 @@
             </button>
 
             <div class="khqr-modal__top">
-                <p class="khqr-modal__eyebrow">ABA KHQR</p>
-                <h2 class="khqr-modal__title" id="khqr-modal-title">{{ __('Scan to complete payment') }}</h2>
-                <p class="khqr-modal__copy">{{ __('Use any supported banking app to scan this KHQR for your course checkout.') }}</p>
+                <h2 class="khqr-modal__title" id="khqr-modal-title">ABA KHQR</h2>
+                <img
+                    src="https://payway.ababank.com/kh/assets/img/ABA_PAYWAY_logo.svg"
+                    alt="ABA PayWay"
+                    class="khqr-modal__brand-image"
+                >
             </div>
 
-            <div class="khqr-modal__qr-wrap">
-                <div class="khqr-modal__qr">
-                    @if ($khqrPreviewUrl)
-                        <img src="{{ $khqrPreviewUrl }}" alt="ABA KHQR">
-                    @else
-                        <div class="khqr-modal__empty">
-                            <strong>{{ __('KHQR preview is not ready yet') }}</strong><br>
-                            {{ __('The checkout record is prepared. Later you can connect the real payment process and show live QR here.') }}
-                        </div>
-                    @endif
+            <div class="khqr-modal__card">
+                <div class="khqr-modal__card-body">
+                    <div class="khqr-modal__qr">
+                        @if ($khqrPreviewUrl)
+                            <img src="{{ $khqrPreviewUrl }}" alt="ABA KHQR">
+                        @else
+                            <div class="khqr-modal__empty">
+                                <strong>{{ __('KHQR preview is not ready yet') }}</strong><br>
+                                {{ __('The checkout record is prepared. Later you can connect the real payment process and show live QR here.') }}
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
 
-            <div class="khqr-modal__meta">
-                <div class="khqr-modal__stat">
-                    <p class="khqr-modal__label">{{ __('Amount') }}</p>
-                    <p class="khqr-modal__value">{{ $payment->currency }} {{ number_format((float) $payment->amount, 2) }}</p>
-                </div>
-
-                <div class="khqr-modal__stat">
-                    <p class="khqr-modal__label">{{ __('Status') }}</p>
-                    <p class="khqr-modal__value">{{ ucfirst($payment->status ?: 'pending') }}</p>
-                </div>
-
-                <div class="khqr-modal__stat">
-                    <p class="khqr-modal__label">{{ __('Order No') }}</p>
-                    <p class="khqr-modal__value">{{ $order->order_no }}</p>
-                </div>
-
-                <div class="khqr-modal__stat">
-                    <p class="khqr-modal__label">{{ __('Course') }}</p>
-                    <p class="khqr-modal__value">{{ $course->title }}</p>
-                </div>
-            </div>
+            <p class="khqr-modal__caption">{{ __('Scan with ABA Mobile, or other Mobile Banking App supporting KHQR') }}</p>
         </div>
     </div>
 

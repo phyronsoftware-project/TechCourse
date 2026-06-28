@@ -8,6 +8,7 @@
     $loginRedirectRoute = route('web.login', ['redirect' => $checkoutRoute]);
     $lessonRouteKey = $activeLesson->slug ?: $activeLesson->id;
     $courseRouteKey = $course->slug ?: $course->id;
+    $currentLessonRoute = route('learning.show', [$courseRouteKey, $lessonRouteKey]);
     $embedUrl = null;
 
     if ($videoUrl) {
@@ -48,7 +49,7 @@
 
         .lesson-learning-main {
             display: grid;
-            gap: 20px;
+            gap: 0;
         }
 
         .lesson-box,
@@ -61,6 +62,10 @@
 
         .lesson-video-shell {
             overflow: hidden;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            border-bottom: 0;
+            margin-bottom: -8px;
         }
 
         .lesson-video-frame {
@@ -90,6 +95,18 @@
         .lesson-detail-box,
         .lesson-comment-box {
             padding: 24px;
+        }
+
+        .lesson-detail-box {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            padding-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        .lesson-comment-box,
+        .lesson-resource-box {
+            margin-top: 20px;
         }
 
         .lesson-head-row {
@@ -438,11 +455,13 @@
         }
 
         .lesson-sidebar-box {
-            padding: 0;
+            padding: 10px 10px 12px;
             position: sticky;
             top: 104px;
-            background: #f2f4f7;
+            background: #ffffff;
             overflow: hidden;
+            border-radius: 0;
+            box-shadow: none;
         }
 
         .lesson-sidebar-head {
@@ -451,14 +470,15 @@
             justify-content: space-between;
             gap: 12px;
             margin-bottom: 0;
-            padding: 16px 16px 10px;
+            padding: 10px 10px 12px;
         }
 
         .lesson-sidebar-head h3 {
             margin: 0;
             color: #0f172a;
             font-family: var(--font-lato);
-            font-size: 14px;
+            font-size: 15px;
+            font-weight: 800;
             line-height: 1.45;
         }
 
@@ -473,7 +493,7 @@
             gap: 10px;
             max-height: 620px;
             overflow-y: auto;
-            padding: 0 10px 10px;
+            padding: 0;
             scrollbar-width: none;
         }
 
@@ -484,11 +504,11 @@
         .lesson-list-row {
             display: grid;
             grid-template-columns: 86px minmax(0, 1fr) auto;
-            gap: 12px;
+            gap: 14px;
             align-items: start;
             width: 100%;
-            padding: 6px;
-            border-radius: 16px;
+            padding: 12px;
+            border-radius: 0;
             background: #ffffff;
             border: 1px solid #dbe6f1;
             text-decoration: none;
@@ -498,18 +518,26 @@
             overflow: hidden;
         }
 
-        .lesson-list-row:hover,
-        .lesson-list-row.is-active {
-            background: #eef5fd;
-            border-color: #c7d9ee;
-            box-shadow: 0 12px 24px rgba(29, 78, 216, 0.08);
-            transform: translateY(-1px);
+        .lesson-list-row:hover {
+            background: #ffffff;
+            border-color: #dbe6f1;
+        }
+
+        .lesson-list-row.is-active,
+        .lesson-list-row.is-active:hover,
+        .lesson-list-row.is-active:focus,
+        .lesson-list-row.is-active:active,
+        .lesson-list-row.is-active:visited {
+            background: #ffffff !important;
+            border-color: #dbe6f1 !important;
+            box-shadow: none !important;
+            transform: none !important;
         }
 
         .lesson-list-thumb {
             width: 86px;
             height: 76px;
-            border-radius: 12px;
+            border-radius: 0;
             overflow: hidden;
             background: #17456a;
             border: 1px solid #cfe0ee;
@@ -549,21 +577,36 @@
 
         .lesson-list-badge {
             min-height: 26px;
-            padding: 0 10px;
+            padding: 0 14px;
             border-radius: 999px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 6px;
             background: #e8eef6;
             color: #284768;
             font-size: 11px;
             font-weight: 700;
             white-space: nowrap;
+            min-width: 104px;
         }
 
-        .lesson-list-row.is-active .lesson-list-badge {
-            background: #d6e7ff;
-            color: #1d4ed8;
+        .lesson-list-badge__mark {
+            font-size: 11px;
+            line-height: 1;
+            font-weight: 800;
+        }
+
+        .lesson-list-row.is-active .lesson-list-title,
+        .lesson-list-row.is-active .lesson-list-copy,
+        .lesson-list-row.is-active .lesson-list-date {
+            color: inherit !important;
+        }
+
+        .lesson-list-row.is-active .lesson-list-badge,
+        .lesson-list-row.is-active:hover .lesson-list-badge {
+            background: #e8eef6 !important;
+            color: #284768 !important;
         }
 
         @media (max-width: 1080px) {
@@ -602,7 +645,7 @@
                     </div>
                 </div>
 
-                <div class="lesson-box lesson-detail-box">
+                <div class="lesson-box lesson-detail-box" data-card-link="{{ $currentLessonRoute }}">
                     <div class="lesson-head-row">
                         <div>
                             <h1 class="lesson-course-name">{{ $course->title }}</h1>
@@ -795,6 +838,7 @@
                                 <div class="lesson-list-date">{{ optional($lesson->created_at)->format('d M Y') ?: __('New') }}</div>
                             </div>
                             <span class="lesson-list-badge">
+                                <span class="lesson-list-badge__mark" aria-hidden="true">•</span>
                                 {{ $lesson->is_preview ? __('Free') : (($courseNeedsPayment ?? false) && !($hasCourseAccess ?? false) ? __('Locked') : gmdate('i:s', (int) ($lesson->duration_seconds ?: 0))) }}
                             </span>
                         </a>
@@ -808,6 +852,20 @@
 @push('web_scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-card-link]').forEach((card) => {
+                card.addEventListener('click', (event) => {
+                    if (event.target.closest('a, button, form, textarea, input')) {
+                        return;
+                    }
+
+                    const url = card.getAttribute('data-card-link');
+
+                    if (url) {
+                        window.location.href = url;
+                    }
+                });
+            });
+
             document.querySelectorAll('[data-lesson-link]').forEach((item) => {
                 item.addEventListener('click', () => {
                     const url = item.getAttribute('data-lesson-link');

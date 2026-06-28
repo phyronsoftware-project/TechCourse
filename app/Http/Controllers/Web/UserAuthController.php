@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Mail\AuthOtpMail;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +20,10 @@ use Throwable;
 
 class UserAuthController extends Controller
 {
+    public function __construct(protected NotificationService $notificationService)
+    {
+    }
+
     public function createLogin(): View|RedirectResponse
     {
         if (Auth::check()) {
@@ -156,14 +161,103 @@ class UserAuthController extends Controller
         return $this->handleSocialProviderCallback('facebook');
     }
 
-    public function redirectToGithub(Request $request): RedirectResponse
+    public function handleTelegramCallback(Request $request): RedirectResponse
     {
-        return $this->redirectToSocialProvider('github');
-    }
+        $redirectTo = $this->validatedRedirect($request->string('redirect')->toString());
+        $botToken = trim((string) config('services.telegram.bot_token'));
 
-    public function handleGithubCallback(Request $request): RedirectResponse
-    {
-        return $this->handleSocialProviderCallback('github');
+        if ($botToken === '') {
+            return redirect()
+                ->route('web.login', array_filter(['redirect' => $redirectTo]))
+                ->with('warning', 'Telegram login is not configured yet. Please add your Telegram bot settings first.');
+        }
+
+        if (! Schema::hasColumn('users', 'telegram_id')) {
+            return redirect()
+                ->route('web.login', array_filter(['redirect' => $redirectTo]))
+                ->with('warning', 'Telegram login database columns are missing. Please run the Telegram SQL or migration first.');
+        }
+
+        $telegramUser = $this->validatedTelegramUser($request, $botToken);
+
+        if ($telegramUser === null) {
+            return redirect()
+                ->route('web.login', array_filter(['redirect' => $redirectTo]))
+                ->with('warning', 'Telegram login failed. Please try again.');
+        }
+
+        $user = User::query()
+            ->where('telegram_id', $telegramUser['id'])
+            ->orWhere('email', $this->telegramPlaceholderEmail($telegramUser['id']))
+            ->first();
+
+        if ($user && in_array($user->role, ['admin', 'super_admin'], true)) {
+            return redirect()
+                ->route('login')
+                ->with('warning', 'This Telegram account belongs to an admin account. Please continue from the admin login form.');
+        }
+
+        if ($user && ($user->status ?? 'active') !== 'active') {
+            return redirect()
+                ->route('web.login', array_filter(['redirect' => $redirectTo]))
+                ->with('warning', 'This account is not active.');
+        }
+
+        $registeredNow = false;
+        $payload = [
+            'name' => $telegramUser['name'],
+            'email' => $this->telegramPlaceholderEmail($telegramUser['id']),
+            'password' => Hash::make(Str::random(40)),
+            'email_verified_at' => now(),
+        ];
+
+        if (Schema::hasColumn('users', 'telegram_id')) {
+            $payload['telegram_id'] = $telegramUser['id'];
+        }
+
+        if (Schema::hasColumn('users', 'telegram_username')) {
+            $payload['telegram_username'] = $telegramUser['username'];
+        }
+
+        if (Schema::hasColumn('users', 'telegram_photo_url')) {
+            $payload['telegram_photo_url'] = $telegramUser['photo_url'];
+        }
+
+        if (Schema::hasColumn('users', 'avatar')) {
+            $payload['avatar'] = $telegramUser['photo_url'];
+        }
+
+        if (! $user) {
+            $registeredNow = true;
+
+            if (Schema::hasColumn('users', 'role')) {
+                $payload['role'] = 'user';
+            }
+
+            if (Schema::hasColumn('users', 'status')) {
+                $payload['status'] = 'active';
+            }
+
+            $user = User::create($payload);
+        } else {
+            unset($payload['email'], $payload['password']);
+
+            if (! $user->email_verified_at) {
+                $payload['email_verified_at'] = now();
+            }
+
+            $user->forceFill(array_filter($payload, static fn ($value) => filled($value) || $value === null))->save();
+        }
+
+        Auth::login($user, true);
+        $request->session()->regenerate();
+        $this->notificationService->flashPopupNotification($user, $registeredNow ? 'register' : 'login');
+
+        if ($redirectTo) {
+            return redirect()->to($redirectTo);
+        }
+
+        return $this->redirectByRole();
     }
 
     public function logout(Request $request): RedirectResponse
@@ -350,7 +444,9 @@ class UserAuthController extends Controller
             ])->save();
         }
 
-        if (($pending['mode'] ?? 'login') === 'password_reset') {
+        $mode = (string) ($pending['mode'] ?? 'login');
+
+        if ($mode === 'password_reset') {
             $request->session()->put('password_reset_verified', [
                 'user_id' => $user->id,
                 'email' => $user->email,
@@ -365,17 +461,16 @@ class UserAuthController extends Controller
 
         Auth::login($user, (bool) ($pending['remember'] ?? false));
         $request->session()->regenerate();
+        $this->notificationService->flashPopupNotification($user, $mode === 'register' ? 'register' : 'login');
 
         $redirectTo = $this->validatedRedirect((string) ($pending['redirect_to'] ?? ''));
         $request->session()->forget('auth_email_otp');
 
         if ($redirectTo) {
-            return redirect()
-                ->to($redirectTo)
-                ->with('success', 'Verification completed successfully.');
+            return redirect()->to($redirectTo);
         }
 
-        return $this->redirectByRole()->with('success', 'Verification completed successfully.');
+        return $this->redirectByRole();
     }
 
     public function resendCode(Request $request): RedirectResponse
@@ -474,6 +569,7 @@ class UserAuthController extends Controller
         }
 
         if (! $user) {
+            $registeredNow = true;
             $payload = [
                 'name' => $socialUser->getName() ?: $socialUser->getNickname() ?: Str::before($email, '@'),
                 'email' => $email,
@@ -495,6 +591,7 @@ class UserAuthController extends Controller
 
             $user = User::create($payload);
         } else {
+            $registeredNow = false;
             $updates = [];
 
             if (! $user->email_verified_at) {
@@ -512,10 +609,67 @@ class UserAuthController extends Controller
 
         Auth::login($user, true);
         request()->session()->regenerate();
+        $this->notificationService->flashPopupNotification($user, $registeredNow ? 'register' : 'login');
 
-        return redirect()
-            ->route('home')
-            ->with('success', ucfirst($provider) . ' login completed successfully.');
+        return redirect()->route('home');
+    }
+
+    protected function validatedTelegramUser(Request $request, string $botToken): ?array
+    {
+        $authData = $request->only([
+            'id',
+            'first_name',
+            'last_name',
+            'username',
+            'photo_url',
+            'auth_date',
+            'hash',
+        ]);
+
+        if (
+            ! filled($authData['id'] ?? null)
+            || ! filled($authData['auth_date'] ?? null)
+            || ! filled($authData['hash'] ?? null)
+        ) {
+            return null;
+        }
+
+        $receivedHash = (string) $authData['hash'];
+        unset($authData['hash']);
+        ksort($authData);
+
+        $checkString = collect($authData)
+            ->filter(static fn ($value) => filled($value))
+            ->map(static fn ($value, $key) => $key . '=' . $value)
+            ->implode("\n");
+
+        $secretKey = hash('sha256', $botToken, true);
+        $calculatedHash = hash_hmac('sha256', $checkString, $secretKey);
+
+        if (! hash_equals($calculatedHash, $receivedHash)) {
+            return null;
+        }
+
+        if ((int) $authData['auth_date'] < now()->subMinutes(10)->timestamp) {
+            return null;
+        }
+
+        $fullName = trim(implode(' ', array_filter([
+            $authData['first_name'] ?? null,
+            $authData['last_name'] ?? null,
+        ])));
+
+        return [
+            'id' => (int) $authData['id'],
+            'name' => $fullName !== '' ? $fullName : ((string) ($authData['username'] ?? 'Telegram User')),
+            'username' => filled($authData['username'] ?? null) ? (string) $authData['username'] : null,
+            'photo_url' => filled($authData['photo_url'] ?? null) ? (string) $authData['photo_url'] : null,
+        ];
+    }
+
+    protected function telegramPlaceholderEmail(int $telegramId): string
+    {
+        return 'telegram_' . $telegramId . '@telegram.local';
     }
 
     protected function validatedRedirect(?string $redirectTo): ?string

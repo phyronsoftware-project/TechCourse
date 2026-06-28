@@ -27,7 +27,8 @@ RUN apk add --no-cache \
     unzip \
     git \
     mysql-client \
-    nginx
+    nginx \
+    ffmpeg
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) pdo_mysql mbstring intl gd zip bcmath
@@ -39,6 +40,7 @@ COPY --from=vendor /app/vendor ./vendor
 COPY --from=frontend /app/public/build ./public/build
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 COPY docker/app/entrypoint.sh /usr/local/bin/app-entrypoint
+COPY docker/app/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 
 RUN chmod +x /usr/local/bin/app-entrypoint \
     && rm -f bootstrap/cache/*.php \

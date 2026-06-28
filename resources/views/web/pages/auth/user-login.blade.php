@@ -292,16 +292,101 @@
                 box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
             }
 
-            .auth-social--google i {
-                color: #ea4335;
+            .auth-social__icon {
+                width: 56px;
+                height: 56px;
+                border-radius: 999px;
+                border: 1.5px solid var(--field-border);
+                background: #ffffff;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+                overflow: hidden;
             }
 
-            .auth-social--facebook i {
-                color: #1877f2;
+            .auth-social__icon img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
             }
 
-            .auth-social--github i {
-                color: #111827;
+            .auth-social--telegram {
+                appearance: none;
+            }
+
+            .auth-social--telegram[disabled] {
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+
+            .auth-telegram-modal {
+                position: fixed;
+                inset: 0;
+                z-index: 1000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 16px;
+                background: rgba(15, 23, 42, 0.48);
+            }
+
+            .auth-telegram-modal.is-open {
+                display: flex;
+            }
+
+            .auth-telegram-modal__card {
+                width: min(420px, 100%);
+                border-radius: 24px;
+                background: #ffffff;
+                border: 1px solid var(--card-border);
+                box-shadow: 0 22px 60px rgba(15, 23, 42, 0.18);
+                padding: 22px 20px;
+            }
+
+            .auth-telegram-modal__head {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 12px;
+            }
+
+            .auth-telegram-modal__title {
+                margin: 0;
+                font-family: var(--font-heading);
+                font-size: 18px;
+            }
+
+            .auth-telegram-modal__copy {
+                margin: 8px 0 0;
+                color: var(--text-soft);
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+            .auth-telegram-modal__close {
+                border: 0;
+                background: transparent;
+                color: var(--text-soft);
+                font-size: 24px;
+                line-height: 1;
+                cursor: pointer;
+            }
+
+            .auth-telegram-modal__body {
+                margin-top: 18px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                text-align: center;
+            }
+
+            .auth-telegram-modal__note {
+                margin: 0;
+                color: var(--text-soft);
+                font-size: 13px;
+                line-height: 1.6;
             }
 
             .auth-switch {
@@ -414,6 +499,11 @@
                     font-size: 22px;
                 }
 
+                .auth-social__icon {
+                    width: 50px;
+                    height: 50px;
+                }
+
                 .auth-submit {
                     min-height: 60px;
                     border-radius: 20px;
@@ -443,7 +533,8 @@
         @php
             $googleRoute = route('web.google.redirect', array_filter(['redirect' => $redirectTo ?? null]));
             $facebookRoute = route('web.facebook.redirect', array_filter(['redirect' => $redirectTo ?? null]));
-            $githubRoute = route('web.github.redirect', array_filter(['redirect' => $redirectTo ?? null]));
+            $telegramRoute = route('web.telegram.callback', array_filter(['redirect' => $redirectTo ?? null]));
+            $telegramBotName = trim((string) config('services.telegram.bot_name'));
         @endphp
         <main class="auth-page">
             <section class="auth-card">
@@ -522,17 +613,23 @@
 
                         <div class="auth-social-stack">
                             <a href="{{ $googleRoute }}" class="auth-social auth-social--google">
-                                <i class="fa-brands fa-google"></i>
+                                <span class="auth-social__icon">
+                                    <img src="{{ asset('Logo-Socail/google.png') }}" alt="Google">
+                                </span>
                                 <span>Google</span>
                             </a>
                             <a href="{{ $facebookRoute }}" class="auth-social auth-social--facebook">
-                                <i class="fa-brands fa-facebook-f"></i>
+                                <span class="auth-social__icon">
+                                    <img src="{{ asset('Logo-Socail/communication.png') }}" alt="Facebook">
+                                </span>
                                 <span>Facebook</span>
                             </a>
-                            <a href="{{ $githubRoute }}" class="auth-social auth-social--github">
-                                <i class="fa-brands fa-github"></i>
-                                <span>Github</span>
-                            </a>
+                            <button type="button" class="auth-social auth-social--telegram" data-telegram-open @disabled($telegramBotName === '')>
+                                <span class="auth-social__icon">
+                                    <img src="{{ asset('Logo-Socail/telegram.png') }}" alt="Telegram">
+                                </span>
+                                <span>Telegram</span>
+                            </button>
                         </div>
 
                         <div class="auth-switch">
@@ -590,17 +687,23 @@
 
                         <div class="auth-social-stack">
                             <a href="{{ $googleRoute }}" class="auth-social auth-social--google">
-                                <i class="fa-brands fa-google"></i>
+                                <span class="auth-social__icon">
+                                    <img src="{{ asset('Logo-Socail/google.png') }}" alt="Google">
+                                </span>
                                 <span>Google</span>
                             </a>
                             <a href="{{ $facebookRoute }}" class="auth-social auth-social--facebook">
-                                <i class="fa-brands fa-facebook-f"></i>
+                                <span class="auth-social__icon">
+                                    <img src="{{ asset('Logo-Socail/communication.png') }}" alt="Facebook">
+                                </span>
                                 <span>Facebook</span>
                             </a>
-                            <a href="{{ $githubRoute }}" class="auth-social auth-social--github">
-                                <i class="fa-brands fa-github"></i>
-                                <span>Github</span>
-                            </a>
+                            <button type="button" class="auth-social auth-social--telegram" data-telegram-open @disabled($telegramBotName === '')>
+                                <span class="auth-social__icon">
+                                    <img src="{{ asset('Logo-Socail/telegram.png') }}" alt="Telegram">
+                                </span>
+                                <span>Telegram</span>
+                            </button>
                         </div>
 
                         <div class="auth-switch">
@@ -611,6 +714,32 @@
                 </div>
             </section>
         </main>
+        <div class="auth-telegram-modal" data-telegram-modal aria-hidden="true">
+            <div class="auth-telegram-modal__card">
+                <div class="auth-telegram-modal__head">
+                    <div>
+                        <h2 class="auth-telegram-modal__title">{{ __('Login with Telegram') }}</h2>
+                        <p class="auth-telegram-modal__copy">{{ __('Continue with the official Telegram widget, then we will return you to TechCourse automatically.') }}</p>
+                    </div>
+                    <button type="button" class="auth-telegram-modal__close" data-telegram-close aria-label="{{ __('Close') }}">&times;</button>
+                </div>
+
+                <div class="auth-telegram-modal__body">
+                    @if ($telegramBotName !== '')
+                        <script async src="https://telegram.org/js/telegram-widget.js?22"
+                            data-telegram-login="{{ $telegramBotName }}"
+                            data-size="large"
+                            data-radius="16"
+                            data-userpic="false"
+                            data-auth-url="{{ $telegramRoute }}"
+                            data-request-access="write"></script>
+                        <p class="auth-telegram-modal__note">{{ __('Bot domain and callback must match your current local URL exactly.') }}</p>
+                    @else
+                        <p class="auth-telegram-modal__copy">{{ __('Telegram bot config is empty. Please add TELEGRAM_BOT_NAME and TELEGRAM_BOT_TOKEN in your .env first.') }}</p>
+                    @endif
+                </div>
+            </div>
+        </div>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
@@ -628,6 +757,39 @@
                         icon.className = showing ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
                     });
                 });
+
+                const telegramModal = document.querySelector('[data-telegram-modal]');
+
+                document.querySelectorAll('[data-telegram-open]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        if (!telegramModal || button.disabled) {
+                            return;
+                        }
+
+                        telegramModal.classList.add('is-open');
+                        telegramModal.setAttribute('aria-hidden', 'false');
+                    });
+                });
+
+                document.querySelectorAll('[data-telegram-close]').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        if (!telegramModal) {
+                            return;
+                        }
+
+                        telegramModal.classList.remove('is-open');
+                        telegramModal.setAttribute('aria-hidden', 'true');
+                    });
+                });
+
+                if (telegramModal) {
+                    telegramModal.addEventListener('click', (event) => {
+                        if (event.target === telegramModal) {
+                            telegramModal.classList.remove('is-open');
+                            telegramModal.setAttribute('aria-hidden', 'true');
+                        }
+                    });
+                }
             });
         </script>
     </body>

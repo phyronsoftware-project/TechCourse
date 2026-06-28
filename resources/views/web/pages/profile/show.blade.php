@@ -405,6 +405,42 @@
             border: 1px solid #e7eef5;
         }
 
+        .profile-order__product {
+            align-items: flex-start;
+        }
+
+        .profile-order__product-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .profile-order__product-thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: 1px solid #e2eaf3;
+            background: #f8fbff;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .profile-order__product-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .profile-order__product-fallback {
+            color: #94a3b8;
+            font-size: 18px;
+        }
+
         .profile-order__course-info {
             min-width: 0;
         }
@@ -571,6 +607,10 @@
                         <span>{{ __('Bought Courses') }}</span>
                         <strong>{{ $orders->flatMap->items->count() }}</strong>
                     </div>
+                    <div class="profile-stat-item">
+                        <span>{{ __('Bought Products') }}</span>
+                        <strong>{{ $shopOrders->flatMap->items->sum('qty') }}</strong>
+                    </div>
                 </div>
 
                 <div class="profile-side-action">
@@ -584,6 +624,7 @@
                         <span class="profile-tab"><button type="button" class="profile-tab-btn is-active" data-profile-tab="account">{{ __('Account Settings') }}</button></span>
                         <span class="profile-tab"><button type="button" class="profile-tab-btn" data-profile-tab="password">{{ __('Change Password') }}</button></span>
                         <span class="profile-tab"><button type="button" class="profile-tab-btn" data-profile-tab="history">{{ __('Bought Course History') }}</button></span>
+                        <span class="profile-tab"><button type="button" class="profile-tab-btn" data-profile-tab="shop-history">{{ __('Bought Product History') }}</button></span>
                         <span class="profile-tab"><button type="button" class="profile-tab-btn" data-profile-tab="liked">{{ __('Liked Courses') }}</button></span>
                         <span class="profile-tab"><button type="button" class="profile-tab-btn" data-profile-tab="saved">{{ __('Saved Courses') }}</button></span>
                     </div>
@@ -619,6 +660,36 @@
                                 <div class="profile-field">
                                     <label for="profile_phone">{{ __('Phone') }}</label>
                                     <input id="profile_phone" type="text" name="phone" value="{{ old('phone', $user->phone) }}">
+                                </div>
+                            @endif
+
+                            @if ($supportsAddress)
+                                <div class="profile-field">
+                                    <label for="profile_address">{{ __('Address') }}</label>
+                                    <input id="profile_address" type="text" name="address" value="{{ old('address', $user->address) }}">
+                                </div>
+                            @endif
+
+                            <div class="profile-form-grid profile-form-grid--2">
+                                @if ($supportsCity)
+                                    <div class="profile-field">
+                                        <label for="profile_city">{{ __('City') }}</label>
+                                        <input id="profile_city" type="text" name="city" value="{{ old('city', $user->city) }}">
+                                    </div>
+                                @endif
+
+                                @if ($supportsProvince)
+                                    <div class="profile-field">
+                                        <label for="profile_province">{{ __('Province') }}</label>
+                                        <input id="profile_province" type="text" name="province" value="{{ old('province', $user->province) }}">
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if ($supportsPostalCode)
+                                <div class="profile-field">
+                                    <label for="profile_postal_code">{{ __('Postal Code') }}</label>
+                                    <input id="profile_postal_code" type="text" name="postal_code" value="{{ old('postal_code', $user->postal_code) }}">
                                 </div>
                             @endif
 
@@ -731,6 +802,71 @@
                                                     <span class="profile-course-price">{{ $order->currency ?: 'USD' }} {{ number_format((float) $item->price, 2) }}</span>
                                                     @if ($item->course)
                                                         <a href="{{ route('courses.show', $item->course->slug ?: $item->course->id) }}" class="profile-course-link">{{ __('View Course') }}</a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <div class="profile-card profile-history profile-panel" data-profile-panel="shop-history" hidden>
+                    <div class="profile-history-head">
+                        <div>
+                            <h2>{{ __('Bought Product History') }}</h2>
+                            <p>{{ __('Review your shopping purchase records and open the product pages you already bought.') }}</p>
+                        </div>
+                    </div>
+
+                    @if ($shopOrders->isEmpty())
+                        <div class="profile-empty">{{ __('No product orders yet. Once you buy products, your history will appear here.') }}</div>
+                    @else
+                        <div class="profile-order-list">
+                            @foreach ($shopOrders as $shopOrder)
+                                <div class="profile-order">
+                                    <div class="profile-order__top">
+                                        <div>
+                                            <h3>{{ __('Order') }}: {{ $shopOrder->order_no ?: ('#' . $shopOrder->id) }}</h3>
+                                            <div class="profile-order__meta">
+                                                <span>{{ __('Date') }}: {{ \Illuminate\Support\Carbon::parse($shopOrder->created_at)->format('d M Y h:i A') }}</span>
+                                                <span>{{ __('Amount') }}: {{ $shopOrder->currency ?: 'USD' }} {{ number_format((float) $shopOrder->total_amount, 2) }}</span>
+                                                @if ($shopOrder->payment_method)
+                                                    <span>{{ __('Payment') }}: {{ strtoupper((string) $shopOrder->payment_method) }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <span class="profile-order__badge">{{ ucfirst((string) ($shopOrder->status ?: 'pending')) }}</span>
+                                    </div>
+
+                                    <div class="profile-order__courses">
+                                        @foreach ($shopOrder->items as $item)
+                                            <div class="profile-order__course profile-order__product">
+                                                <div class="profile-order__product-main">
+                                                    <div class="profile-order__product-thumb">
+                                                        @if ($item->image_url)
+                                                            <img src="{{ $item->image_url }}" alt="{{ $item->name }}">
+                                                        @else
+                                                            <span class="profile-order__product-fallback">
+                                                                <i class="fa-solid fa-box-open"></i>
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    <div class="profile-order__course-info">
+                                                        <strong>{{ $item->name }}</strong>
+                                                        <span>{{ __('SKU') }}: {{ $item->sku ?: '-' }}</span>
+                                                        <span>{{ __('Qty') }}: {{ $item->qty }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="profile-order__course-actions">
+                                                    <span class="profile-course-price">{{ $shopOrder->currency ?: 'USD' }} {{ number_format((float) ($item->line_total ?: $item->unit_price), 2) }}</span>
+                                                    @if ($item->slug || $item->product_id)
+                                                        <a href="{{ route('shop.show', $item->slug ?: $item->product_id) }}" class="profile-course-link">{{ __('View Product') }}</a>
                                                     @endif
                                                 </div>
                                             </div>

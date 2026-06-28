@@ -119,22 +119,22 @@
             margin: 0;
             color: #0f172a;
             font-family: var(--font-lato);
-            font-size: 1.6rem;
-            line-height: 1.35;
+            font-size: 1.3rem;
+            line-height: 1.28;
         }
 
         .learning-lesson-title {
-            margin: 10px 0 0;
+            margin: 8px 0 0;
             color: #1e293b;
-            font-size: 1rem;
+            font-size: 0.88rem;
             font-weight: 700;
         }
 
         .learning-description {
-            margin: 14px 0 0;
+            margin: 12px 0 0;
             color: #64748b;
-            font-size: 14px;
-            line-height: 1.8;
+            font-size: 12px;
+            line-height: 1.7;
         }
 
         .learning-actions {
@@ -158,7 +158,7 @@
             background: #f3f6fa;
             border: 1px solid #dbe6f1;
             color: #1e3a5f;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
@@ -177,7 +177,7 @@
             gap: 18px;
             margin-top: 16px;
             color: #64748b;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
         }
 
@@ -459,11 +459,13 @@
         }
 
         .learning-sidebar-card {
-            padding: 0;
+            padding: 10px 10px 12px;
             position: sticky;
             top: 104px;
-            background: #f2f4f7;
+            background: #ffffff;
             overflow: hidden;
+            border-radius: 0;
+            box-shadow: none;
         }
 
         .learning-sidebar-head {
@@ -472,14 +474,15 @@
             justify-content: space-between;
             gap: 12px;
             margin-bottom: 0;
-            padding: 16px 16px 10px;
+            padding: 10px 10px 12px;
             color: #0f172a;
         }
 
         .learning-sidebar-head h3 {
             margin: 0;
             font-family: var(--font-lato);
-            font-size: 14px;
+            font-size: 15px;
+            font-weight: 800;
             line-height: 1.45;
         }
 
@@ -494,7 +497,7 @@
             gap: 10px;
             max-height: 620px;
             overflow-y: auto;
-            padding: 0 10px 10px;
+            padding: 0;
             scrollbar-width: none;
         }
 
@@ -505,27 +508,36 @@
         .learning-lesson-item {
             display: grid;
             grid-template-columns: 86px minmax(0, 1fr) auto;
-            gap: 12px;
+            gap: 14px;
             align-items: start;
             width: 100%;
-            padding: 6px;
-            border-radius: 16px;
+            padding: 12px;
+            border-radius: 0;
             background: #ffffff;
             border: 1px solid #dbe6f1;
             text-decoration: none;
             transition: 0.2s ease;
         }
 
-        .learning-lesson-item:hover,
-        .learning-lesson-item.is-active {
-            background: #eef5fd;
-            border-color: #c7d9ee;
+        .learning-lesson-item:hover {
+            background: #ffffff;
+            border-color: #dbe6f1;
+        }
+
+        .learning-lesson-item.is-active,
+        .learning-lesson-item.is-active:hover,
+        .learning-lesson-item.is-active:focus,
+        .learning-lesson-item.is-active:active,
+        .learning-lesson-item.is-active:visited {
+            background: #ffffff !important;
+            border-color: #dbe6f1 !important;
+            box-shadow: none !important;
         }
 
         .learning-lesson-thumb {
             width: 86px;
             height: 76px;
-            border-radius: 12px;
+            border-radius: 0;
             overflow: hidden;
             background: #17456a;
             border: 1px solid #cfe0ee;
@@ -565,11 +577,13 @@
 
         .learning-lesson-badge {
             min-height: 26px;
-            padding: 0 10px;
+            padding: 0 14px;
             border-radius: 999px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 6px;
+            min-width: 104px;
             background: #e8eef6;
             color: #284768;
             font-size: 11px;
@@ -577,9 +591,22 @@
             white-space: nowrap;
         }
 
-        .learning-lesson-item.is-active .learning-lesson-badge {
-            background: #d6e7ff;
-            color: #1d4ed8;
+        .learning-lesson-badge__mark {
+            font-size: 11px;
+            line-height: 1;
+            font-weight: 800;
+        }
+
+        .learning-lesson-item.is-active .learning-lesson-name,
+        .learning-lesson-item.is-active .learning-lesson-copy,
+        .learning-lesson-item.is-active .learning-lesson-date {
+            color: inherit !important;
+        }
+
+        .learning-lesson-item.is-active .learning-lesson-badge,
+        .learning-lesson-item.is-active:hover .learning-lesson-badge {
+            background: #e8eef6 !important;
+            color: #284768 !important;
         }
 
         .related-shell {
@@ -835,7 +862,16 @@
                                     <div class="learning-lesson-date">{{ optional($lesson->created_at)->format('d M Y') ?: __('New') }}</div>
                                 </div>
                                 <span class="learning-lesson-badge">
-                                    {{ $lesson->is_preview ? __('Free') : (($courseNeedsPayment ?? false) && !($hasCourseAccess ?? false) ? __('Locked') : gmdate('i:s', (int) ($lesson->duration_seconds ?: 0))) }}
+                                    @if ($lesson->is_preview)
+                                        <span class="learning-lesson-badge__mark" aria-hidden="true">•</span>
+                                        {{ __('Free') }}
+                                    @elseif (($courseNeedsPayment ?? false) && !($hasCourseAccess ?? false))
+                                        <span class="learning-lesson-badge__mark" aria-hidden="true">•</span>
+                                        {{ __('Locked') }}
+                                    @else
+                                        <span class="learning-lesson-badge__mark" aria-hidden="true">•</span>
+                                        {{ gmdate('i:s', (int) ($lesson->duration_seconds ?: 0)) }}
+                                    @endif
                                 </span>
                             </a>
                         @endforeach

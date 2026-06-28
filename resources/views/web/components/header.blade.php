@@ -18,8 +18,8 @@
     $navItems = [
         ['label' => __('Home'), 'href' => route('home'), 'active' => request()->routeIs('home')],
         ['label' => __('Course'), 'href' => route('courses.index'), 'active' => request()->routeIs('courses.*')],
+        ['label' => __('Shop'), 'href' => route('shop.index'), 'active' => request()->routeIs('shop.*')],
         ['label' => __('About Us'), 'href' => route('about'), 'active' => request()->routeIs('about')],
-        ['label' => __('Contact'), 'href' => route('contact'), 'active' => request()->routeIs('contact')],
     ];
 
     $authUser = auth()->user();
@@ -35,8 +35,12 @@
             </a>
         </div>
 
-        <button type="button" class="mobile-menu-icon" data-web-menu-toggle aria-label="Open menu">
-            <i class="fa-solid fa-bars"></i>
+        <button type="button" class="mobile-menu-icon" data-web-menu-toggle aria-label="{{ __('Open menu') }}">
+            <span class="mobile-menu-icon__ring">
+                <span class="mobile-menu-icon__line"></span>
+                <span class="mobile-menu-icon__line"></span>
+                <span class="mobile-menu-icon__line"></span>
+            </span>
         </button>
 
         <nav class="navbar offcanvas-right" aria-label="Main navigation">
@@ -118,6 +122,77 @@
 
                             <span class="header-auth-divider" aria-hidden="true"></span>
 
+                            <div class="header-notification" data-web-notification>
+                                <button
+                                    type="button"
+                                    class="header-auth-btn header-auth-btn-icon header-auth-btn-notification"
+                                    data-web-notification-toggle
+                                    data-web-notification-read-url="{{ route('web.notifications.read-all') }}"
+                                    data-web-notification-csrf="{{ csrf_token() }}"
+                                    aria-expanded="false"
+                                    aria-label="{{ __('Notifications') }}"
+                                    title="{{ __('Notifications') }}"
+                                >
+                                    <i class="fa-regular fa-bell"></i>
+                                    @if (($headerNotificationUnreadCount ?? 0) > 0)
+                                        <span class="header-notification__badge" data-web-notification-badge>{{ $headerNotificationUnreadCount > 99 ? '99+' : $headerNotificationUnreadCount }}</span>
+                                    @endif
+                                </button>
+
+                                <div class="header-notification__panel" data-web-notification-panel hidden>
+                                    <div class="header-notification__panel-head">
+                                        <strong>{{ __('Notifications') }}</strong>
+                                        <span>{{ __('New updates will appear here.') }}</span>
+                                    </div>
+
+                                    @if (($headerNotifications ?? collect())->isNotEmpty())
+                                        <div class="header-notification__list">
+                                            @foreach ($headerNotifications as $notification)
+                                                @if ($notification->link_url)
+                                                    <a href="{{ $notification->link_url }}" class="header-notification__item {{ !($notification->is_read ?? false) ? 'is-unread' : '' }}" data-web-menu-close>
+                                                        <span class="header-notification__item-icon header-notification__item-icon--{{ $notification->style }}">
+                                                            <i class="fa-solid fa-bell"></i>
+                                                        </span>
+                                                        <span class="header-notification__item-content">
+                                                            <span class="header-notification__item-head">
+                                                                <strong>{{ $notification->title }}</strong>
+                                                                @if ($notification->created_at)
+                                                                    <small class="header-notification__item-time">{{ $notification->created_at->diffForHumans() }}</small>
+                                                                @endif
+                                                            </span>
+                                                            <span class="header-notification__item-message">{{ $notification->message }}</span>
+                                                        </span>
+                                                    </a>
+                                                @else
+                                                    <div class="header-notification__item {{ !($notification->is_read ?? false) ? 'is-unread' : '' }}">
+                                                        <span class="header-notification__item-icon header-notification__item-icon--{{ $notification->style }}">
+                                                            <i class="fa-solid fa-bell"></i>
+                                                        </span>
+                                                        <span class="header-notification__item-content">
+                                                            <span class="header-notification__item-head">
+                                                                <strong>{{ $notification->title }}</strong>
+                                                                @if ($notification->created_at)
+                                                                    <small class="header-notification__item-time">{{ $notification->created_at->diffForHumans() }}</small>
+                                                                @endif
+                                                            </span>
+                                                            <span class="header-notification__item-message">{{ $notification->message }}</span>
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="header-notification__empty">
+                                            <span class="header-notification__empty-icon">
+                                                <i class="fa-regular fa-bell-slash"></i>
+                                            </span>
+                                            <strong>{{ __('No notifications yet') }}</strong>
+                                            <p>{{ __('You do not have any notifications right now.') }}</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
                             <form action="{{ route('web.logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="header-auth-btn header-auth-btn-logout" aria-label="{{ __('Logout') }}" title="{{ __('Logout') }}">
@@ -129,7 +204,7 @@
 
                         @guest
                             <a href="{{ route('web.login') }}" class="header-auth-btn header-auth-btn-register" data-web-menu-close aria-label="{{ __('Login / Register') }}" title="{{ __('Login / Register') }}">
-                                <i class="fa-solid fa-user-plus"></i>
+                                <i class="fa-solid fa-user" aria-hidden="true"></i>
                                 <span class="header-auth-btn__label">{{ __('Login') }}</span>
                             </a>
                         @endguest

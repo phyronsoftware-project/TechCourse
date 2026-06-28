@@ -47,10 +47,20 @@ return [
         'redirect' => env('FACEBOOK_REDIRECT_URI'),
     ],
 
-    'github' => [
-        'client_id' => env('GITHUB_CLIENT_ID'),
-        'client_secret' => env('GITHUB_CLIENT_SECRET'),
-        'redirect' => env('GITHUB_REDIRECT_URI'),
+    'telegram' => [
+        'bot_name' => env('TELEGRAM_BOT_NAME'),
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'redirect' => env('TELEGRAM_REDIRECT_URI'),
+    ],
+
+    'google_cloud_tts' => [
+        'service_account_json' => env('GOOGLE_CLOUD_TTS_SERVICE_ACCOUNT_JSON'),
+        'service_account_json_path' => env('GOOGLE_CLOUD_TTS_SERVICE_ACCOUNT_JSON_PATH'),
+    ],
+
+    'elevenlabs' => [
+        'api_key' => env('ELEVENLABS_API_KEY'),
+        'model' => env('ELEVENLABS_TTS_MODEL', 'eleven_multilingual_v2'),
     ],
 
     'aba_payway' => [

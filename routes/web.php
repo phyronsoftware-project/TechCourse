@@ -5,14 +5,21 @@ use App\Http\Controllers\Web\CourseController;
 use App\Http\Controllers\Web\CourseCheckoutController;
 use App\Http\Controllers\Web\EngagementController;
 use App\Http\Controllers\Web\LearningController;
+use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\ProfileController;
+use App\Http\Controllers\Web\ShopController;
+use App\Http\Controllers\Web\ShopInteractionController;
 use App\Http\Controllers\Web\UserAuthController;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
-Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
+Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');
+Route::get('/terms-and-conditions', [HomeController::class, 'terms'])->name('terms');
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/shop/{product}', [ShopController::class, 'show'])->name('shop.show');
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
 Route::get('/learning/{course}/{lesson}', [LearningController::class, 'show'])->name('learning.show');
@@ -30,6 +37,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/learning/{course}/{lesson}/comments', [EngagementController::class, 'storeLessonComment'])->name('learning.comments.store');
     Route::put('/learning/{course}/{lesson}/comments/{comment}', [EngagementController::class, 'updateLessonComment'])->name('learning.comments.update');
     Route::delete('/learning/{course}/{lesson}/comments/{comment}', [EngagementController::class, 'destroyLessonComment'])->name('learning.comments.destroy');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('web.notifications.read-all');
+    Route::get('/shop-data/state', [ShopInteractionController::class, 'state'])->name('shop.state');
+    Route::post('/shop-data/cart/toggle', [ShopInteractionController::class, 'toggleCart'])->name('shop.cart.toggle');
+    Route::post('/shop-data/cart/qty', [ShopInteractionController::class, 'updateCartQty'])->name('shop.cart.qty');
+    Route::post('/shop-data/favorite/toggle', [ShopInteractionController::class, 'toggleFavorite'])->name('shop.favorite.toggle');
 });
 
 Route::middleware('guest')->group(function () {
@@ -45,8 +57,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/auth/google/callback', [UserAuthController::class, 'handleGoogleCallback'])->name('web.google.callback');
     Route::get('/auth/facebook/redirect', [UserAuthController::class, 'redirectToFacebook'])->name('web.facebook.redirect');
     Route::get('/auth/facebook/callback', [UserAuthController::class, 'handleFacebookCallback'])->name('web.facebook.callback');
-    Route::get('/auth/github/redirect', [UserAuthController::class, 'redirectToGithub'])->name('web.github.redirect');
-    Route::get('/auth/github/callback', [UserAuthController::class, 'handleGithubCallback'])->name('web.github.callback');
+    Route::get('/auth/telegram/callback', [UserAuthController::class, 'handleTelegramCallback'])->name('web.telegram.callback');
     Route::get('/verify-code', [UserAuthController::class, 'showVerifyCode'])->name('web.verify.code.notice');
     Route::post('/verify-code', [UserAuthController::class, 'verifyCode'])->name('web.verify.code.store');
     Route::post('/verify-code/resend', [UserAuthController::class, 'resendCode'])->name('web.verify.code.resend');

@@ -9,22 +9,24 @@
         } else {
             $pages = [1, 2];
 
-            if ($currentPage > 3) {
+            if ($currentPage <= 3) {
+                $pages[] = 3;
                 $pages[] = '...';
-            }
-
-            if ($currentPage > 2 && $currentPage < $lastPage) {
+            } elseif ($currentPage >= $lastPage - 2) {
+                $pages[] = '...';
+                $pages[] = $lastPage - 2;
+            } else {
+                $pages[] = '...';
                 $pages[] = $currentPage - 1;
                 $pages[] = $currentPage;
-            }
-
-            if ($currentPage < $lastPage - 2) {
                 $pages[] = '...';
             }
 
             $pages[] = $lastPage - 1;
             $pages[] = $lastPage;
-            $pages = array_values(array_unique($pages, SORT_REGULAR));
+            $pages = array_values(array_unique(array_filter($pages, static function ($page) use ($lastPage) {
+                return $page === '...' || ($page >= 1 && $page <= $lastPage);
+            }), SORT_REGULAR));
         }
     @endphp
 
