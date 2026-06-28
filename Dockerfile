@@ -16,6 +16,7 @@ FROM php:8.4-fpm-alpine
 
 RUN apk add --no-cache \
     bash \
+    ca-certificates \
     fcgi \
     freetype-dev \
     icu-dev \
