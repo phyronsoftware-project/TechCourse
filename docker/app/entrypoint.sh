@@ -7,6 +7,15 @@ PORT="${PORT:-80}"
 sed "s/__PORT__/${PORT}/g" /etc/nginx/http.d/default.conf > /tmp/default.conf
 mv /tmp/default.conf /etc/nginx/http.d/default.conf
 
+if [ -f /etc/secrets/ca.pem ]; then
+    cp /etc/secrets/ca.pem /tmp/render-ca.pem
+    chmod 644 /tmp/render-ca.pem
+    export MYSQL_ATTR_SSL_CA=/tmp/render-ca.pem
+    echo "Aiven CA loaded from Render secret file."
+else
+    echo "Aiven CA secret file not found at /etc/secrets/ca.pem."
+fi
+
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 chmod 755 public/logo || true
