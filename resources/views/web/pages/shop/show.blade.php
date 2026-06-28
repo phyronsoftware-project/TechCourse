@@ -1167,6 +1167,13 @@
             transform: translateY(-50%);
         }
 
+        body.menu-open .shop-cart-rail {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-50%) translateX(24px);
+        }
+
         .shop-cart-rail__btn {
             position: relative;
             width: 46px;
@@ -1496,7 +1503,7 @@
 
         @media (max-width: 768px) {
             .shop-detail-page {
-                width: min(100%, calc(100% - 18px));
+                width: min(100%, calc(100% - 8px));
             }
 
             .shop-detail-main {
@@ -1513,24 +1520,60 @@
 
             .shop-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
             }
 
             .shop-card {
-                min-height: 306px;
+                min-height: 286px;
             }
 
             .shop-card__title {
-                min-height: 44px;
-                font-size: 0.8rem;
+                min-height: 36px;
+                font-size: 0.76rem;
             }
 
             .shop-card__media {
-                height: 148px;
+                height: 128px;
             }
 
             .shop-card:hover .shop-card__body {
                 bottom: -28px;
                 transform: translateY(-28px);
+            }
+
+            .shop-card__body {
+                padding: 12px 9px 10px;
+            }
+
+            .shop-card__category {
+                margin-bottom: 4px;
+                font-size: 0.52rem;
+            }
+
+            .shop-card__meta,
+            .shop-card__bottom-row,
+            .shop-card__price-row {
+                gap: 8px;
+            }
+
+            .shop-card__sale {
+                font-size: 0.7rem;
+            }
+
+            .shop-card__cost,
+            .shop-card__save,
+            .shop-card__installment {
+                font-size: 0.58rem;
+            }
+
+            .shop-card__favorite {
+                width: 38px;
+                height: 38px;
+            }
+
+            .shop-card__btn {
+                min-height: 38px;
+                font-size: 0.74rem;
             }
 
             .shop-cart-drawer {
@@ -1557,9 +1600,27 @@
         }
 
         @media (max-width: 560px) {
+            .shop-detail-page {
+                width: min(100%, calc(100% - 6px));
+            }
+
             .shop-grid,
             .shop-favorite-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+
+            .shop-card {
+                min-height: 278px;
+            }
+
+            .shop-card__title {
+                min-height: auto;
+                padding-bottom: 4px;
+            }
+
+            .shop-card__body {
+                padding: 11px 8px 9px;
             }
 
             .shop-detail-thumbs {
