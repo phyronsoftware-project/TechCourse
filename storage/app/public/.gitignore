@@ -1,2 +1,14 @@
 *
 !.gitignore
+!avatars/
+!avatars/**
+!banners/
+!banners/**
+!categories/
+!categories/**
+!courses/
+!courses/**
+!resources/
+!resources/**
+!shop/
+!shop/**
