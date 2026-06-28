@@ -42,6 +42,7 @@ COPY --from=frontend /app/public/build ./public/build
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 COPY docker/app/entrypoint.sh /usr/local/bin/app-entrypoint
 COPY docker/app/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/app/php-fpm-env.conf /usr/local/etc/php-fpm.d/zz-render-env.conf
 
 RUN chmod +x /usr/local/bin/app-entrypoint \
     && rm -f bootstrap/cache/*.php \

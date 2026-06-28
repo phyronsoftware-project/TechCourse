@@ -4,6 +4,9 @@
 
 @php
     $shopProducts = $products instanceof \Illuminate\Contracts\Pagination\Paginator ? $products : collect();
+    $activeCategoryLabel = $categories->firstWhere('slug', $activeCategory)?->name
+        ?? $categories->firstWhere('name', $activeCategory)?->name
+        ?? __('All');
 @endphp
 
 @section('content')
@@ -102,6 +105,23 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+        }
+
+        .shop-category-mobile {
+            display: none;
+        }
+
+        .shop-category-mobile select {
+            width: 100%;
+            min-height: 44px;
+            border-radius: 14px;
+            border: 1px solid #d5e2ef;
+            background: #ffffff;
+            padding: 0 14px;
+            color: #0f172a;
+            font-size: 0.84rem;
+            font-weight: 700;
+            outline: none;
         }
 
         .shop-category-chip {
@@ -668,6 +688,13 @@
             transform: translateY(-50%);
         }
 
+        body.menu-open .shop-cart-rail {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-50%) translateX(24px);
+        }
+
         .shop-cart-rail__btn {
             position: relative;
             width: 46px;
@@ -1069,24 +1096,34 @@
 
         @media (max-width: 768px) {
             .shop-page {
-                width: min(100%, calc(100% - 18px));
+                width: min(100%, calc(100% - 8px));
+                gap: 12px;
+            }
+
+            .shop-category-row {
+                display: none;
+            }
+
+            .shop-category-mobile {
+                display: block;
             }
 
             .shop-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
             }
 
             .shop-card {
-                min-height: 306px;
+                min-height: 286px;
             }
 
             .shop-card__title {
-                min-height: 44px;
-                font-size: 0.8rem;
+                min-height: 36px;
+                font-size: 0.76rem;
             }
 
             .shop-card__media {
-                height: 148px;
+                height: 128px;
             }
 
             .shop-card:hover .shop-card__body {
@@ -1094,8 +1131,44 @@
                 transform: translateY(-28px);
             }
 
+            .shop-card__body {
+                padding: 12px 9px 10px;
+            }
+
+            .shop-card__category {
+                margin-bottom: 4px;
+                font-size: 0.52rem;
+            }
+
+            .shop-card__meta,
+            .shop-card__bottom-row,
+            .shop-card__price-row {
+                gap: 8px;
+            }
+
+            .shop-card__sale {
+                font-size: 0.7rem;
+            }
+
+            .shop-card__cost,
+            .shop-card__save,
+            .shop-card__installment {
+                font-size: 0.58rem;
+            }
+
+            .shop-card__favorite {
+                width: 38px;
+                height: 38px;
+            }
+
+            .shop-card__btn {
+                min-height: 38px;
+                font-size: 0.74rem;
+            }
+
             .shop-search {
                 grid-template-columns: 1fr;
+                padding: 12px;
             }
 
             .shop-gallery-main {
@@ -1118,17 +1191,36 @@
         }
 
         @media (max-width: 560px) {
+            .shop-page {
+                width: min(100%, calc(100% - 6px));
+            }
+
             .shop-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
             }
 
             .shop-card {
-                min-height: 300px;
+                min-height: 278px;
+            }
+
+            .shop-search {
+                padding: 10px;
+                border-radius: 18px;
+            }
+
+            .shop-search input,
+            .shop-search button {
+                min-height: 42px;
+            }
+
+            .shop-card__body {
+                padding: 11px 8px 9px;
             }
 
             .shop-card__title {
                 min-height: auto;
-                padding-bottom: 10px;
+                padding-bottom: 4px;
             }
 
             .shop-gallery-thumbs {
@@ -1157,6 +1249,19 @@
                     <a href="{{ route('shop.index', array_filter(['category' => $category->slug, 'search' => $search ?: null])) }}" class="shop-category-chip {{ $activeCategory === $category->slug ? 'is-active' : '' }}">{{ $category->name }}</a>
                 @endforeach
             </div>
+
+            <form action="{{ route('shop.index') }}" method="GET" class="shop-category-mobile">
+                @if ($search !== '')
+                    <input type="hidden" name="search" value="{{ $search }}">
+                @endif
+
+                <select name="category" aria-label="{{ __('Category') }}" onchange="this.form.submit()">
+                    <option value="">{{ __('All') }}</option>
+                    @foreach ($categories as $category)
+                        <option value="{{ $category->slug }}" @selected($activeCategory === $category->slug)>{{ $category->name }}</option>
+                    @endforeach
+                </select>
+            </form>
         </div>
 
         <div data-shop-results>

@@ -1194,11 +1194,11 @@
 
             .mobile-menu-icon {
                 display: none;
-                width: 58px;
-                height: 58px;
+                width: 50px;
+                height: 50px;
                 padding: 0;
                 border: 1px solid rgba(148, 163, 184, 0.45);
-                border-radius: 20px;
+                border-radius: 18px;
                 background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(226, 232, 240, 0.92));
                 box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12);
                 cursor: pointer;
@@ -1212,18 +1212,18 @@
             .mobile-menu-icon__ring {
                 width: 100%;
                 height: 100%;
-                border-radius: 19px;
+                border-radius: 17px;
                 display: inline-flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                gap: 6px;
+                gap: 5px;
                 background: linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.18));
             }
 
             .mobile-menu-icon__line {
-                width: 24px;
-                height: 4px;
+                width: 20px;
+                height: 3px;
                 border-radius: 999px;
                 background: #1e293b;
                 box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -1247,6 +1247,12 @@
 
             body.menu-open {
                 overflow: hidden;
+            }
+
+            body.menu-open .mobile-menu-icon {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
             }
 
             footer {
