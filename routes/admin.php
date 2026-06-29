@@ -27,7 +27,7 @@ $adminPrefix = 'admin/phyron/v1';
 
 Route::prefix($adminPrefix)->middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
-    Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+    Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:auth')->name('login.store');
 });
 
 Route::prefix($adminPrefix)->middleware('auth')->group(function () {

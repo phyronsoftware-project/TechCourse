@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -51,12 +52,24 @@ class UserAuthController extends Controller
         $user = User::query()->where('email', $credentials['email'])->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            Log::channel('security')->warning('Login failed due to invalid credentials.', [
+                'email' => $credentials['email'],
+                'ip' => $request->ip(),
+                'user_agent' => (string) $request->userAgent(),
+            ]);
+
             return back()
                 ->withErrors(['email' => 'The provided credentials do not match our records.'])
                 ->onlyInput('email');
         }
 
         if (($user->status ?? 'active') !== 'active') {
+            Log::channel('security')->warning('Login attempt blocked for inactive account.', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'ip' => $request->ip(),
+            ]);
+
             return back()
                 ->withErrors(['email' => 'This account is not active.'])
                 ->onlyInput('email');
@@ -557,6 +570,12 @@ class UserAuthController extends Controller
         } catch (Throwable $exception) {
             report($exception);
         }
+
+        Log::channel('security')->warning('reCAPTCHA verification failed.', [
+            'ip' => $request->ip(),
+            'email' => (string) $request->input('email', ''),
+            'route' => optional($request->route())->getName(),
+        ]);
 
         $except = $excludePasswordFields
             ? ['password', 'password_confirmation', 'g-recaptcha-response']

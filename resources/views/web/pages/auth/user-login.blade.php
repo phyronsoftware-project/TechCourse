@@ -190,6 +190,30 @@
                 box-shadow: 0 0 0 4px rgba(24, 149, 188, 0.08);
             }
 
+            .auth-field input.is-invalid {
+                border-color: #f26d85;
+                box-shadow: none;
+            }
+
+            .auth-field-error {
+                display: none;
+                margin-top: 6px;
+                color: #d62849;
+                font-size: 11px;
+                line-height: 1.45;
+                font-weight: 400;
+            }
+
+            .auth-field-error.is-visible {
+                display: block;
+            }
+
+            .auth-captcha-wrap {
+                display: grid;
+                justify-items: start;
+                gap: 6px;
+            }
+
             .auth-helper-row {
                 display: flex;
                 align-items: center;
@@ -205,8 +229,20 @@
             }
 
             .auth-captcha .g-recaptcha {
-                transform: scale(0.92);
+                transform: none;
                 transform-origin: left top;
+            }
+
+            .auth-captcha-error {
+                display: none;
+                color: #d62849;
+                font-size: 11px;
+                line-height: 1.45;
+                font-weight: 400;
+            }
+
+            .auth-captcha-error.is-visible {
+                display: block;
             }
 
             .auth-remember {
@@ -582,7 +618,7 @@
                             </div>
                         @endif
 
-                        <form action="{{ route('web.register.store') }}" method="POST" class="auth-form">
+                        <form action="{{ route('web.register.store') }}" method="POST" class="auth-form" novalidate data-auth-validate>
                             @csrf
                             @if (!empty($redirectTo))
                                 <input type="hidden" name="redirect" value="{{ $redirectTo }}">
@@ -593,17 +629,20 @@
                                     <div class="auth-field">
                                         <label for="register_name">{{ __('Full Name') }}</label>
                                         <input id="register_name" type="text" name="name" value="{{ old('name') }}" placeholder="{{ __('Enter your full name') }}" required>
+                                        <div class="auth-field-error" data-field-error></div>
                                     </div>
 
                                     <div class="auth-field">
                                         <label for="register_phone">{{ __('Phone') }}</label>
                                         <input id="register_phone" type="text" name="phone" value="{{ old('phone') }}" placeholder="{{ __('Enter your phone number') }}">
+                                        <div class="auth-field-error" data-field-error></div>
                                     </div>
                                 </div>
 
                                 <div class="auth-field">
                                     <label for="register_email">{{ __('Email') }}</label>
                                     <input id="register_email" type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('Enter your email') }}" required>
+                                    <div class="auth-field-error" data-field-error></div>
                                 </div>
 
                                 <div class="auth-grid-2">
@@ -615,6 +654,7 @@
                                                 <i class="fa-regular fa-eye"></i>
                                             </button>
                                         </div>
+                                        <div class="auth-field-error" data-field-error></div>
                                     </div>
 
                                     <div class="auth-field">
@@ -625,12 +665,16 @@
                                                 <i class="fa-regular fa-eye"></i>
                                             </button>
                                         </div>
+                                        <div class="auth-field-error" data-field-error></div>
                                     </div>
                                 </div>
 
                                 @if ($recaptchaEnabled)
-                                    <div class="auth-captcha">
-                                        <div class="g-recaptcha" data-sitekey="{{ $recaptchaSiteKey }}"></div>
+                                    <div class="auth-captcha-wrap">
+                                        <div class="auth-captcha">
+                                            <div class="g-recaptcha" data-sitekey="{{ $recaptchaSiteKey }}"></div>
+                                        </div>
+                                        <div class="auth-captcha-error" data-captcha-error></div>
                                     </div>
                                 @endif
 
@@ -677,7 +721,7 @@
                             </div>
                         @endif
 
-                        <form action="{{ route('web.login.store') }}" method="POST" class="auth-form">
+                        <form action="{{ route('web.login.store') }}" method="POST" class="auth-form" novalidate data-auth-validate>
                             @csrf
                             @if (!empty($redirectTo))
                                 <input type="hidden" name="redirect" value="{{ $redirectTo }}">
@@ -687,6 +731,7 @@
                                 <div class="auth-field">
                                     <label for="login_email">{{ __('Email') }}</label>
                                     <input id="login_email" type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('Enter your email') }}" required>
+                                    <div class="auth-field-error" data-field-error></div>
                                 </div>
 
                                 <div class="auth-field">
@@ -697,6 +742,7 @@
                                             <i class="fa-regular fa-eye"></i>
                                         </button>
                                     </div>
+                                    <div class="auth-field-error" data-field-error></div>
                                 </div>
 
                                 <div class="auth-helper-row">
@@ -709,8 +755,11 @@
                                 </div>
 
                                 @if ($recaptchaEnabled)
-                                    <div class="auth-captcha">
-                                        <div class="g-recaptcha" data-sitekey="{{ $recaptchaSiteKey }}"></div>
+                                    <div class="auth-captcha-wrap">
+                                        <div class="auth-captcha">
+                                            <div class="g-recaptcha" data-sitekey="{{ $recaptchaSiteKey }}"></div>
+                                        </div>
+                                        <div class="auth-captcha-error" data-captcha-error></div>
                                     </div>
                                 @endif
 
@@ -777,6 +826,89 @@
         </div>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
+                const requiredMessage = @json(__('Please fill out this field first.'));
+                const emailMessage = @json(__('Please enter a valid email address.'));
+                const captchaMessage = @json(__('Please complete reCAPTCHA verification first.'));
+
+                document.querySelectorAll('[data-auth-validate]').forEach((form) => {
+                    const captchaError = form.querySelector('[data-captcha-error]');
+
+                    const setFieldError = (input) => {
+                        const field = input.closest('.auth-field');
+                        const errorBox = field ? field.querySelector('[data-field-error]') : null;
+
+                        if (!field || !errorBox) {
+                            return;
+                        }
+
+                        let message = '';
+
+                        if (input.validity.valueMissing) {
+                            message = requiredMessage;
+                        } else if (input.validity.typeMismatch && input.type === 'email') {
+                            message = emailMessage;
+                        }
+
+                        if (message !== '') {
+                            input.classList.add('is-invalid');
+                            errorBox.textContent = message;
+                            errorBox.classList.add('is-visible');
+                        } else {
+                            input.classList.remove('is-invalid');
+                            errorBox.textContent = '';
+                            errorBox.classList.remove('is-visible');
+                        }
+                    };
+
+                    const setCaptchaError = () => {
+                        if (!captchaError) {
+                            return true;
+                        }
+
+                        const captchaResponse = form.querySelector('[name="g-recaptcha-response"]');
+                        const hasCaptcha = captchaResponse && captchaResponse.value.trim() !== '';
+
+                        if (hasCaptcha) {
+                            captchaError.textContent = '';
+                            captchaError.classList.remove('is-visible');
+
+                            return true;
+                        }
+
+                        captchaError.textContent = captchaMessage;
+                        captchaError.classList.add('is-visible');
+
+                        return false;
+                    };
+
+                    form.querySelectorAll('input').forEach((input) => {
+                        input.addEventListener('input', () => setFieldError(input));
+                        input.addEventListener('blur', () => setFieldError(input));
+                    });
+
+                    form.addEventListener('submit', (event) => {
+                        let firstInvalid = null;
+
+                        form.querySelectorAll('input[required], input[type=\"email\"]').forEach((input) => {
+                            setFieldError(input);
+
+                            if (!input.checkValidity() && !firstInvalid) {
+                                firstInvalid = input;
+                            }
+                        });
+
+                        const captchaValid = setCaptchaError();
+
+                        if (firstInvalid || !captchaValid) {
+                            event.preventDefault();
+
+                            if (firstInvalid) {
+                                firstInvalid.focus();
+                            }
+                        }
+                    });
+                });
+
                 document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
                     toggle.addEventListener('click', () => {
                         const wrap = toggle.closest('.auth-password-wrap');
