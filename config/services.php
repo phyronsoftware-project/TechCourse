@@ -53,6 +53,12 @@ return [
         'redirect' => env('TELEGRAM_REDIRECT_URI'),
     ],
 
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY'),
+        'verify_url' => env('RECAPTCHA_VERIFY_URL', 'https://www.google.com/recaptcha/api/siteverify'),
+    ],
+
     'google_cloud_tts' => [
         'service_account_json' => env('GOOGLE_CLOUD_TTS_SERVICE_ACCOUNT_JSON'),
         'service_account_json_path' => env('GOOGLE_CLOUD_TTS_SERVICE_ACCOUNT_JSON_PATH'),

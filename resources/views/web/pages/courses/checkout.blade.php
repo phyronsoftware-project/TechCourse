@@ -541,7 +541,7 @@
         <div class="khqr-modal__backdrop" data-khqr-close></div>
 
         <div class="khqr-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="khqr-modal-title">
-            <button type="button" class="khqr-modal__close" data-khqr-close aria-label="Close">
+            <button type="button" class="khqr-modal__close" data-khqr-close aria-label="{{ __('Close') }}">
                 <i class="fa-solid fa-xmark"></i>
             </button>
 

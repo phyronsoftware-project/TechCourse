@@ -16,13 +16,13 @@
         </div>
 
         <div class="fo1 footer-download-panel">
-            <h3>ទាញយកកម្មវិធី TechCourse</h3>
+            <h3>{{ __('Download TechCourse App') }}</h3>
             <div class="footer-store-links footer-store-links--panel">
-                <a href="#" aria-label="Download on the App Store">
-                    <img src="{{ asset('ABA_Images/appstore.png') }}" alt="Download on the App Store">
+                <a href="#" aria-label="{{ __('Download on the App Store') }}">
+                    <img src="{{ asset('ABA_Images/appstore.png') }}" alt="{{ __('Download on the App Store') }}">
                 </a>
-                <a href="#" aria-label="Get it on Google Play">
-                    <img src="{{ asset('ABA_Images/Playstore.png') }}" alt="Get it on Google Play">
+                <a href="#" aria-label="{{ __('Get it on Google Play') }}">
+                    <img src="{{ asset('ABA_Images/Playstore.png') }}" alt="{{ __('Get it on Google Play') }}">
                 </a>
             </div>
         </div>

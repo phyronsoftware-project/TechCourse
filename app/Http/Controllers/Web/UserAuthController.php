@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -42,6 +43,10 @@ class UserAuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
+
+        if ($recaptchaRedirect = $this->validateRecaptcha($request)) {
+            return $recaptchaRedirect;
+        }
 
         $user = User::query()->where('email', $credentials['email'])->first();
 
@@ -98,6 +103,10 @@ class UserAuthController extends Controller
             'phone' => ['nullable', 'string', 'max:50'],
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
+
+        if ($recaptchaRedirect = $this->validateRecaptcha($request, true)) {
+            return $recaptchaRedirect;
+        }
 
         $payload = [
             'name' => $data['name'],
@@ -515,6 +524,59 @@ class UserAuthController extends Controller
         }
 
         return redirect()->route('home');
+    }
+
+    protected function validateRecaptcha(Request $request, bool $excludePasswordFields = false): ?RedirectResponse
+    {
+        if (! $this->recaptchaEnabled()) {
+            return null;
+        }
+
+        $request->validate([
+            'g-recaptcha-response' => ['required', 'string'],
+        ], [
+            'g-recaptcha-response.required' => __('Please complete reCAPTCHA verification first.'),
+        ]);
+
+        try {
+            $response = Http::asForm()->timeout(10)->post(
+                (string) config('services.recaptcha.verify_url'),
+                [
+                    'secret' => (string) config('services.recaptcha.secret_key'),
+                    'response' => (string) $request->input('g-recaptcha-response'),
+                    'remoteip' => (string) $request->ip(),
+                ],
+            );
+
+            $payload = $response->json();
+            $verified = is_array($payload) && (bool) ($payload['success'] ?? false);
+
+            if ($verified) {
+                return null;
+            }
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
+        $except = $excludePasswordFields
+            ? ['password', 'password_confirmation', 'g-recaptcha-response']
+            : ['password', 'g-recaptcha-response'];
+
+        return back()
+            ->withErrors(['captcha' => __('reCAPTCHA verification failed. Please try again.')])
+            ->withInput($request->except($except));
+    }
+
+    protected function recaptchaEnabled(): bool
+    {
+        $siteKey = trim((string) config('services.recaptcha.site_key'));
+        $secretKey = trim((string) config('services.recaptcha.secret_key'));
+
+        if ($siteKey === '' || $secretKey === '') {
+            return false;
+        }
+
+        return $siteKey !== 'your_site_key' && $secretKey !== 'your_secret_key';
     }
 
     protected function redirectToSocialProvider(string $provider): RedirectResponse

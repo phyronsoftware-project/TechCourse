@@ -10,6 +10,13 @@
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Noto+Sans+Khmer:wght@400;500;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        @php
+            $recaptchaSiteKey = trim((string) config('services.recaptcha.site_key'));
+            $recaptchaEnabled = $recaptchaSiteKey !== '' && $recaptchaSiteKey !== 'your_site_key';
+        @endphp
+        @if ($recaptchaEnabled)
+            <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+        @endif
 
         <style>
             :root {
@@ -52,37 +59,37 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                padding: 28px 16px;
+                padding: 22px 16px;
             }
 
             .auth-card {
-                width: min(550px, 100%);
+                width: min(500px, 100%);
                 padding: 0;
             }
 
             .auth-panel {
                 width: 100%;
-                min-height: 577px;
+                min-height: 520px;
                 background: var(--card-bg);
                 border: 1px solid var(--card-border);
-                border-radius: 24px;
+                border-radius: 22px;
                 box-shadow: 0 18px 44px rgba(15, 23, 42, 0.06);
-                padding: 26px 28px 24px;
+                padding: 20px 22px 20px;
             }
 
             .auth-title {
                 margin: 0;
                 font-family: var(--font-heading);
-                font-size: 18px;
+                font-size: 16px;
                 line-height: 1.2;
                 color: var(--text-strong);
             }
 
             .auth-copy {
-                margin: 12px 0 0;
+                margin: 8px 0 0;
                 max-width: 620px;
                 color: var(--text-soft);
-                font-size: 14px;
+                font-size: 12px;
                 line-height: 1.5;
             }
 
@@ -107,39 +114,39 @@
             }
 
             .auth-form {
-                margin-top: 22px;
+                margin-top: 16px;
             }
 
             .auth-grid {
                 display: grid;
-                gap: 18px;
+                gap: 14px;
             }
 
             .auth-grid-2 {
                 display: grid;
                 grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 18px;
+                gap: 14px;
             }
 
             .auth-field label {
                 display: block;
-                margin-bottom: 8px;
+                margin-bottom: 6px;
                 color: var(--text-strong);
                 font-family: var(--font-heading);
-                font-size: 16px;
+                font-size: 14px;
                 font-weight: 700;
                 line-height: 1.2;
             }
 
             .auth-field input {
                 width: 100%;
-                min-height: 54px;
-                padding: 0 18px;
-                border-radius: 16px;
+                min-height: 46px;
+                padding: 0 15px;
+                border-radius: 14px;
                 border: 1.5px solid var(--field-border);
                 background: #ffffff;
                 color: var(--text-strong);
-                font-size: 15px;
+                font-size: 13px;
                 outline: none;
                 transition: border-color 0.2s ease, box-shadow 0.2s ease;
             }
@@ -149,16 +156,16 @@
             }
 
             .auth-password-wrap input {
-                padding-right: 52px;
+                padding-right: 44px;
             }
 
             .auth-password-toggle {
                 position: absolute;
                 top: 50%;
-                right: 16px;
+                right: 12px;
                 transform: translateY(-50%);
-                width: 28px;
-                height: 28px;
+                width: 24px;
+                height: 24px;
                 border: 0;
                 background: transparent;
                 color: #6b7f99;
@@ -170,7 +177,7 @@
             }
 
             .auth-password-toggle i {
-                font-size: 16px;
+                font-size: 14px;
                 pointer-events: none;
             }
 
@@ -187,41 +194,52 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                gap: 14px;
-                margin-top: 4px;
+                gap: 12px;
+                margin-top: 2px;
+            }
+
+            .auth-captcha {
+                display: flex;
+                justify-content: flex-end;
+                margin-top: 0;
+            }
+
+            .auth-captcha .g-recaptcha {
+                transform: scale(0.92);
+                transform-origin: right top;
             }
 
             .auth-remember {
                 display: inline-flex;
                 align-items: center;
-                gap: 12px;
+                gap: 10px;
                 color: var(--text-soft);
-                font-size: 14px;
+                font-size: 12px;
             }
 
             .auth-remember input {
-                width: 18px;
-                height: 18px;
+                width: 16px;
+                height: 16px;
                 margin: 0;
                 accent-color: var(--primary);
             }
 
             .auth-link {
                 color: var(--primary);
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: 700;
                 text-decoration: none;
             }
 
             .auth-submit {
                 width: 100%;
-                min-height: 56px;
+                min-height: 48px;
                 border: 0;
-                border-radius: 18px;
+                border-radius: 16px;
                 background: var(--primary);
                 color: #ffffff;
                 font-family: var(--font-heading);
-                font-size: 16px;
+                font-size: 14px;
                 font-weight: 700;
                 cursor: pointer;
                 transition: background 0.2s ease, transform 0.2s ease;
@@ -236,10 +254,10 @@
                 display: flex;
                 align-items: center;
                 gap: 14px;
-                margin: 22px 0 14px;
+                margin: 18px 0 12px;
                 color: #7485a1;
                 font-family: var(--font-heading);
-                font-size: 16px;
+                font-size: 14px;
                 font-weight: 700;
             }
 
@@ -257,7 +275,7 @@
                 gap: 10px;
                 align-items: start;
                 justify-items: center;
-                max-width: 360px;
+                max-width: 320px;
                 margin: 0 auto;
             }
 
@@ -273,28 +291,28 @@
                 gap: 10px;
                 color: var(--text-strong);
                 font-family: var(--font-heading);
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: 700;
                 cursor: pointer;
                 text-decoration: none;
             }
 
             .auth-social i {
-                width: 56px;
-                height: 56px;
+                width: 50px;
+                height: 50px;
                 border-radius: 999px;
                 border: 1.5px solid var(--field-border);
                 background: #ffffff;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 24px;
+                font-size: 20px;
                 box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
             }
 
             .auth-social__icon {
-                width: 56px;
-                height: 56px;
+                width: 50px;
+                height: 50px;
                 border-radius: 999px;
                 border: 1.5px solid var(--field-border);
                 background: #ffffff;
@@ -393,7 +411,7 @@
                 margin-top: 12px;
                 text-align: center;
                 color: var(--text-soft);
-                font-size: 14px;
+                font-size: 12px;
             }
 
             .auth-switch a {
@@ -526,6 +544,11 @@
                     gap: 14px;
                     font-size: 20px;
                 }
+
+                .auth-captcha {
+                    justify-content: flex-start;
+                    overflow-x: auto;
+                }
             }
         </style>
     </head>
@@ -605,6 +628,12 @@
                                     </div>
                                 </div>
 
+                                @if ($recaptchaEnabled)
+                                    <div class="auth-captcha">
+                                        <div class="g-recaptcha" data-sitekey="{{ $recaptchaSiteKey }}"></div>
+                                    </div>
+                                @endif
+
                                 <button type="submit" class="auth-submit">{{ __('Register') }}</button>
                             </div>
                         </form>
@@ -678,6 +707,12 @@
 
                                     <a href="{{ route('password.request') }}" class="auth-link">{{ __('Forgot password?') }}</a>
                                 </div>
+
+                                @if ($recaptchaEnabled)
+                                    <div class="auth-captcha">
+                                        <div class="g-recaptcha" data-sitekey="{{ $recaptchaSiteKey }}"></div>
+                                    </div>
+                                @endif
 
                                 <button type="submit" class="auth-submit">{{ __('Login') }}</button>
                             </div>

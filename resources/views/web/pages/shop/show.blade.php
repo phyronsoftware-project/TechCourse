@@ -1884,7 +1884,7 @@
         <div class="shop-khqr-modal__backdrop" data-shop-khqr-close></div>
 
         <div class="shop-khqr-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="shop-khqr-title">
-            <button type="button" class="shop-khqr-modal__close" data-shop-khqr-close aria-label="Close">
+            <button type="button" class="shop-khqr-modal__close" data-shop-khqr-close aria-label="{{ __('Close') }}">
                 <i class="fa-solid fa-xmark"></i>
             </button>
 

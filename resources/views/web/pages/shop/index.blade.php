@@ -1200,6 +1200,11 @@
                 gap: 8px;
             }
 
+            .shop-favorite-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+
             .shop-card {
                 min-height: 278px;
             }
@@ -1225,10 +1230,6 @@
 
             .shop-gallery-thumbs {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .shop-favorite-grid {
-                grid-template-columns: 1fr;
             }
         }
     </style>
