@@ -200,13 +200,13 @@
 
             .auth-captcha {
                 display: flex;
-                justify-content: flex-end;
+                justify-content: flex-start;
                 margin-top: 0;
             }
 
             .auth-captcha .g-recaptcha {
                 transform: scale(0.92);
-                transform-origin: right top;
+                transform-origin: left top;
             }
 
             .auth-remember {
