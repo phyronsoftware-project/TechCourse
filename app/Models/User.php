@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -13,12 +14,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'email', 'phone', 'address', 'city', 'province', 'postal_code', 'avatar', 'telegram_id', 'telegram_username', 'telegram_photo_url', 'role', 'status', 'password', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'phone', 'address', 'city', 'province', 'postal_code', 'avatar', 'telegram_id', 'telegram_username', 'telegram_photo_url', 'role', 'status', 'password', 'email_verified_at', 'notification_muted', 'app_language', 'app_sound_enabled', 'app_vibrate_enabled'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -30,6 +31,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'notification_muted' => 'boolean',
+            'app_sound_enabled' => 'boolean',
+            'app_vibrate_enabled' => 'boolean',
         ];
     }
 

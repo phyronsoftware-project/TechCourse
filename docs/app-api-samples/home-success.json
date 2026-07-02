@@ -1,0 +1,63 @@
+{
+  "success": true,
+  "message": "Home data fetched successfully.",
+  "data": {
+    "banners": [
+      {
+        "id": 2,
+        "title": "Backend Development Course Collection",
+        "subtitle": "Explore practical courses for backend development.",
+        "image_url": "/storage/banners/banner-2.jpg",
+        "button_text": "Start Learning",
+        "target_course_id": 11
+      }
+    ],
+    "categories": [
+      {
+        "id": 1,
+        "name": "Web Development",
+        "slug": "web-development",
+        "description": "HTML, CSS, JavaScript, and full-stack website development.",
+        "image_url": "/storage/categories/web-development.jpg"
+      }
+    ],
+    "featured_courses": [
+      {
+        "id": 11,
+        "title": "Laravel Beginner to Advanced",
+        "slug": "laravel-beginner-to-advanced",
+        "short_description": "Learn Laravel Beginner to Advanced with real project practice.",
+        "description": "Practical Khmer programming course for Laravel Beginner to Advanced.",
+        "thumbnail_url": "/storage/courses/laravel-beginner-to-advanced.jpg",
+        "intro_video_url": "https://www.youtube.com/watch?v=techcourse-11",
+        "level": "beginner",
+        "language": "Khmer",
+        "price": 0,
+        "currency": "USD",
+        "is_free": true,
+        "duration_text": "6 hours",
+        "total_lessons": 10,
+        "total_students": 85,
+        "lessons_count": 10,
+        "resources_count": 0,
+        "reviews_count": 0,
+        "category": {
+          "id": 2,
+          "name": "Backend Development",
+          "slug": "backend-development",
+          "image_url": "/storage/categories/backend-development.jpg"
+        },
+        "creator": {
+          "id": 1,
+          "name": "TechCourse Admin"
+        },
+        "is_liked": false,
+        "is_saved": false,
+        "has_access": false
+      }
+    ],
+    "free_courses": [],
+    "paid_courses": [],
+    "latest_courses": []
+  }
+}

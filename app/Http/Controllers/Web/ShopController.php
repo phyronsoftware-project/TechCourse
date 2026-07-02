@@ -114,10 +114,10 @@ class ShopController extends Controller
             return $path;
         }
 
-        if (str_starts_with($path, 'storage/')) {
-            return asset(ltrim($path, '/'));
-        }
+        $normalizedPath = str_starts_with($path, 'storage/')
+            ? ltrim(substr($path, strlen('storage/')), '/')
+            : ltrim($path, '/');
 
-        return asset('storage/' . ltrim($path, '/'));
+        return route('media.public', ['path' => $normalizedPath]);
     }
 }

@@ -25,7 +25,7 @@ class SocialMediaController extends Controller
                 'platform' => ['nullable', Rule::in(['web', 'app', 'all'])],
             ])->validate();
 
-            $platform = $validated['platform'] ?? 'web';
+            $platform = $validated['platform'] ?? ($request->routeIs('api.app.*') ? 'app' : 'web');
 
             $links = SocialMediaLink::query()
                 ->where('is_active', true)

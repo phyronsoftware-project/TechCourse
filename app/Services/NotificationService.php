@@ -18,6 +18,13 @@ class NotificationService
 
     public function getHeaderNotifications(?User $user, string $channel = 'web', int $limit = 8): array
     {
+        if ($this->notificationsMutedForChannel($user, $channel)) {
+            return [
+                'items' => collect(),
+                'unreadCount' => 0,
+            ];
+        }
+
         if (! $this->tablesReady()) {
             return [
                 'items' => collect(),
@@ -66,6 +73,10 @@ class NotificationService
 
     public function markAllVisibleAsRead(User $user, string $channel = 'web'): int
     {
+        if ($this->notificationsMutedForChannel($user, $channel)) {
+            return 0;
+        }
+
         if (! $this->tablesReady()) {
             return 0;
         }
@@ -227,5 +238,10 @@ class NotificationService
                         ->where('user_id', $user->id);
                 });
         });
+    }
+
+    protected function notificationsMutedForChannel(?User $user, string $channel): bool
+    {
+        return $channel === 'app' && (bool) ($user?->notification_muted ?? false);
     }
 }

@@ -16,6 +16,13 @@ class HomeController extends Controller
         return view('web.pages.home.welcome', [
             'featuredCourses' => $this->featuredCourses(),
             'categories' => $this->categories(),
+            // Provide homepage tracking stats from DB only to keep the section stable.
+            'trackingStats' => [
+                'login_users' => $this->safeCount('users'),
+                'guest_views' => $this->safeCount('website_guest_views'),
+                'courses' => $this->safeCount('courses'),
+                'products' => $this->safeCount('shop_products'),
+            ],
         ]);
     }
 

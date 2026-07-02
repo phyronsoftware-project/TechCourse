@@ -97,11 +97,11 @@ class Course extends Model
                     return $this->thumbnail;
                 }
 
-                if (str_starts_with($this->thumbnail, 'storage/')) {
-                    return '/' . ltrim($this->thumbnail, '/');
-                }
+                $path = str_starts_with($this->thumbnail, 'storage/')
+                    ? ltrim(substr($this->thumbnail, strlen('storage/')), '/')
+                    : ltrim($this->thumbnail, '/');
 
-                return '/storage/' . ltrim($this->thumbnail, '/');
+                return route('media.public', ['path' => $path]);
             },
         );
     }

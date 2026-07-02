@@ -65,10 +65,10 @@ class ShopProduct extends Model
             return $this->image;
         }
 
-        if (str_starts_with($this->image, 'storage/')) {
-            return asset(ltrim($this->image, '/'));
-        }
+        $path = str_starts_with($this->image, 'storage/')
+            ? ltrim(substr($this->image, strlen('storage/')), '/')
+            : ltrim($this->image, '/');
 
-        return asset('storage/' . ltrim($this->image, '/'));
+        return route('media.public', ['path' => $path]);
     }
 }

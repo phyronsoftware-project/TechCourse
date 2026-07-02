@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "message": "Telegram login successful.",
+  "data": {
+    "token_type": "Bearer",
+    "access_token": "2|sample_telegram_token_value",
+    "is_new_user": true,
+    "user": {
+      "id": 20,
+      "name": "Telegram User",
+      "email": "telegram_123456789@telegram.local",
+      "phone": null,
+      "address": null,
+      "city": null,
+      "province": null,
+      "postal_code": null,
+      "avatar": "https://example.com/avatar.jpg",
+      "avatar_url": "https://example.com/avatar.jpg",
+      "role": "user",
+      "status": "active",
+      "email_verified_at": "2026-06-29T00:00:00+00:00"
+    }
+  }
+}

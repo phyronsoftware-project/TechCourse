@@ -38,11 +38,11 @@ class CourseCategory extends Model
                     return $this->image;
                 }
 
-                if (str_starts_with($this->image, 'storage/')) {
-                    return '/' . ltrim($this->image, '/');
-                }
+                $path = str_starts_with($this->image, 'storage/')
+                    ? ltrim(substr($this->image, strlen('storage/')), '/')
+                    : ltrim($this->image, '/');
 
-                return '/storage/' . ltrim($this->image, '/');
+                return route('media.public', ['path' => $path]);
             },
         );
     }

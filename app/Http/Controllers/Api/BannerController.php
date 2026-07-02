@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class BannerController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
             if (!Schema::hasTable('banners')) {
@@ -19,13 +20,15 @@ class BannerController extends Controller
                 ]);
             }
 
+            $platform = $request->routeIs('api.app.*') ? 'app' : 'web';
+
             // Admin banner schedule is currently entered in Cambodia local time.
             // Compare in the same timezone so active slides are not filtered out unexpectedly.
             $now = now('Asia/Phnom_Penh');
 
             $banners = Banner::query()
                 ->with('course')
-                ->where('platform', 'web')
+                ->where('platform', $platform)
                 ->where('is_active', true)
                 ->where(function ($query) use ($now) {
                     $query->whereNull('starts_at')

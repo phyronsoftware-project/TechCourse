@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\EngagementController;
 use App\Http\Controllers\Web\LearningController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\ProfileController;
+use App\Http\Controllers\Web\PublicMediaController;
 use App\Http\Controllers\Web\ShopController;
 use App\Http\Controllers\Web\ShopInteractionController;
 use App\Http\Controllers\Web\UserAuthController;
@@ -18,6 +19,9 @@ Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
 Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');
 Route::get('/terms-and-conditions', [HomeController::class, 'terms'])->name('terms');
+Route::get('/media/public/{path}', [PublicMediaController::class, 'show'])
+    ->where('path', '.*')
+    ->name('media.public');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/{product}', [ShopController::class, 'show'])->name('shop.show');
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');

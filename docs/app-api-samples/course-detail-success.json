@@ -1,0 +1,56 @@
+{
+  "success": true,
+  "message": "Course detail fetched successfully.",
+  "data": {
+    "course": {
+      "id": 11,
+      "title": "Laravel Beginner to Advanced",
+      "slug": "laravel-beginner-to-advanced",
+      "short_description": "Learn Laravel Beginner to Advanced with real project practice.",
+      "description": "Practical Khmer programming course for Laravel Beginner to Advanced.",
+      "thumbnail_url": "/storage/courses/laravel-beginner-to-advanced.jpg",
+      "intro_video_url": "https://www.youtube.com/watch?v=techcourse-11",
+      "level": "beginner",
+      "language": "Khmer",
+      "price": 0,
+      "currency": "USD",
+      "is_free": true,
+      "duration_text": "6 hours",
+      "total_lessons": 10,
+      "total_students": 85,
+      "lessons_count": 10,
+      "resources_count": 0,
+      "reviews_count": 0,
+      "category": {
+        "id": 2,
+        "name": "Backend Development",
+        "slug": "backend-development",
+        "image_url": "/storage/categories/backend-development.jpg"
+      },
+      "creator": {
+        "id": 1,
+        "name": "TechCourse Admin"
+      },
+      "is_liked": false,
+      "is_saved": false,
+      "has_access": false
+    },
+    "lessons": [
+      {
+        "id": 101,
+        "title": "Course Introduction - Part 1",
+        "slug": "laravel-beginner-to-advanced-lesson-1",
+        "description": "Lesson 1 preview.",
+        "video_type": "youtube",
+        "video_url": "https://www.youtube.com/watch?v=techcourse-11-1",
+        "duration_seconds": 660,
+        "is_preview": true,
+        "is_locked": false,
+        "sort_order": 1
+      }
+    ],
+    "resources": [],
+    "reviews": [],
+    "has_access": false
+  }
+}
