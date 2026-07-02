@@ -151,8 +151,8 @@
             margin: 0;
             max-width: 820px;
             color: rgba(241, 245, 249, 0.72);
-            font-size: 0.8rem;
-            line-height: 1.65;
+            font-size: 0.96rem;
+            line-height: 1.7;
             text-align: center;
             box-shadow: none;
         }
@@ -269,9 +269,9 @@
             margin: 0;
             max-width: 180px;
             color: rgba(241, 245, 249, 0.82);
-            font-size: 0.74rem;
+            font-size: 0.96rem;
             font-weight: 600;
-            line-height: 1.5;
+            line-height: 1.7;
             text-align: center;
         }
 
@@ -340,9 +340,10 @@
             max-width: 760px;
             color: #0f172a;
             font-family: var(--font-lato);
-            font-size: clamp(2rem, 4vw, 3.15rem);
-            line-height: 1.08;
-            letter-spacing: -0.03em;
+            font-size: clamp(1.15rem, 2vw, 1.7rem);
+            line-height: 1.12;
+            letter-spacing: -0.02em;
+            font-weight: 800;
         }
 
         .home-services__copy {
@@ -489,8 +490,8 @@
             }
 
             .home-tracking__copy {
-                font-size: 0.72rem;
-                line-height: 1.6;
+                font-size: 0.96rem;
+                line-height: 1.7;
             }
 
             .home-tracking__grid {
