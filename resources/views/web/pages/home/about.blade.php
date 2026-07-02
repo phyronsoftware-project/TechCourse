@@ -3,80 +3,168 @@
 @section('title', __('About TechCourse'))
 
 @php
-    $certificates = [
-        'Certificate in Front-End Web Design',
-        'Certificate in Internship Program',
-        'Certificate in Microsoft Office (Word, Excel, PowerPoint)',
-    ];
+    $isKhmer = app()->getLocale() === 'km';
 
-    $timelineItems = [
-        [
-            'period' => '2026 - Present',
-            'title' => 'App Developer (Flutter)',
-            'meta' => 'Learning mobile app development with real practice',
-            'side' => 'right',
-            'points' => [
-                'Started building mobile applications using Flutter with focus on clean UI, responsive layouts, and reusable widgets.',
-                'Practiced state management, API integration, form handling, and navigation flow for mobile app screens.',
-                'Learned how to connect Flutter apps with back-end services, JSON APIs, and authentication features.',
-                'Improved mobile development skills by working on app structure, component organization, and user experience details.',
+    // Localize static content for the about page.
+    $certificates = $isKhmer
+        ? [
+            'វិញ្ញាបនបត្រ Front-End Web Design',
+            'វិញ្ញាបនបត្រ Internship Program',
+            'វិញ្ញាបនបត្រ Microsoft Office (Word, Excel, PowerPoint)',
+        ]
+        : [
+            'Certificate in Front-End Web Design',
+            'Certificate in Internship Program',
+            'Certificate in Microsoft Office (Word, Excel, PowerPoint)',
+        ];
+
+    // Translate intro content to match the current website locale.
+    $aboutRole = $isKhmer ? 'អ្នកអភិវឌ្ឍន៍ Web / App' : 'Web / App Developer';
+    $aboutExperience = $isKhmer ? 'បទពិសោធន៍ 1 ឆ្នាំ' : '1 Year Experience';
+    $aboutKicker = $isKhmer ? 'អំពីខ្ញុំ' : 'About Me';
+    $aboutObjectiveTitle = $isKhmer ? 'គោលបំណង' : 'Objective';
+    $aboutObjectiveCopy = $isKhmer
+        ? 'ខ្ញុំជា Web Developer ដែលមានបទពិសោធន៍ការងារ 1 ឆ្នាំ ក្នុងការអភិវឌ្ឍ web application ទាំងផ្នែក frontend និង backend។ ខ្ញុំស្រលាញ់ការរៀនបច្ចេកវិទ្យាថ្មីៗ និងបន្តអភិវឌ្ឍសមត្ថភាពផ្ទាល់ខ្លួនជានិច្ច ដើម្បីក្លាយជាអ្នកអភិវឌ្ឍន៍ដែលមានជំនាញខ្ពស់ និងមានវិជ្ជាជីវៈ។'
+        : 'I am a Web Developer with 1 year of work experience in developing web applications on both the frontend and backend. I am passionate about learning new technologies and continuously improving my personal skills to become a highly skilled and professional developer.';
+    $certificateTitle = $isKhmer ? 'វិញ្ញាបនបត្រ' : 'Certificates';
+
+    $timelineItems = $isKhmer
+        ? [
+            [
+                'period' => '2026 - បច្ចុប្បន្ន',
+                'title' => 'អ្នកអភិវឌ្ឍន៍ App (Flutter)',
+                'meta' => 'កំពុងរៀន mobile app development ជាមួយការអនុវត្តពិត',
+                'side' => 'right',
+                'points' => [
+                    'បានចាប់ផ្តើមបង្កើត mobile application ដោយប្រើ Flutter ដោយផ្តោតលើ UI ស្អាត responsive layout និង reusable widgets។',
+                    'បានអនុវត្ត state management, API integration, form handling និង navigation flow សម្រាប់ mobile screens។',
+                    'បានរៀនភ្ជាប់ Flutter app ជាមួយ back-end services, JSON APIs និង authentication features។',
+                    'បានអភិវឌ្ឍជំនាញ mobile development តាមរយៈ app structure, component organization និង user experience details។',
+                ],
             ],
-        ],
-        [
-            'period' => '2025 - Present',
-            'title' => 'Full Stack Developer',
-            'meta' => 'Personal projects and new knowledge',
-            'side' => 'left',
-            'points' => [
-                'Built complete projects mostly using Laravel for the back end.',
-                'Worked on QR Code payments (ABA/Bakong), webhooks, and Telegram Bot services.',
-                'Implemented shopping cart design, OAuth, order systems, notification systems, and guards for authentication management.',
+            [
+                'period' => '2025 - បច្ចុប្បន្ន',
+                'title' => 'Full Stack Developer',
+                'meta' => 'Personal projects និងចំណេះដឹងថ្មីៗ',
+                'side' => 'left',
+                'points' => [
+                    'បានបង្កើត project ពេញលេញជាចម្បងដោយប្រើ Laravel សម្រាប់ back end។',
+                    'បានធ្វើការលើ QR Code payments (ABA/Bakong), webhooks និង Telegram Bot services។',
+                    'បាន implement shopping cart design, OAuth, order systems, notification systems និង guards សម្រាប់ authentication management។',
+                ],
             ],
-        ],
-        [
-            'period' => '2024 - 2025',
-            'title' => 'Back-End Development',
-            'meta' => 'Self-Learning & Project-Based Practice',
-            'side' => 'right',
-            'points' => [
-                'Used Git and GitHub for code management and deploying projects to Vercel.',
-                'Built websites using AJAX and JSON to fetch and send data from MySQL.',
-                'Wrote back-end APIs using PHP (MVC - OOP) and the Laravel framework.',
-                'Connected MySQL with Laravel for CRUD operations and data management.',
-                'Practiced authentication, session handling, form validation, and REST APIs with JSON.',
+            [
+                'period' => '2024 - 2025',
+                'title' => 'Back-End Development',
+                'meta' => 'Self-Learning និង Project-Based Practice',
+                'side' => 'right',
+                'points' => [
+                    'បានប្រើ Git និង GitHub សម្រាប់ code management និង deploy projects ទៅ Vercel។',
+                    'បានបង្កើត website ដោយប្រើ AJAX និង JSON សម្រាប់ fetch និង send data ពី MySQL។',
+                    'បានសរសេរ back-end APIs ដោយប្រើ PHP (MVC - OOP) និង Laravel framework។',
+                    'បានភ្ជាប់ MySQL ជាមួយ Laravel សម្រាប់ CRUD operations និង data management។',
+                    'បានអនុវត្ត authentication, session handling, form validation និង REST APIs ជាមួយ JSON។',
+                ],
             ],
-        ],
-        [
-            'period' => '2023 - 2024',
-            'title' => 'Front-End Development',
-            'meta' => 'Have studied at ETEC and Self-Learning',
-            'side' => 'left',
-            'points' => [
-                'Learned and practiced HTML, CSS, JavaScript, Bootstrap, and jQuery to build smart user interfaces.',
-                'Built websites with responsive design and interactive functions.',
+            [
+                'period' => '2023 - 2024',
+                'title' => 'Front-End Development',
+                'meta' => 'បានសិក្សានៅ ETEC និង Self-Learning',
+                'side' => 'left',
+                'points' => [
+                    'បានរៀន និងអនុវត្ត HTML, CSS, JavaScript, Bootstrap និង jQuery ដើម្បីបង្កើត smart user interfaces។',
+                    'បានបង្កើត website ដែលមាន responsive design និង interactive functions។',
+                ],
             ],
-        ],
-        [
-            'period' => '2022 - 2026',
-            'title' => 'Bachelor of Computer Science',
-            'meta' => 'Royal University of Phnom Penh',
-            'side' => 'right',
-            'points' => [
-                'Studied major computer science subjects such as Data Structures, Web Programming, and System Analysis.',
-                'Focused on a skill that matched my ability, which is Web Programming.',
+            [
+                'period' => '2022 - 2026',
+                'title' => 'បរិញ្ញាបត្រ Computer Science',
+                'meta' => 'សាកលវិទ្យាល័យភូមិន្ទភ្នំពេញ',
+                'side' => 'right',
+                'points' => [
+                    'បានសិក្សាមុខវិជ្ជាសំខាន់ៗក្នុង computer science ដូចជា Data Structures, Web Programming និង System Analysis។',
+                    'បានផ្តោតលើជំនាញដែលសមស្របនឹងសមត្ថភាពខ្លួន គឺ Web Programming។',
+                ],
             ],
-        ],
-        [
-            'period' => '2019 - 2022',
-            'title' => 'High School Diploma',
-            'meta' => 'O Ta Pong High School (Pursat)',
-            'side' => 'left',
-            'points' => [
-                'Focused on science subjects, physics, mathematics, and chemistry.',
-                'Successfully graduated in the 2022 high school national examination.',
+            [
+                'period' => '2019 - 2022',
+                'title' => 'សញ្ញាបត្រមធ្យមសិក្សាទុតិយភូមិ',
+                'meta' => 'វិទ្យាល័យអូរតាប៉ោង (ពោធិ៍សាត់)',
+                'side' => 'left',
+                'points' => [
+                    'បានផ្តោតលើមុខវិជ្ជាវិទ្យាសាស្រ្ត រួមមាន physics, mathematics និង chemistry។',
+                    'បានបញ្ចប់ការសិក្សាជោគជ័យក្នុងការប្រឡងជាតិថ្នាក់ទី 12 ឆ្នាំ 2022។',
+                ],
             ],
-        ],
-    ];
+        ]
+        : [
+            [
+                'period' => '2026 - Present',
+                'title' => 'App Developer (Flutter)',
+                'meta' => 'Learning mobile app development with real practice',
+                'side' => 'right',
+                'points' => [
+                    'Started building mobile applications using Flutter with focus on clean UI, responsive layouts, and reusable widgets.',
+                    'Practiced state management, API integration, form handling, and navigation flow for mobile app screens.',
+                    'Learned how to connect Flutter apps with back-end services, JSON APIs, and authentication features.',
+                    'Improved mobile development skills by working on app structure, component organization, and user experience details.',
+                ],
+            ],
+            [
+                'period' => '2025 - Present',
+                'title' => 'Full Stack Developer',
+                'meta' => 'Personal projects and new knowledge',
+                'side' => 'left',
+                'points' => [
+                    'Built complete projects mostly using Laravel for the back end.',
+                    'Worked on QR Code payments (ABA/Bakong), webhooks, and Telegram Bot services.',
+                    'Implemented shopping cart design, OAuth, order systems, notification systems, and guards for authentication management.',
+                ],
+            ],
+            [
+                'period' => '2024 - 2025',
+                'title' => 'Back-End Development',
+                'meta' => 'Self-Learning & Project-Based Practice',
+                'side' => 'right',
+                'points' => [
+                    'Used Git and GitHub for code management and deploying projects to Vercel.',
+                    'Built websites using AJAX and JSON to fetch and send data from MySQL.',
+                    'Wrote back-end APIs using PHP (MVC - OOP) and the Laravel framework.',
+                    'Connected MySQL with Laravel for CRUD operations and data management.',
+                    'Practiced authentication, session handling, form validation, and REST APIs with JSON.',
+                ],
+            ],
+            [
+                'period' => '2023 - 2024',
+                'title' => 'Front-End Development',
+                'meta' => 'Have studied at ETEC and Self-Learning',
+                'side' => 'left',
+                'points' => [
+                    'Learned and practiced HTML, CSS, JavaScript, Bootstrap, and jQuery to build smart user interfaces.',
+                    'Built websites with responsive design and interactive functions.',
+                ],
+            ],
+            [
+                'period' => '2022 - 2026',
+                'title' => 'Bachelor of Computer Science',
+                'meta' => 'Royal University of Phnom Penh',
+                'side' => 'right',
+                'points' => [
+                    'Studied major computer science subjects such as Data Structures, Web Programming, and System Analysis.',
+                    'Focused on a skill that matched my ability, which is Web Programming.',
+                ],
+            ],
+            [
+                'period' => '2019 - 2022',
+                'title' => 'High School Diploma',
+                'meta' => 'O Ta Pong High School (Pursat)',
+                'side' => 'left',
+                'points' => [
+                    'Focused on science subjects, physics, mathematics, and chemistry.',
+                    'Successfully graduated in the 2022 high school national examination.',
+                ],
+            ],
+        ];
 @endphp
 
 @section('content')
@@ -512,25 +600,21 @@
                 <div class="about-profile__avatar-wrap">
                     <img src="{{ asset('logo/aboutus.png') }}" alt="Phon Phyron" class="about-profile__avatar">
                 </div>
-                <p class="about-profile__role">Web / App Developer</p>
-                <span class="about-profile__experience">1 Year Experience</span>
+                <p class="about-profile__role">{{ $aboutRole }}</p>
+                <span class="about-profile__experience">{{ $aboutExperience }}</span>
             </aside>
 
             <div class="about-profile__content">
                 <div class="about-profile__intro">
                     <div class="about-profile__summary-card about-profile__summary-card--objective">
-                        <span class="about-profile__kicker">About Me</span>
-                        <h2 class="about-profile__title">Objective</h2>
-                        <p class="about-profile__objective">
-                            I am a Web Developer with 1 year of work experience in developing web applications on both the frontend and
-                            backend. I am passionate about learning new technologies and continuously improving my personal skills to
-                            become a highly skilled and professional developer.
-                        </p>
+                        <span class="about-profile__kicker">{{ $aboutKicker }}</span>
+                        <h2 class="about-profile__title">{{ $aboutObjectiveTitle }}</h2>
+                        <p class="about-profile__objective">{{ $aboutObjectiveCopy }}</p>
                     </div>
 
                     <div class="about-profile__summary">
                         <div class="about-profile__summary-card">
-                            <h3>Certificates</h3>
+                            <h3>{{ $certificateTitle }}</h3>
                             <div class="about-profile__cert-list">
                                 @foreach ($certificates as $certificate)
                                     <div class="about-profile__cert-item">

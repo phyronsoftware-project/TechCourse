@@ -3,7 +3,17 @@
 @section('title', $activeLesson->title)
 
 @php
-    $videoUrl = $activeLesson->video_url ?: $course->intro_video_url;
+    // Prefer uploaded lesson video file when lesson uses local upload.
+    $uploadedVideoUrl = null;
+
+    if (($activeLesson->video_type ?? null) === 'upload' && !empty($activeLesson->video_file)) {
+        $videoFilePath = ltrim((string) $activeLesson->video_file, '/');
+        $uploadedVideoUrl = \Illuminate\Support\Str::startsWith($videoFilePath, ['http://', 'https://'])
+            ? $videoFilePath
+            : route('media.public', ['path' => $videoFilePath]);
+    }
+
+    $videoUrl = $uploadedVideoUrl ?: ($activeLesson->video_url ?: $course->intro_video_url);
     $checkoutRoute = route('courses.checkout', $course->slug ?: $course->id);
     $loginRedirectRoute = route('web.login', ['redirect' => $checkoutRoute]);
     $lessonRouteKey = $activeLesson->slug ?: $activeLesson->id;
@@ -638,7 +648,7 @@
                         @if ($embedUrl)
                             <iframe src="{{ $embedUrl }}" title="{{ $activeLesson->title }}" frameborder="0" allowfullscreen></iframe>
                         @elseif ($videoUrl)
-                            <video controls src="{{ $videoUrl }}"></video>
+                            <video controls playsinline preload="metadata" src="{{ $videoUrl }}"></video>
                         @else
                             <div class="lesson-video-empty">{{ __('Video Display') }}</div>
                         @endif

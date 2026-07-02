@@ -12,6 +12,40 @@
     $trackingSectionCopy = $isKhmer
         ? 'មើលចំនួនអ្នកប្រើ guest visits វគ្គសិក្សា និងផលិតផលសរុបក្នុងកន្លែងតែមួយ ដើម្បីតាមដានស្ថានភាពទូទៅរបស់ website បានលឿន។'
         : 'See total users, guest visits, courses, and products in one place for a fast overview of your website activity.';
+    $homeNoticeTitle = $isKhmer ? 'សេចក្ដីជូនដំណឹងសម្រាប់ Test Website' : 'Test Website Notice';
+    $homeNoticeCopy = $isKhmer
+        ? 'Website នេះសម្រាប់សាកល្បងតែប៉ុណ្ណោះ។ បើមានការទូទាត់ ឬប្រតិបត្តិការណាមួយ យើងអាចមិនទទួលយក complaint ឬ issue ពាក់ព័ន្ធនឹង test transaction ទេ។'
+        : 'This website is for testing only. If you make a payment here, we may not accept issues or complaints related to test transactions.';
+
+    $whyChooseTitle = $isKhmer ? 'ហេតុអ្វីជ្រើសយើង' : 'Why Choose Us';
+    $whyChooseCopy = $isKhmer
+        ? 'ចំណុចសំខាន់ខ្លីៗដែលជួយឲ្យអតិថិជន និងអ្នករៀនទុកចិត្តលើ service និង learning flow របស់យើង។'
+        : 'A few clear reasons clients and learners can trust our service and learning flow.';
+    $whyChooseItems = $isKhmer
+        ? [
+            ['icon' => 'fa-solid fa-bolt', 'title' => 'ជំនួយរហ័ស', 'copy' => 'ឆ្លើយតបរហ័ស និងជួយដោះស្រាយបញ្ហាតាមតម្រូវការពិត។'],
+            ['icon' => 'fa-solid fa-diagram-project', 'title' => 'រៀនតាម Project ពិត', 'copy' => 'ផ្តោតលើ project និងការអនុវត្តដែលអាចយកទៅប្រើបាន។'],
+            ['icon' => 'fa-solid fa-mobile-screen', 'title' => 'ប្រើបានល្អលើ Mobile', 'copy' => 'UI ត្រូវបានរៀបចំឲ្យប្រើងាយលើ mobile និង desktop។'],
+            ['icon' => 'fa-solid fa-shield-heart', 'title' => 'សេវាកម្មគួរជាទុកចិត្ត', 'copy' => 'រក្សា flow សាមញ្ញ ស្ថេរភាព និងងាយគ្រប់គ្រងបន្ត។'],
+        ]
+        : [
+            ['icon' => 'fa-solid fa-bolt', 'title' => 'Fast Support', 'copy' => 'Quick response and practical help for real user needs.'],
+            ['icon' => 'fa-solid fa-diagram-project', 'title' => 'Real Project Learning', 'copy' => 'Focused on practical projects and useful implementation.'],
+            ['icon' => 'fa-solid fa-mobile-screen', 'title' => 'Mobile Friendly', 'copy' => 'Layouts designed to work smoothly on phone and desktop.'],
+            ['icon' => 'fa-solid fa-shield-heart', 'title' => 'Trusted Service', 'copy' => 'Simple, stable, and easy-to-maintain product flow.'],
+        ];
+
+    $featuredSectionTitle = $isKhmer ? 'វគ្គសិក្សាណែនាំ' : 'Featured Courses';
+    $featuredSectionCopy = $isKhmer
+        ? 'ជ្រើសមើលវគ្គសិក្សាដែលគួរចាប់ផ្តើម ឬពេញនិយម ដើម្បីចូលមើលបានលឿនពីទំព័រដើម។'
+        : 'Open a few highlighted courses quickly from the homepage.';
+
+    $ctaTitle = $isKhmer ? 'ត្រៀមចាប់ផ្តើមជាមួយយើងមែនទេ?' : 'Ready To Start With Us?';
+    $ctaCopy = $isKhmer
+        ? 'បើអ្នកចង់សាកល្បង service ឬចាប់ផ្តើមរៀន សូមចូលមើល courses ឬទាក់ទងមកយើងដោយផ្ទាល់។'
+        : 'If you want to explore our services or begin learning, open the courses page or contact us directly.';
+    $ctaPrimary = $isKhmer ? 'មើលវគ្គសិក្សា' : 'View Courses';
+    $ctaSecondary = $isKhmer ? 'ទាក់ទងមកយើង' : 'Contact Us';
 
     $trackingItems = [
         [
@@ -99,6 +133,58 @@
             width: 100vw;
             margin-left: calc(50% - 50vw);
             padding: 0 0 24px;
+        }
+
+        .home-notice-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            z-index: 1301;
+            width: min(460px, calc(100vw - 28px));
+            padding: 16px 18px;
+            border-radius: 20px;
+            border: 1px solid #fde68a;
+            background: linear-gradient(180deg, #fff8db, #fff2b8);
+            color: #854d0e;
+            box-shadow: 0 20px 34px rgba(146, 64, 14, 0.12);
+            transform: translate(-50%, -50%);
+            transition: opacity 0.28s ease, transform 0.28s ease;
+        }
+
+        .home-notice-popup.is-hidden {
+            opacity: 0;
+            transform: translate(-50%, calc(-50% - 10px));
+            pointer-events: none;
+        }
+
+        .home-notice-popup__title {
+            margin: 0 0 6px;
+            font-family: var(--font-lato);
+            font-size: 0.94rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .home-notice-popup__copy {
+            margin: 0;
+            font-size: 0.82rem;
+            line-height: 1.65;
+            text-align: center;
+        }
+
+        .home-notice-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1300;
+            background: rgba(15, 23, 42, 0.34);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            transition: opacity 0.28s ease;
+        }
+
+        .home-notice-backdrop.is-hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .home-tracking__inner {
@@ -297,7 +383,7 @@
             position: relative;
             width: min(1280px, calc(100% - 32px));
             margin: 0 auto;
-            padding: 40px 0 72px;
+            padding: 62px 0 104px;
         }
 
         .home-services__inner {
@@ -359,6 +445,239 @@
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 18px;
+        }
+
+        .home-compact-section {
+            width: min(1280px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 0 0 86px;
+        }
+
+        .home-compact-head {
+            display: grid;
+            gap: 8px;
+            justify-items: center;
+            text-align: center;
+            padding-bottom: 16px;
+        }
+
+        .home-compact-head__title {
+            margin: 0;
+            color: #0f172a;
+            font-family: var(--font-lato);
+            font-size: clamp(1.15rem, 2vw, 1.7rem);
+            line-height: 1.12;
+            letter-spacing: -0.02em;
+            font-weight: 800;
+        }
+
+        .home-compact-head__copy {
+            margin: 0;
+            max-width: 720px;
+            color: #64748b;
+            font-size: 0.96rem;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .home-why-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: min(920px, 100%);
+            margin: 0 auto;
+        }
+
+        .home-why-item {
+            border-radius: 20px;
+            border: 1px solid #dde8f3;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 255, 0.98));
+            overflow: hidden;
+            transition: border-color 0.24s ease;
+        }
+
+        .home-why-item:hover {
+            border-color: #cddcf0;
+        }
+
+        .home-why-item summary {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 44px minmax(0, 1fr) 22px;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 18px;
+            cursor: pointer;
+        }
+
+        .home-why-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .home-why-card__icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef4ff;
+            color: #2563eb;
+            font-size: 1rem;
+        }
+
+        .home-why-card__title {
+            margin: 0;
+            color: #0f172a;
+            font-size: 0.92rem;
+            font-weight: 800;
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        .home-why-card__copy {
+            margin: 0;
+            padding: 0 18px 18px 74px;
+            color: #64748b;
+            font-size: 0.86rem;
+            line-height: 1.65;
+        }
+
+        .home-why-item__chevron {
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .home-why-item.is-open .home-why-item__chevron {
+            transform: rotate(180deg);
+        }
+
+        .home-why-item__content {
+            height: 0;
+            overflow: hidden;
+            transition: height 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .home-why-item__content-inner {
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity 0.42s ease, transform 0.42s ease;
+        }
+
+        .home-why-item.is-open .home-why-item__content-inner {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.08s;
+        }
+
+        .home-featured-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .home-featured-card {
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            min-height: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #ffffff;
+            border: 1px solid #dbe6f1;
+            box-shadow: 0 12px 22px rgba(15, 23, 42, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .home-featured-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 28px rgba(15, 23, 42, 0.1);
+        }
+
+        .home-featured-card__media {
+            position: relative;
+            height: 150px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e7eef5;
+        }
+
+        .home-featured-card__media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .home-featured-card__fallback {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+            color: #5b708a;
+            font-size: 34px;
+        }
+
+        .home-featured-card__body {
+            display: grid;
+            gap: 8px;
+            padding: 12px 12px 14px;
+        }
+
+        .home-featured-card__meta {
+            color: #64748b;
+            font-size: 10px;
+        }
+
+        .home-featured-card__title {
+            margin: 0;
+            color: #0f172a;
+            font-size: 0.92rem;
+            line-height: 1.4;
+            font-family: var(--font-lato);
+        }
+
+        .home-featured-card__copy {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            min-height: 40px;
+        }
+
+        .home-featured-card__footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .home-featured-card__price {
+            min-height: 22px;
+            padding: 0 9px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef4ff;
+            color: #1d4ed8;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .home-featured-empty {
+            min-height: 160px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            border-radius: 20px;
+            border: 1px solid #dde8f3;
+            background: #ffffff;
+            color: #64748b;
+            font-size: 0.92rem;
         }
 
         .home-service-card {
@@ -464,12 +783,21 @@
                 width: min(620px, calc(100% - 24px));
             }
 
+            .home-featured-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .home-services__grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
         @media (max-width: 768px) {
+            .home-notice-popup {
+                width: min(420px, calc(100vw - 20px));
+                padding: 14px 14px;
+            }
+
             .home-tracking {
                 padding: 0 0 14px;
             }
@@ -523,7 +851,29 @@
 
             .home-services {
                 width: min(100%, calc(100% - 20px));
-                padding: 24px 0 56px;
+                padding: 36px 0 80px;
+            }
+
+            .home-compact-section {
+                width: min(100%, calc(100% - 20px));
+                padding: 0 0 68px;
+            }
+
+            .home-featured-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .home-compact-head__copy {
+                font-size: 0.9rem;
+            }
+
+            .home-why-item summary {
+                grid-template-columns: 40px minmax(0, 1fr) 20px;
+                padding: 14px 14px;
+            }
+
+            .home-why-card__copy {
+                padding: 0 14px 14px 66px;
             }
 
             .home-services__grid {
@@ -538,6 +888,12 @@
     </style>
 
     <section class="home-tracking" id="home-tracking-section">
+        <div class="home-notice-backdrop" data-home-notice-backdrop></div>
+        <div class="home-notice-popup" data-home-notice-popup>
+            <p class="home-notice-popup__title">{{ $homeNoticeTitle }}</p>
+            <p class="home-notice-popup__copy">{{ $homeNoticeCopy }}</p>
+        </div>
+
         <div class="home-tracking__inner">
             <div class="home-tracking__head">
                 <span class="home-tracking__badge">{{ __('Website Tracking') }}</span>
@@ -596,5 +952,180 @@
             </div>
         </div>
     </section>
+
+    <section class="home-compact-section">
+        <div class="home-compact-head">
+            <h2 class="home-compact-head__title">{{ $whyChooseTitle }}</h2>
+            <p class="home-compact-head__copy">{{ $whyChooseCopy }}</p>
+        </div>
+
+        <div class="home-why-grid">
+            @foreach ($whyChooseItems as $item)
+                <details class="home-why-item {{ $loop->first ? 'is-open' : '' }}" @if($loop->first) open @endif data-why-item>
+                    <summary>
+                        <span class="home-why-card__icon">
+                            <i class="{{ $item['icon'] }}"></i>
+                        </span>
+                        <h3 class="home-why-card__title">{{ $item['title'] }}</h3>
+                        <span class="home-why-item__chevron">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </span>
+                    </summary>
+                    <div class="home-why-item__content" data-why-content>
+                        <div class="home-why-item__content-inner">
+                            <p class="home-why-card__copy">{{ $item['copy'] }}</p>
+                        </div>
+                    </div>
+                </details>
+            @endforeach
+        </div>
+    </section>
+
+    <section class="home-compact-section">
+        <div class="home-compact-head">
+            <h2 class="home-compact-head__title">{{ $featuredSectionTitle }}</h2>
+            <p class="home-compact-head__copy">{{ $featuredSectionCopy }}</p>
+        </div>
+
+        @if ($featuredCourses->isNotEmpty())
+            <div class="home-featured-grid">
+                @foreach ($featuredCourses->take(4) as $course)
+                    @php
+                        $lessonCount = (int) ($course->total_lessons ?: $course->lessons?->count() ?: 0);
+                        $courseCategory = $course->category?->name ?: __('General');
+                        $priceLabel = $course->is_free ? __('Free') : (($course->currency ?: 'USD') . ' ' . number_format((float) $course->price, 2));
+                    @endphp
+                    <a href="{{ route('courses.show', $course->slug ?: $course->id) }}" class="home-featured-card">
+                        <div class="home-featured-card__media">
+                            @if ($course->thumbnail_url)
+                                <img src="{{ $course->thumbnail_url }}" alt="{{ $course->title }}">
+                            @else
+                                <div class="home-featured-card__fallback">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="home-featured-card__body">
+                            <div class="home-featured-card__meta">{{ $courseCategory }}</div>
+                            <h3 class="home-featured-card__title">{{ $course->title }}</h3>
+                            <p class="home-featured-card__copy">
+                                {{ \Illuminate\Support\Str::limit($course->short_description ?: $course->description ?: ($isKhmer ? 'វគ្គសិក្សាដែលអាចចាប់ផ្តើមមើលបានភ្លាមពីទំព័រដើម។' : 'A course you can open quickly from the homepage.'), 90) }}
+                            </p>
+                            <div class="home-featured-card__footer">
+                                <span>{{ $lessonCount }} {{ __('Lessons') }}</span>
+                                <span class="home-featured-card__price">{{ $priceLabel }}</span>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @else
+            <div class="home-featured-empty">
+                {{ $isKhmer ? 'មិនទាន់មានវគ្គសិក្សាណែនាំសម្រាប់បង្ហាញនៅពេលនេះទេ។' : 'No featured courses available right now.' }}
+            </div>
+        @endif
+    </section>
+
+    <script>
+        (() => {
+            const homeNotice = document.querySelector('[data-home-notice-popup]');
+            const homeNoticeBackdrop = document.querySelector('[data-home-notice-backdrop]');
+            const whyItems = Array.from(document.querySelectorAll('[data-why-item]'));
+            const homeNoticeStorageKey = 'techcourse_home_notice_seen';
+
+            // Show the home popup only once for the first website visit in this browser.
+            if (homeNotice) {
+                const hasSeenNotice = window.localStorage.getItem(homeNoticeStorageKey) === '1';
+
+                if (hasSeenNotice) {
+                    homeNotice.hidden = true;
+                    if (homeNoticeBackdrop) {
+                        homeNoticeBackdrop.hidden = true;
+                    }
+                } else {
+                    window.localStorage.setItem(homeNoticeStorageKey, '1');
+
+                    window.setTimeout(() => {
+                        homeNotice.classList.add('is-hidden');
+                        homeNoticeBackdrop?.classList.add('is-hidden');
+
+                        window.setTimeout(() => {
+                            homeNotice.hidden = true;
+                            if (homeNoticeBackdrop) {
+                                homeNoticeBackdrop.hidden = true;
+                            }
+                        }, 300);
+                    }, 6000);
+                }
+            }
+
+            // Animate accordion panels slowly and keep only one item open at a time.
+            if (whyItems.length) {
+                const setPanelState = (item, shouldOpen) => {
+                    const content = item.querySelector('[data-why-content]');
+
+                    if (!content) {
+                        return;
+                    }
+
+                    content.style.overflow = 'hidden';
+
+                    if (shouldOpen) {
+                        item.open = true;
+                        item.classList.add('is-open');
+
+                        const targetHeight = content.scrollHeight;
+                        content.style.height = `${targetHeight}px`;
+
+                        window.setTimeout(() => {
+                            if (item.classList.contains('is-open')) {
+                                content.style.height = 'auto';
+                            }
+                        }, 540);
+                    } else {
+                        const startHeight = content.scrollHeight;
+                        content.style.height = `${startHeight}px`;
+
+                        requestAnimationFrame(() => {
+                            item.classList.remove('is-open');
+                            content.style.height = '0px';
+                        });
+
+                        window.setTimeout(() => {
+                            if (!item.classList.contains('is-open')) {
+                                item.open = false;
+                            }
+                        }, 540);
+                    }
+                };
+
+                whyItems.forEach((item) => {
+                    const summary = item.querySelector('summary');
+                    const content = item.querySelector('[data-why-content]');
+
+                    if (!summary || !content) {
+                        return;
+                    }
+
+                    content.style.height = item.classList.contains('is-open') ? 'auto' : '0px';
+
+                    summary.addEventListener('click', (event) => {
+                        event.preventDefault();
+
+                        const isOpen = item.classList.contains('is-open');
+
+                        whyItems.forEach((otherItem) => {
+                            if (otherItem !== item && otherItem.classList.contains('is-open')) {
+                                setPanelState(otherItem, false);
+                            }
+                        });
+
+                        setPanelState(item, !isOpen);
+                    });
+                });
+            }
+        })();
+    </script>
 
 @endsection

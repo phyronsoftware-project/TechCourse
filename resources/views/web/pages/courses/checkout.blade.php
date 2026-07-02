@@ -48,6 +48,56 @@
             align-items: start;
         }
 
+        .checkout-test-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            z-index: 1201;
+            width: min(460px, calc(100vw - 28px));
+            padding: 14px 16px;
+            border-radius: 20px;
+            border: 1px solid #fde68a;
+            background: linear-gradient(180deg, #fff8db, #fff2b8);
+            color: #854d0e;
+            box-shadow: 0 10px 22px rgba(146, 64, 14, 0.08);
+            transform: translate(-50%, -50%);
+            transition: opacity 0.28s ease, transform 0.28s ease;
+        }
+
+        .checkout-test-alert-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            background: rgba(15, 23, 42, 0.36);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            transition: opacity 0.28s ease;
+        }
+
+        .checkout-test-alert.is-hidden {
+            opacity: 0;
+            transform: translate(-50%, calc(-50% - 10px));
+            pointer-events: none;
+        }
+
+        .checkout-test-alert-backdrop.is-hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .checkout-test-alert__title {
+            margin: 0 0 6px;
+            font-family: var(--font-lato);
+            font-size: 0.94rem;
+            font-weight: 800;
+        }
+
+        .checkout-test-alert__copy {
+            margin: 0;
+            font-size: 0.82rem;
+            line-height: 1.65;
+        }
+
         .checkout-course-card {
             overflow: hidden;
             display: grid;
@@ -459,6 +509,13 @@
     <section class="checkout-shell">
         <h1 class="checkout-page-title">{{ $course->title }}</h1>
 
+        {{-- Show a clear warning popup before any test payment action starts. --}}
+        <div class="checkout-test-alert-backdrop" data-checkout-test-alert-backdrop></div>
+        <div class="checkout-test-alert" data-checkout-test-alert>
+            <p class="checkout-test-alert__title">{{ __('Test Website Notice') }}</p>
+            <p class="checkout-test-alert__copy">{{ __('This website is for testing only. If you make a payment here, we may not accept issues or complaints related to test transactions.') }}</p>
+        </div>
+
         <div class="checkout-layout">
             <article class="checkout-course-card">
                 <div class="checkout-course-media">
@@ -575,9 +632,26 @@
 
     <script>
         (() => {
+            const testAlert = document.querySelector('[data-checkout-test-alert]');
+            const testAlertBackdrop = document.querySelector('[data-checkout-test-alert-backdrop]');
             const modal = document.querySelector('[data-khqr-modal]');
             const openButton = document.querySelector('[data-khqr-open]');
             const closeButtons = document.querySelectorAll('[data-khqr-close]');
+
+            // Auto-hide the checkout test popup after 3 seconds.
+            if (testAlert) {
+                window.setTimeout(() => {
+                    testAlert.classList.add('is-hidden');
+                    testAlertBackdrop?.classList.add('is-hidden');
+
+                    window.setTimeout(() => {
+                        testAlert.hidden = true;
+                        if (testAlertBackdrop) {
+                            testAlertBackdrop.hidden = true;
+                        }
+                    }, 300);
+                }, 3000);
+            }
 
             if (!modal || !openButton) {
                 return;
