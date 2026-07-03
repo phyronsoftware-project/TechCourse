@@ -4,9 +4,22 @@
 
 @php
     $courseDescription = $course->short_description ?: \Illuminate\Support\Str::limit(strip_tags((string) $course->description), 180);
-    // Course checkout now uses the live ABA KHQR flow again for the active domain setup.
+    // Course checkout shows the full payment method list again while ABA KHQR remains the active live option.
     $paymentMethods = [
         ['name' => 'ABA KHQR', 'copy' => __('Scan to pay with ABA Mobile or any banking app supporting KHQR'), 'image' => asset('ABA_Images/ABA-BANK.svg'), 'actionable' => true],
+        [
+            'name' => __('Card'),
+            'copy' => __('Credit/Debit Card'),
+            'image' => asset('ABA_Images/card_icon.png'),
+            'logos' => [
+                ['type' => 'image', 'src' => asset('ABA_Images/VISA-Copy.png'), 'alt' => 'Visa'],
+                ['type' => 'mastercard'],
+                ['type' => 'image', 'src' => asset('ABA_Images/UPI.png'), 'alt' => 'UPI'],
+                ['type' => 'image', 'src' => asset('ABA_Images/JCB.png'), 'alt' => 'JCB'],
+            ],
+        ],
+        ['name' => 'Alipay', 'copy' => __('Scan to pay with Alipay'), 'image' => asset('ABA_Images/Alipay.png')],
+        ['name' => 'WeChat', 'copy' => __('Scan to pay with WeChat'), 'image' => asset('ABA_Images/Wechat.png')],
     ];
 @endphp
 
