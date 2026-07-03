@@ -38,6 +38,11 @@ class HomeController extends Controller
         ]);
     }
 
+    public function service(): View
+    {
+        return view('web.pages.home.service');
+    }
+
     public function faq(): View
     {
         return view('web.pages.home.faq');

@@ -18,14 +18,14 @@
             'Certificate in Microsoft Office (Word, Excel, PowerPoint)',
         ];
 
-    // Translate intro content to match the current website locale.
-    $aboutRole = $isKhmer ? 'អ្នកអភិវឌ្ឍន៍ Web / App' : 'Web / App Developer';
-    $aboutExperience = $isKhmer ? 'បទពិសោធន៍ 1 ឆ្នាំ' : '1 Year Experience';
-    $aboutKicker = $isKhmer ? 'អំពីខ្ញុំ' : 'About Me';
-    $aboutObjectiveTitle = $isKhmer ? 'គោលបំណង' : 'Objective';
+    // Keep the intro focused on the platform course and product offering.
+    $aboutRole = $isKhmer ? 'Platform វគ្គសិក្សា និងផលិតផល' : 'Course And Product Platform';
+    $aboutExperience = $isKhmer ? 'Courses និង Products' : 'Courses And Products';
+    $aboutKicker = $isKhmer ? 'អំពីយើង' : 'About Us';
+    $aboutObjectiveTitle = $isKhmer ? 'គោលបំណង Platform' : 'Platform Objective';
     $aboutObjectiveCopy = $isKhmer
-        ? 'ខ្ញុំជា Web Developer ដែលមានបទពិសោធន៍ការងារ 1 ឆ្នាំ ក្នុងការអភិវឌ្ឍ web application ទាំងផ្នែក frontend និង backend។ ខ្ញុំស្រលាញ់ការរៀនបច្ចេកវិទ្យាថ្មីៗ និងបន្តអភិវឌ្ឍសមត្ថភាពផ្ទាល់ខ្លួនជានិច្ច ដើម្បីក្លាយជាអ្នកអភិវឌ្ឍន៍ដែលមានជំនាញខ្ពស់ និងមានវិជ្ជាជីវៈ។'
-        : 'I am a Web Developer with 1 year of work experience in developing web applications on both the frontend and backend. I am passionate about learning new technologies and continuously improving my personal skills to become a highly skilled and professional developer.';
+        ? 'TechCourse មានគោលបំណងផ្តល់ជូនវគ្គសិក្សា និងផលិតផលដែលជួយឲ្យអ្នកប្រើអាចរៀនជំនាញថ្មីៗ និងជ្រើសរើស tools ឬ item ដែលសមស្របសម្រាប់ការងារ និងអាជីវកម្មរបស់ខ្លួនបានក្នុងកន្លែងតែមួយ។'
+        : 'TechCourse aims to provide courses and products that help users learn new skills and choose useful tools or items for their work and business in one place.';
     $certificateTitle = $isKhmer ? 'វិញ្ញាបនបត្រ' : 'Certificates';
 
     $timelineItems = $isKhmer

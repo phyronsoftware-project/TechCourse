@@ -67,7 +67,7 @@
 
             .web-main {
                 min-height: 45vh;
-                padding: 92px 0 0;
+                padding: 74px 0 0;
             }
 
             .web-home-blank {
@@ -2488,7 +2488,7 @@
             }
 
             .web-main {
-                padding: 102px 0 0;
+                padding: 74px 0 0;
             }
 
             header {

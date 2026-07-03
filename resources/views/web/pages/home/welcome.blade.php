@@ -155,14 +155,15 @@
 
 @section('content')
     <style>
+        /* Keep the hero linked closely to the fixed header. */
         .home-hero {
             position: relative;
             overflow: hidden;
             width: 100vw;
             margin-left: calc(50% - 50vw);
-            margin-top: -92px;
+            margin-top: 0;
             min-height: 540px;
-            padding: 122px 0 46px;
+            padding: 20px 0 46px;
             background:
                 linear-gradient(180deg, #f8fbff 0%, #edf4ff 18%, #eef4ff 58%, #f6f9ff 100%);
             border-bottom: 1px solid #e6eef8;
@@ -1210,9 +1211,9 @@
 
         @media (max-width: 768px) {
             .home-hero {
-                margin-top: -92px;
+                margin-top: 0;
                 min-height: auto;
-                padding: 118px 0 56px;
+                padding: 20px 0 56px;
             }
 
             .home-hero__inner {
