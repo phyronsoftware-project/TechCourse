@@ -59,7 +59,7 @@
                 'meta' => 'Self-Learning និង Project-Based Practice',
                 'side' => 'right',
                 'points' => [
-                    'បានប្រើ Git និង GitHub សម្រាប់ code management និង deploy projects ទៅ Vercel។',
+                    'បានប្រើ Git និង GitHub សម្រាប់ code management និង deploy projects ទៅ Vercel, Render, Cloudways។',
                     'បានបង្កើត website ដោយប្រើ AJAX និង JSON សម្រាប់ fetch និង send data ពី MySQL។',
                     'បានសរសេរ back-end APIs ដោយប្រើ PHP (MVC - OOP) និង Laravel framework។',
                     'បានភ្ជាប់ MySQL ជាមួយ Laravel សម្រាប់ CRUD operations និង data management។',
@@ -127,7 +127,7 @@
                 'meta' => 'Self-Learning & Project-Based Practice',
                 'side' => 'right',
                 'points' => [
-                    'Used Git and GitHub for code management and deploying projects to Vercel.',
+                    'Used Git and GitHub for code management and deploying projects to Vercel, Render, Cloudways.',
                     'Built websites using AJAX and JSON to fetch and send data from MySQL.',
                     'Wrote back-end APIs using PHP (MVC - OOP) and the Laravel framework.',
                     'Connected MySQL with Laravel for CRUD operations and data management.',
