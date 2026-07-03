@@ -397,20 +397,6 @@
             font-size: 1.2rem;
         }
 
-        .khqr-modal__top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 0 46px 2px 18px;
-        }
-
-        .khqr-modal__brand-image {
-            width: 170px;
-            display: block;
-            object-fit: contain;
-        }
-
         .khqr-modal__title {
             margin: 0;
             color: #0f2a52;
@@ -428,6 +414,20 @@
             background: #ffffff;
             box-shadow: none;
             border: 0;
+        }
+
+        .khqr-modal__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 0 46px 2px 18px;
+        }
+
+        .khqr-modal__brand-image {
+            width: 170px;
+            display: block;
+            object-fit: contain;
         }
 
         .khqr-modal__card-body {

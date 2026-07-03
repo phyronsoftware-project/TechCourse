@@ -70,6 +70,7 @@ class ShopController extends Controller
     public function show(string $product, BakongKhqrService $bakongKhqrService): View
     {
         abort_unless(Schema::hasTable('shop_products'), 404);
+        $bakongKhqrSummary = $bakongKhqrService->summary();
 
         $shopProduct = ShopProduct::query()
             ->with(['category', 'images'])
@@ -120,6 +121,9 @@ class ShopController extends Controller
             'product' => $shopProduct,
             'gallery' => $gallery,
             'relatedProducts' => $relatedProducts,
+            // Expose KHQR merchant details so the modal card can follow the Bakong layout more closely.
+            'shopKhqrMerchantName' => data_get($bakongKhqrSummary, 'merchant_name'),
+            'shopKhqrAccountId' => data_get($bakongKhqrSummary, 'account_id'),
             'shopKhqrPreviewUrl' => $shopKhqrPreviewUrl,
             'shopKhqrDeepLink' => $shopKhqrDeepLink,
             'shopKhqrError' => $shopKhqrError,

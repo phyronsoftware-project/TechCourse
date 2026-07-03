@@ -71,6 +71,9 @@ class CourseCheckoutController extends Controller
             'order' => $order,
             'payment' => $payment,
             'bakong' => $bakongOpenApiService->summary(),
+            // Expose KHQR merchant details so the modal card can follow the Bakong layout more closely.
+            'khqrMerchantName' => data_get($bakongKhqrService->summary(), 'merchant_name'),
+            'khqrAccountId' => data_get($bakongKhqrService->summary(), 'account_id'),
             'khqrPreviewUrl' => $generatedKhqr['image_data_uri'] ?? $this->resolveKhqrPreviewUrl($payment),
             'khqrDeepLink' => $generatedKhqr['deep_link'] ?? null,
             'khqrReferenceMd5' => $generatedKhqr['md5'] ?? null,
@@ -145,6 +148,8 @@ class CourseCheckoutController extends Controller
     {
         return DB::transaction(function () use ($course) {
             $userId = (int) Auth::id();
+            $amount = (float) ($course->price ?? 0);
+            $currency = $course->currency ?: 'USD';
 
             $existingOrder = Order::query()
                 ->where('user_id', $userId)
@@ -162,12 +167,61 @@ class CourseCheckoutController extends Controller
                     ->first();
 
                 if ($existingPayment) {
+                    // Keep any pending checkout aligned with the latest course price from dashboard edits.
+                    $existingOrder->forceFill([
+                        'total_amount' => $amount,
+                        'currency' => $currency,
+                        'payment_method' => 'bakong_khqr',
+                    ])->save();
+
+                    OrderItem::query()
+                        ->where('order_id', $existingOrder->id)
+                        ->where('course_id', $course->id)
+                        ->update([
+                            'course_title' => $course->title,
+                            'price' => $amount,
+                        ]);
+
+                    $existingPayload = is_array($existingPayment->response_payload) ? $existingPayment->response_payload : [];
+
+                    // Reset old ABA QR leftovers so the refreshed checkout uses the latest Bakong data only.
+                    $existingPayment->forceFill([
+                        'payment_provider' => 'bakong_open_api',
+                        'transaction_id' => null,
+                        'merchant_id' => null,
+                        'abapay_deeplink' => null,
+                        'khqr_deeplink' => null,
+                        'qr_image_url' => null,
+                        'amount' => $amount,
+                        'currency' => $currency,
+                        'payment_option' => 'bakong_khqr',
+                        'response_payload' => array_merge(
+                            collect($existingPayload)
+                                ->except([
+                                    'amount',
+                                    'currency',
+                                    'qrString',
+                                    'qrImage',
+                                    'abapay_deeplink',
+                                    'app_store',
+                                    'play_store',
+                                    'status',
+                                ])
+                                ->all(),
+                            [
+                            'course_id' => $course->id,
+                            'course_title' => $course->title,
+                            'note' => 'Pending Bakong KHQR checkout prepared from frontend course lock flow.',
+                            ],
+                        ),
+                    ])->save();
+
+                    $existingOrder->refresh();
+                    $existingPayment->refresh();
+
                     return [$existingOrder, $existingPayment];
                 }
             }
-
-            $amount = (float) ($course->price ?? 0);
-            $currency = $course->currency ?: 'USD';
 
             $order = Order::create([
                 'user_id' => $userId,

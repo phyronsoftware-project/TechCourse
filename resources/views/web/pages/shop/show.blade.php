@@ -9,6 +9,8 @@
     $shareDescription = trim((string) ($product->description ?: 'Useful IT product for app development, web development, learning, and daily productivity setup.'));
     $salePrice = (float) $product->sale_price;
     $costPrice = (float) $product->cost_price;
+    // Keep the shop KHQR currency explicit because this product flow currently charges in USD.
+    $shopKhqrCurrencyCode = 'USD';
     $saveAmount = max($costPrice - $salePrice, 0);
     $monthlyPrice = $salePrice > 0 ? ceil(($salePrice / 12) * 100) / 100 : 0;
     $galleryItems = $gallery->values();
@@ -783,14 +785,6 @@
             font-size: 1.2rem;
         }
 
-        .shop-khqr-modal__top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 0 46px 2px 18px;
-        }
-
         .shop-khqr-modal__title {
             margin: 0;
             color: #0f2a52;
@@ -798,6 +792,14 @@
             font-size: 1.2rem;
             line-height: 1.2;
             font-weight: 700;
+        }
+
+        .shop-khqr-modal__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 0 46px 2px 18px;
         }
 
         .shop-khqr-modal__brand-image {
@@ -814,6 +816,20 @@
             background: #ffffff;
             box-shadow: none;
             border: 0;
+        }
+
+        .shop-khqr-modal__card-body {
+            padding: 10px 10px 0;
+            background: #ffffff;
+        }
+
+        .shop-khqr-modal__qr {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100%;
+            overflow: hidden;
+            background: #ffffff;
         }
 
         .shop-khqr-modal__qr img {
@@ -1910,14 +1926,16 @@
             </div>
 
             <div class="shop-khqr-modal__card">
-                <div class="shop-khqr-modal__qr">
-                    @if ($shopKhqrPreviewUrl)
-                        <img src="{{ $shopKhqrPreviewUrl }}" alt="Bakong KHQR">
-                    @else
-                        <div class="shop-khqr-modal__caption" style="padding: 18px 16px;">
-                            {{ $shopKhqrError ?: __('The Bakong QR is not ready yet for this product.') }}
-                        </div>
-                    @endif
+                <div class="shop-khqr-modal__card-body">
+                    <div class="shop-khqr-modal__qr">
+                        @if ($shopKhqrPreviewUrl)
+                            <img src="{{ $shopKhqrPreviewUrl }}" alt="Bakong KHQR">
+                        @else
+                            <div class="shop-khqr-modal__caption" style="padding: 18px 16px;">
+                                {{ $shopKhqrError ?: __('The Bakong QR is not ready yet for this product.') }}
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
 
