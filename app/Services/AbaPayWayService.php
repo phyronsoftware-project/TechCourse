@@ -49,14 +49,20 @@ class AbaPaywayService
             'price' => (float) ($payload['amount'] ?? 0),
         ]], JSON_UNESCAPED_SLASHES));
 
+        // ABA PayWay limits some identity fields, so trim them before sending the QR request.
+        $firstName = $this->limitField((string) ($payload['first_name'] ?? 'ABA'), 20);
+        $lastName = $this->limitField((string) ($payload['last_name'] ?? 'Bank'), 20);
+        $email = $this->limitField((string) ($payload['email'] ?? ''), 50);
+        $phone = $this->limitField((string) ($payload['phone'] ?? ''), 20);
+
         $request = [
             'req_time' => $reqTime,
             'merchant_id' => (string) $summary['merchant_id'],
             'tran_id' => (string) $payload['tran_id'],
-            'first_name' => (string) ($payload['first_name'] ?? 'ABA'),
-            'last_name' => (string) ($payload['last_name'] ?? 'Bank'),
-            'email' => (string) ($payload['email'] ?? ''),
-            'phone' => (string) ($payload['phone'] ?? ''),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $email,
+            'phone' => $phone,
             'amount' => (float) ($payload['amount'] ?? 0),
             'purchase_type' => 'purchase',
             'payment_option' => 'abapay_khqr',
@@ -145,5 +151,16 @@ class AbaPaywayService
         }
 
         return substr($value, 0, $prefix) . str_repeat('*', max(strlen($value) - ($prefix + $suffix), 4)) . substr($value, -$suffix);
+    }
+
+    protected function limitField(string $value, int $limit): string
+    {
+        $trimmed = trim($value);
+
+        if ($trimmed === '') {
+            return '';
+        }
+
+        return mb_substr($trimmed, 0, $limit);
     }
 }

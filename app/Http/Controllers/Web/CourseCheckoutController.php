@@ -8,6 +8,7 @@ use App\Models\CourseEnrollment;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Services\AbaPaywayService;
 use App\Services\BakongKhqrService;
 use App\Services\BakongOpenApiService;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +23,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CourseCheckoutController extends Controller
 {
-    public function show(string $course, BakongOpenApiService $bakongOpenApiService, BakongKhqrService $bakongKhqrService): View|RedirectResponse
+    public function show(string $course, AbaPaywayService $abaPaywayService): View|RedirectResponse
     {
         $courseModel = $this->resolveCourse($course);
 
@@ -52,16 +53,10 @@ class CourseCheckoutController extends Controller
 
         [$order, $payment] = $this->ensurePendingCheckout($courseModel);
         $khqrError = null;
-        $generatedKhqr = null;
 
         try {
-            // Generate a live Bakong KHQR image for the current checkout amount.
-            $generatedKhqr = $bakongKhqrService->generateCheckoutKhqr([
-                'amount' => (float) $payment->amount,
-                'currency' => $payment->currency,
-                'order_no' => $order->order_no,
-                'course_title' => $courseModel->title,
-            ]);
+            // Generate and store a live ABA KHQR so course checkout uses the active ABA flow again.
+            $payment = $this->ensureKhqrPrepared($courseModel, $order, $payment, $abaPaywayService);
         } catch (Throwable $exception) {
             $khqrError = $exception->getMessage();
         }
@@ -70,10 +65,8 @@ class CourseCheckoutController extends Controller
             'course' => $courseModel,
             'order' => $order,
             'payment' => $payment,
-            'bakong' => $bakongOpenApiService->summary(),
-            'khqrPreviewUrl' => $generatedKhqr['image_data_uri'] ?? $this->resolveKhqrPreviewUrl($payment),
-            'khqrDeepLink' => $generatedKhqr['deep_link'] ?? null,
-            'khqrReferenceMd5' => $generatedKhqr['md5'] ?? null,
+            'khqrPreviewUrl' => $this->resolveKhqrPreviewUrl($payment),
+            'khqrDeepLink' => $payment->khqr_deeplink ?: $payment->abapay_deeplink,
             'khqrError' => $khqrError,
         ]);
     }
@@ -175,7 +168,7 @@ class CourseCheckoutController extends Controller
                 'total_amount' => $amount,
                 'currency' => $currency,
                 'status' => 'pending',
-                'payment_method' => 'bakong_khqr',
+                'payment_method' => 'abapay_khqr',
             ]);
 
             OrderItem::create([
@@ -188,17 +181,17 @@ class CourseCheckoutController extends Controller
             $payment = Payment::create([
                 'order_id' => $order->id,
                 'user_id' => $userId,
-                'payment_provider' => 'bakong_open_api',
+                'payment_provider' => 'aba_payway',
                 'amount' => $amount,
                 'currency' => $currency,
                 'status' => 'pending',
-                'payment_option' => 'bakong_khqr',
+                'payment_option' => 'abapay_khqr',
                 'merchant_id' => null,
                 'req_time' => now()->format('YmdHis'),
                 'response_payload' => [
                     'course_id' => $course->id,
                     'course_title' => $course->title,
-                    'note' => 'Pending Bakong KHQR checkout prepared from frontend course lock flow.',
+                    'note' => 'Pending ABA KHQR checkout prepared from frontend course lock flow.',
                 ],
             ]);
 
@@ -206,8 +199,7 @@ class CourseCheckoutController extends Controller
         });
     }
 
-    /*
-    // ABA KHQR generation is paused for now because this checkout is switching to Bakong-first flow.
+    // ABA KHQR generation is active again so checkout can show a real ABA QR instead of a static image.
     protected function ensureKhqrPrepared(Course $course, Order $order, Payment $payment, AbaPaywayService $abaPaywayService): Payment
     {
         $existingPayload = is_array($payment->response_payload) ? $payment->response_payload : [];
@@ -241,7 +233,6 @@ class CourseCheckoutController extends Controller
 
         return $payment->fresh();
     }
-    */
 
     // Reuse one course lookup path for checkout actions.
     protected function resolveCourse(string $course): ?Course
@@ -327,13 +318,11 @@ class CourseCheckoutController extends Controller
         });
     }
 
-    /*
-    // ABA transaction id helper is paused together with the ABA checkout flow.
+    // ABA checkout uses a short unique tran id for KHQR generation requests.
     protected function generateAbaTranId(Payment $payment): string
     {
         return 'TCP' . $payment->id . Str::upper(Str::random(6));
     }
-    */
 
     protected function userHasCourseAccess(int $courseId): bool
     {

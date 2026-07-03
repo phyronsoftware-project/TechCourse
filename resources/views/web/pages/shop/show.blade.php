@@ -13,7 +13,6 @@
     $monthlyPrice = $salePrice > 0 ? ceil(($salePrice / 12) * 100) / 100 : 0;
     $galleryItems = $gallery->values();
     $shareImage = $product->image_url ?: ($galleryItems->first() ?: asset('logo/logo1.png'));
-    $shopKhqrPreviewUrl = asset('ABA_Images/KHQR_Static.png');
     $clientAddress = collect([$authUser?->address, $authUser?->city, $authUser?->province])
         ->filter(fn ($value) => filled($value))
         ->implode(', ');
@@ -832,6 +831,24 @@
             color: #8a94a6;
             font-size: 11px;
             line-height: 1.65;
+        }
+
+        .shop-khqr-modal__link-wrap {
+            padding: 0 18px 14px;
+        }
+
+        .shop-khqr-modal__link {
+            min-height: 42px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #dbeafe;
+            font-size: 0.78rem;
+            font-weight: 800;
         }
 
         .shop-related {
@@ -1899,11 +1916,27 @@
 
             <div class="shop-khqr-modal__card">
                 <div class="shop-khqr-modal__qr">
-                    <img src="{{ $shopKhqrPreviewUrl }}" alt="ABA KHQR">
+                    @if ($shopKhqrPreviewUrl)
+                        <img src="{{ $shopKhqrPreviewUrl }}" alt="ABA KHQR">
+                    @else
+                        <div class="shop-khqr-modal__caption" style="padding: 18px 16px;">
+                            {{ $shopKhqrError ?: __('The ABA QR is not ready yet for this product.') }}
+                        </div>
+                    @endif
                 </div>
             </div>
 
             <p class="shop-khqr-modal__caption">{{ __('Scan with ABA Mobile, or other Mobile Banking App supporting KHQR') }}</p>
+            <p class="shop-khqr-modal__caption">{{ 'USD ' . number_format($salePrice, 2) }}</p>
+
+            @if (!empty($shopKhqrDeepLink))
+                <div class="shop-khqr-modal__link-wrap">
+                    {{-- Product payment modal exposes the live ABA deeplink so users can open the ABA app directly. --}}
+                    <a href="{{ $shopKhqrDeepLink }}" target="_blank" rel="noopener noreferrer" class="shop-khqr-modal__link">
+                        {{ __('Open ABA Deeplink') }}
+                    </a>
+                </div>
+            @endif
         </div>
     </div>
 

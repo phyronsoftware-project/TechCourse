@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Services\AbaPaywayService;
 use App\Models\ShopCategory;
 use App\Models\ShopProduct;
 use Illuminate\Http\Request;
@@ -66,7 +67,7 @@ class ShopController extends Controller
         ]);
     }
 
-    public function show(string $product): View
+    public function show(string $product, AbaPaywayService $abaPaywayService): View
     {
         abort_unless(Schema::hasTable('shop_products'), 404);
 
@@ -96,12 +97,44 @@ class ShopController extends Controller
             ->filter()
             ->values();
 
+        $shopKhqrPreviewUrl = null;
+        $shopKhqrDeepLink = null;
+        $shopKhqrError = null;
+
+        try {
+            // Generate a live ABA KHQR for the product detail modal so the shop page avoids static payment images.
+            $abaKhqr = $abaPaywayService->generateKhqr([
+                'tran_id' => $this->generateShopAbaTranId($shopProduct),
+                'amount' => (float) ($shopProduct->sale_price ?: 0),
+                'currency' => 'USD',
+                'item_name' => $shopProduct->name,
+                'first_name' => 'TechCourse',
+                'last_name' => 'Shop',
+                'email' => auth()->user()?->email ?: '',
+                'phone' => auth()->user()?->phone ?: '',
+            ]);
+
+            $shopKhqrPreviewUrl = data_get($abaKhqr, 'qrImage') ?: data_get($abaKhqr, 'data.qrImage');
+            $shopKhqrDeepLink = data_get($abaKhqr, 'abapay_deeplink') ?: data_get($abaKhqr, 'data.abapay_deeplink');
+        } catch (Throwable $exception) {
+            $shopKhqrError = $exception->getMessage();
+        }
+
         return view('web.pages.shop.show', [
             'product' => $shopProduct,
             'gallery' => $gallery,
             'relatedProducts' => $relatedProducts,
+            'shopKhqrPreviewUrl' => $shopKhqrPreviewUrl,
+            'shopKhqrDeepLink' => $shopKhqrDeepLink,
+            'shopKhqrError' => $shopKhqrError,
             'shopReady' => Schema::hasTable('shop_categories') && Schema::hasTable('shop_products') && Schema::hasTable('shop_product_images'),
         ]);
+    }
+
+    // Product detail uses a lightweight ABA transaction id because there is no dedicated shop checkout table flow yet.
+    protected function generateShopAbaTranId(ShopProduct $product): string
+    {
+        return 'TCSHOP' . $product->id . now()->format('His');
     }
 
     protected function normalizeImagePath(?string $path): ?string

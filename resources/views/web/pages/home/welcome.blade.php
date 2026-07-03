@@ -17,8 +17,8 @@
         ? 'រៀនជំនាញ Tech និងស្វែងរក Web Service ដែលសមនឹងអាជីវកម្មរបស់អ្នក'
         : 'Learn Tech Skills And Find Web Services That Fit Your Business';
     $heroCopy = $isKhmer
-        ? 'TechCourse បង្កើតឡើងសម្រាប់អ្នកចង់រៀនជំនាញ tech ជាមួយ course ដែលអាចចាប់ផ្តើមបានលឿន និង service សម្រាប់ web, mobile app, UI/UX និង digital growth ក្នុងកន្លែងតែមួយ។'
-        : 'TechCourse brings together practical courses and digital services for web, mobile app, UI/UX, and online growth in one place.';
+        ? 'TechCourse បង្កើតឡើងសម្រាប់អ្នកចង់រៀនជំនាញ tech ជាមួយ course ដែលអាចចាប់ផ្តើមបានលឿន មាន service សម្រាប់ web, mobile app, UI/UX, digital growth ហើយក៏មាន product មួយចំនួនសម្រាប់អ្នកអាចជ្រើសទិញបានក្នុងកន្លែងតែមួយ។'
+        : 'TechCourse brings together practical courses, digital services for web and mobile, and selected products you can buy in one place.';
     $heroPrimaryCta = $isKhmer ? 'មើលវគ្គសិក្សា' : 'Browse Courses';
     $heroSecondaryCta = $isKhmer ? 'មើលសេវាកម្ម' : 'View Services';
     $heroHighlights = $isKhmer
@@ -160,8 +160,12 @@
             overflow: hidden;
             width: 100vw;
             margin-left: calc(50% - 50vw);
-            padding: 42px 0 72px;
-            background: linear-gradient(180deg, #edf4ff 0%, #eef4ff 42%, #f5f9ff 100%);
+            margin-top: -92px;
+            min-height: 540px;
+            padding: 122px 0 46px;
+            background:
+                linear-gradient(180deg, #f8fbff 0%, #edf4ff 18%, #eef4ff 58%, #f6f9ff 100%);
+            border-bottom: 1px solid #e6eef8;
         }
 
         .home-hero__bg {
@@ -208,6 +212,7 @@
             z-index: 1;
             width: min(1180px, calc(100% - 36px));
             margin: 0 auto;
+            min-height: calc(540px - 76px);
             display: grid;
             grid-template-columns: minmax(0, 1.04fr) minmax(300px, 0.88fr);
             gap: 28px;
@@ -1205,11 +1210,14 @@
 
         @media (max-width: 768px) {
             .home-hero {
-                padding: 34px 0 56px;
+                margin-top: -92px;
+                min-height: auto;
+                padding: 118px 0 56px;
             }
 
             .home-hero__inner {
                 width: min(100%, calc(100% - 20px));
+                min-height: auto;
                 gap: 20px;
             }
 

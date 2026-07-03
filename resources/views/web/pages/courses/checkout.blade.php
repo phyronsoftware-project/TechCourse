@@ -4,9 +4,9 @@
 
 @php
     $courseDescription = $course->short_description ?: \Illuminate\Support\Str::limit(strip_tags((string) $course->description), 180);
-    // The old default ABA KHQR image is paused so checkout only shows a live Bakong QR when it really exists.
+    // Course checkout now uses the live ABA KHQR flow again for the active domain setup.
     $paymentMethods = [
-        ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/logo.png'), 'actionable' => true],
+        ['name' => 'ABA KHQR', 'copy' => __('Scan to pay with ABA Mobile or any banking app supporting KHQR'), 'image' => asset('ABA_Images/ABA-BANK.svg'), 'actionable' => true],
     ];
 @endphp
 
@@ -31,7 +31,7 @@
 
         .checkout-layout {
             display: grid;
-            grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.52fr);
+            grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.64fr);
             gap: 22px;
             align-items: start;
         }
@@ -188,6 +188,7 @@
             background: #ffffff;
             border: 1px solid #e5edf5;
             box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
         }
 
         .checkout-payments::before {
@@ -203,6 +204,8 @@
         }
 
         .checkout-pay-card {
+            width: 100%;
+            box-sizing: border-box;
             display: grid;
             grid-template-columns: 52px minmax(0, 1fr) auto;
             gap: 12px;
@@ -256,6 +259,7 @@
             font-size: 0.67rem;
             line-height: 1.45;
             margin-top: 1px;
+            word-break: break-word;
         }
 
         .checkout-pay-logos {
@@ -686,25 +690,25 @@
             </button>
 
             <div class="khqr-modal__top">
-                <h2 class="khqr-modal__title" id="khqr-modal-title">Bakong KHQR</h2>
+                <h2 class="khqr-modal__title" id="khqr-modal-title">ABA KHQR</h2>
             </div>
 
             <div class="khqr-modal__card">
                 <div class="khqr-modal__card-body">
                     <div class="khqr-modal__qr">
                         @if ($khqrPreviewUrl)
-                            <img src="{{ $khqrPreviewUrl }}" alt="Bakong KHQR">
+                            <img src="{{ $khqrPreviewUrl }}" alt="ABA KHQR">
                         @else
                             <div class="khqr-modal__empty">
                                 <strong>{{ __('KHQR preview is not ready yet') }}</strong><br>
-                                {{ __('The Bakong checkout record is prepared. Add your live KHQR generator later and the real QR can be shown here.') }}
+                                {{ __('The ABA checkout record is prepared. Once the live QR is generated it will appear here.') }}
                             </div>
                         @endif
                     </div>
                 </div>
             </div>
 
-            <p class="khqr-modal__caption">{{ __('Scan with Bakong app or any Mobile Banking App supporting KHQR') }}</p>
+            <p class="khqr-modal__caption">{{ __('Scan with ABA Mobile, or other Mobile Banking App supporting KHQR') }}</p>
             {{-- Show the checkout amount in a small centered line under the KHQR image. --}}
             <p class="khqr-modal__price">{{ $payment->currency }} {{ number_format((float) $payment->amount, 2) }}</p>
 
@@ -712,7 +716,7 @@
                 <div class="khqr-actions">
                     @if (!empty($khqrDeepLink))
                         <a href="{{ $khqrDeepLink }}" target="_blank" rel="noopener noreferrer" class="khqr-actions__link">
-                            {{ __('Open Bakong Deeplink') }}
+                            {{ __('Open ABA Deeplink') }}
                         </a>
                     @endif
                 </div>

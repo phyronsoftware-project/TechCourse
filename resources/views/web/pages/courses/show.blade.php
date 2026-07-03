@@ -675,7 +675,7 @@
                             @if ($previewLesson)
                                 <a href="{{ $startLessonRoute }}" class="learning-action-chip">
                                     <i class="fa-solid fa-circle-play"></i>
-                                    {{ (($courseNeedsPayment ?? false) && !($hasCourseAccess ?? false) && !$previewLesson->is_preview) ? __('Pay with Bakong KHQR') : __('Start Lesson') }}
+                                    {{ (($courseNeedsPayment ?? false) && !($hasCourseAccess ?? false) && !$previewLesson->is_preview) ? __('Pay with ABA KHQR') : __('Start Lesson') }}
                                 </a>
                             @endif
                         </div>
