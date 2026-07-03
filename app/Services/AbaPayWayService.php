@@ -5,7 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
-class AbaPaywayService
+class AbaPayWayService
 {
     public function summary(): array
     {
@@ -37,12 +37,11 @@ class AbaPaywayService
     {
         $summary = $this->summary();
 
-        if (! $summary['is_ready'] || blank($summary['generate_qr_url'])) {
+        if (! $summary['is_ready'] || blank($summary['purchase_url'])) {
             throw new RuntimeException('ABA PayWay sandbox config is not ready.');
         }
 
         $reqTime = now()->format('YmdHis');
-        $callbackUrl = base64_encode((string) $summary['callback_url']);
         $items = base64_encode(json_encode([[
             'name' => (string) ($payload['item_name'] ?? 'TechCourse Payment'),
             'quantity' => 1,
@@ -55,33 +54,36 @@ class AbaPaywayService
         $email = $this->limitField((string) ($payload['email'] ?? ''), 50);
         $phone = $this->limitField((string) ($payload['phone'] ?? ''), 20);
 
+        $returnUrl = (string) ($payload['return_url'] ?? $summary['return_url'] ?? '');
+        $cancelUrl = (string) ($payload['cancel_url'] ?? $summary['cancel_url'] ?? '');
+        $continueSuccessUrl = (string) ($payload['continue_success_url'] ?? $summary['return_url'] ?? '');
+
         $request = [
             'req_time' => $reqTime,
             'merchant_id' => (string) $summary['merchant_id'],
             'tran_id' => (string) $payload['tran_id'],
-            'first_name' => $firstName,
-            'last_name' => $lastName,
+            'firstname' => $firstName,
+            'lastname' => $lastName,
             'email' => $email,
             'phone' => $phone,
             'amount' => (float) ($payload['amount'] ?? 0),
-            'purchase_type' => 'purchase',
+            'type' => 'purchase',
             'payment_option' => 'abapay_khqr',
             'items' => $items,
-            'callback_url' => $callbackUrl,
             'currency' => (string) ($payload['currency'] ?? $summary['currency'] ?? 'USD'),
-            'return_deeplink' => null,
+            'return_url' => $returnUrl,
+            'cancel_url' => $cancelUrl,
+            'continue_success_url' => $continueSuccessUrl,
+            'return_deeplink' => '',
             'custom_fields' => null,
             'return_params' => null,
-            'payout' => null,
-            'lifetime' => (int) ($payload['lifetime'] ?? 6),
-            'qr_image_template' => (string) ($payload['qr_image_template'] ?? 'template3_color'),
         ];
 
-        $request['hash'] = $this->generateQrHash($request, (string) $summary['api_key']);
+        $request['hash'] = $this->generatePurchaseHash($request, (string) $summary['api_key']);
 
-        $response = Http::acceptJson()
-            ->contentType('application/json')
-            ->post((string) $summary['generate_qr_url'], $request);
+        $response = Http::asForm()
+            ->acceptJson()
+            ->post((string) $summary['purchase_url'], $request);
 
         if (! $response->successful()) {
             $errorMessage = (string) data_get($response->json(), 'status.message', '');
@@ -113,7 +115,8 @@ class AbaPaywayService
         return $data;
     }
 
-    protected function generateQrHash(array $request, string $apiKey): string
+    // ABA purchase hash follows the documented field sequence for QR/deeplink generation on sandbox checkout.
+    protected function generatePurchaseHash(array $request, string $apiKey): string
     {
         $string = implode('', [
             (string) ($request['req_time'] ?? ''),
@@ -121,20 +124,21 @@ class AbaPaywayService
             (string) ($request['tran_id'] ?? ''),
             number_format((float) ($request['amount'] ?? 0), 2, '.', ''),
             (string) ($request['items'] ?? ''),
-            (string) ($request['first_name'] ?? ''),
-            (string) ($request['last_name'] ?? ''),
+            '',
+            '',
+            (string) ($request['firstname'] ?? ''),
+            (string) ($request['lastname'] ?? ''),
             (string) ($request['email'] ?? ''),
             (string) ($request['phone'] ?? ''),
-            (string) ($request['purchase_type'] ?? ''),
+            (string) ($request['type'] ?? ''),
             (string) ($request['payment_option'] ?? ''),
-            (string) ($request['callback_url'] ?? ''),
-            (string) ($request['currency'] ?? ''),
+            (string) ($request['return_url'] ?? ''),
+            (string) ($request['cancel_url'] ?? ''),
+            (string) ($request['continue_success_url'] ?? ''),
             (string) ($request['return_deeplink'] ?? ''),
+            (string) ($request['currency'] ?? ''),
             (string) ($request['custom_fields'] ?? ''),
             (string) ($request['return_params'] ?? ''),
-            (string) ($request['payout'] ?? ''),
-            (string) ($request['lifetime'] ?? ''),
-            (string) ($request['qr_image_template'] ?? ''),
         ]);
 
         return base64_encode(hash_hmac('sha512', $string, $apiKey, true));

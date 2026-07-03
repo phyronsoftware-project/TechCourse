@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\AbaPaywayService;
+use App\Services\AbaPayWayService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
-    public function index(AbaPaywayService $abaPaywayService)
+    public function index(AbaPayWayService $abaPaywayService)
     {
         return view('admin.pages.settings.index', [
             'pageTitle' => 'Settings',

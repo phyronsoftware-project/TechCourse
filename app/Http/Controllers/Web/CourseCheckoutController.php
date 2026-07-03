@@ -8,7 +8,7 @@ use App\Models\CourseEnrollment;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
-use App\Services\AbaPaywayService;
+use App\Services\AbaPayWayService;
 use App\Services\BakongKhqrService;
 use App\Services\BakongOpenApiService;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +23,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CourseCheckoutController extends Controller
 {
-    public function show(string $course, AbaPaywayService $abaPaywayService): View|RedirectResponse
+    public function show(string $course, AbaPayWayService $abaPaywayService): View|RedirectResponse
     {
         $courseModel = $this->resolveCourse($course);
 
@@ -200,7 +200,7 @@ class CourseCheckoutController extends Controller
     }
 
     // ABA KHQR generation is active again so checkout can show a real ABA QR instead of a static image.
-    protected function ensureKhqrPrepared(Course $course, Order $order, Payment $payment, AbaPaywayService $abaPaywayService): Payment
+    protected function ensureKhqrPrepared(Course $course, Order $order, Payment $payment, AbaPayWayService $abaPaywayService): Payment
     {
         $existingPayload = is_array($payment->response_payload) ? $payment->response_payload : [];
 

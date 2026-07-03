@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Services\AbaPaywayService;
+use App\Services\AbaPayWayService;
 use App\Models\ShopCategory;
 use App\Models\ShopProduct;
 use Illuminate\Http\Request;
@@ -67,7 +67,7 @@ class ShopController extends Controller
         ]);
     }
 
-    public function show(string $product, AbaPaywayService $abaPaywayService): View
+    public function show(string $product, AbaPayWayService $abaPaywayService): View
     {
         abort_unless(Schema::hasTable('shop_products'), 404);
 
