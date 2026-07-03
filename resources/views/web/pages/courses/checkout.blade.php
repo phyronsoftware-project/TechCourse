@@ -3,22 +3,10 @@
 @section('title', __('Course Checkout'))
 
 @php
-    $khqrPreviewUrl = asset('ABA_Images/KHQR_Static.png');
     $courseDescription = $course->short_description ?: \Illuminate\Support\Str::limit(strip_tags((string) $course->description), 180);
+    // The old default ABA KHQR image is paused so checkout only shows a live Bakong QR when it really exists.
     $paymentMethods = [
-        ['name' => 'ABA KHQR', 'copy' => __('Scan to pay with any banking app'), 'image' => asset('ABA_Images/ABA-BANK.svg'), 'actionable' => true],
-        [
-            'name' => __('Card'),
-            'copy' => __('Credit/Debit Card'),
-            'image' => asset('ABA_Images/card_icon.png'),
-            'logos' => [
-                ['type' => 'image', 'src' => asset('ABA_Images/VISA-Copy.png'), 'alt' => 'Visa'],
-                ['type' => 'mastercard'],
-                ['type' => 'image', 'src' => asset('ABA_Images/JCB.png'), 'alt' => 'JCB'],
-            ],
-        ],
-        ['name' => 'Alipay', 'copy' => __('Scan to pay with Alipay'), 'image' => asset('ABA_Images/Alipay.png')],
-        ['name' => 'WeChat', 'copy' => __('Scan to pay with WeChat'), 'image' => asset('ABA_Images/Wechat.png')],
+        ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/logo.png'), 'actionable' => true],
     ];
 @endphp
 
@@ -426,7 +414,7 @@
         }
 
         .khqr-modal__card-body {
-            padding: 0;
+            padding: 10px 10px 0;
             background: #ffffff;
         }
 
@@ -440,7 +428,7 @@
         }
 
         .khqr-modal__qr img {
-            width: 100%;
+            width: calc(100% - 4px);
             max-height: 500px;
             display: block;
             object-fit: contain;
@@ -462,6 +450,101 @@
             color: #8a94a6;
             font-size: 11px;
             line-height: 1.65;
+        }
+
+        .khqr-modal__price {
+            width: 100%;
+            margin: 8px 0 0;
+            padding: 0 12px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 11px;
+            line-height: 1.55;
+        }
+
+        .khqr-verify {
+            padding: 12px 16px 16px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .khqr-verify__title {
+            margin: 0;
+            color: #0f2a52;
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .khqr-verify__grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .khqr-verify__field,
+        .khqr-verify__select {
+            width: 100%;
+            min-height: 42px;
+            border-radius: 14px;
+            border: 1px solid #dbe6f1;
+            background: #ffffff;
+            padding: 0 12px;
+            color: #0f172a;
+            font-size: 0.78rem;
+        }
+
+        .khqr-verify__field:focus,
+        .khqr-verify__select:focus {
+            outline: none;
+            border-color: #93c5fd;
+        }
+
+        .khqr-verify__button {
+            min-height: 42px;
+            border: 0;
+            border-radius: 14px;
+            background: #0f2a52;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .khqr-verify__copy {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.72rem;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .khqr-actions {
+            display: grid;
+            gap: 10px;
+            padding: 0 16px 12px;
+        }
+
+        .khqr-actions__link {
+            min-height: 42px;
+            border-radius: 14px;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            color: #1d4ed8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .khqr-reference {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.72rem;
+            line-height: 1.7;
+            text-align: center;
+            word-break: break-word;
         }
 
         @media (max-width: 980px) {
@@ -603,30 +686,37 @@
             </button>
 
             <div class="khqr-modal__top">
-                <h2 class="khqr-modal__title" id="khqr-modal-title">ABA KHQR</h2>
-                <img
-                    src="https://payway.ababank.com/kh/assets/img/ABA_PAYWAY_logo.svg"
-                    alt="ABA PayWay"
-                    class="khqr-modal__brand-image"
-                >
+                <h2 class="khqr-modal__title" id="khqr-modal-title">Bakong KHQR</h2>
             </div>
 
             <div class="khqr-modal__card">
                 <div class="khqr-modal__card-body">
                     <div class="khqr-modal__qr">
                         @if ($khqrPreviewUrl)
-                            <img src="{{ $khqrPreviewUrl }}" alt="ABA KHQR">
+                            <img src="{{ $khqrPreviewUrl }}" alt="Bakong KHQR">
                         @else
                             <div class="khqr-modal__empty">
                                 <strong>{{ __('KHQR preview is not ready yet') }}</strong><br>
-                                {{ __('The checkout record is prepared. Later you can connect the real payment process and show live QR here.') }}
+                                {{ __('The Bakong checkout record is prepared. Add your live KHQR generator later and the real QR can be shown here.') }}
                             </div>
                         @endif
                     </div>
                 </div>
             </div>
 
-            <p class="khqr-modal__caption">{{ __('Scan with ABA Mobile, or other Mobile Banking App supporting KHQR') }}</p>
+            <p class="khqr-modal__caption">{{ __('Scan with Bakong app or any Mobile Banking App supporting KHQR') }}</p>
+            {{-- Show the checkout amount in a small centered line under the KHQR image. --}}
+            <p class="khqr-modal__price">{{ $payment->currency }} {{ number_format((float) $payment->amount, 2) }}</p>
+
+            @if (!empty($khqrDeepLink))
+                <div class="khqr-actions">
+                    @if (!empty($khqrDeepLink))
+                        <a href="{{ $khqrDeepLink }}" target="_blank" rel="noopener noreferrer" class="khqr-actions__link">
+                            {{ __('Open Bakong Deeplink') }}
+                        </a>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 

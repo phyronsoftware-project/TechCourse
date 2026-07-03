@@ -84,4 +84,22 @@ return [
         'callback_url' => env('ABA_PAYWAY_CALLBACK_URL'),
     ],
 
+    // Store Bakong Open API credentials for checkout verification requests.
+    'bakong_open_api' => [
+        'base_url' => env('BAKONG_OPEN_API_BASE_URL', 'https://api-bakong.nbc.gov.kh'),
+        'token' => env('BAKONG_OPEN_API_TOKEN'),
+    ],
+
+    // Store Bakong KHQR merchant info for generating live payment QR.
+    'bakong_khqr' => [
+        'account_id' => env('BAKONG_KHQR_ACCOUNT_ID'),
+        'merchant_name' => env('BAKONG_KHQR_MERCHANT_NAME', 'TechCourse'),
+        'merchant_city' => env('BAKONG_KHQR_MERCHANT_CITY', 'Phnom Penh'),
+        'mobile_number' => env('BAKONG_KHQR_MOBILE_NUMBER'),
+        'app_name' => env('BAKONG_KHQR_APP_NAME', 'TechCourse'),
+        'app_icon_url' => env('BAKONG_KHQR_APP_ICON_URL'),
+        'callback_url' => env('BAKONG_KHQR_CALLBACK_URL', env('APP_URL')),
+        'token' => env('BAKONG_KHQR_TOKEN', env('BAKONG_OPEN_API_TOKEN')),
+    ],
+
 ];

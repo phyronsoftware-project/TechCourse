@@ -30,6 +30,7 @@ Route::get('/learning/{course}/{lesson}', [LearningController::class, 'show'])->
 
 Route::middleware('auth')->group(function () {
     Route::get('/courses/{course}/checkout', [CourseCheckoutController::class, 'show'])->name('courses.checkout');
+    Route::post('/courses/{course}/checkout/verify-bakong', [CourseCheckoutController::class, 'verify'])->name('courses.checkout.verify-bakong');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
