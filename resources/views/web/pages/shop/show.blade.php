@@ -23,7 +23,7 @@
         ['label' => __('Address'), 'value' => $clientAddress],
     ];
     $paymentMethods = [
-        ['name' => 'ABA KHQR', 'copy' => __('Scan to pay with any banking app'), 'image' => asset('ABA_Images/ABA-BANK.svg')],
+        ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/logo.png')],
         [
             'name' => __('Card'),
             'copy' => __('Credit/Debit Card'),
@@ -1906,34 +1906,29 @@
             </button>
 
             <div class="shop-khqr-modal__top">
-                <h2 class="shop-khqr-modal__title" id="shop-khqr-title">ABA KHQR</h2>
-                <img
-                    src="https://payway.ababank.com/kh/assets/img/ABA_PAYWAY_logo.svg"
-                    alt="ABA PayWay"
-                    class="shop-khqr-modal__brand-image"
-                >
+                <h2 class="shop-khqr-modal__title" id="shop-khqr-title">Bakong KHQR</h2>
             </div>
 
             <div class="shop-khqr-modal__card">
                 <div class="shop-khqr-modal__qr">
                     @if ($shopKhqrPreviewUrl)
-                        <img src="{{ $shopKhqrPreviewUrl }}" alt="ABA KHQR">
+                        <img src="{{ $shopKhqrPreviewUrl }}" alt="Bakong KHQR">
                     @else
                         <div class="shop-khqr-modal__caption" style="padding: 18px 16px;">
-                            {{ $shopKhqrError ?: __('The ABA QR is not ready yet for this product.') }}
+                            {{ $shopKhqrError ?: __('The Bakong QR is not ready yet for this product.') }}
                         </div>
                     @endif
                 </div>
             </div>
 
-            <p class="shop-khqr-modal__caption">{{ __('Scan with ABA Mobile, or other Mobile Banking App supporting KHQR') }}</p>
+            <p class="shop-khqr-modal__caption">{{ __('Scan with Bakong app or any Mobile Banking App supporting KHQR') }}</p>
             <p class="shop-khqr-modal__caption">{{ 'USD ' . number_format($salePrice, 2) }}</p>
 
             @if (!empty($shopKhqrDeepLink))
                 <div class="shop-khqr-modal__link-wrap">
-                    {{-- Product payment modal exposes the live ABA deeplink so users can open the ABA app directly. --}}
+                    {{-- Product payment modal exposes the live Bakong deeplink so users can open the Bakong app directly. --}}
                     <a href="{{ $shopKhqrDeepLink }}" target="_blank" rel="noopener noreferrer" class="shop-khqr-modal__link">
-                        {{ __('Open ABA Deeplink') }}
+                        {{ __('Open Bakong Deeplink') }}
                     </a>
                 </div>
             @endif

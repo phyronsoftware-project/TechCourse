@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Services\AbaPayWayService;
+use App\Services\BakongKhqrService;
 use App\Models\ShopCategory;
 use App\Models\ShopProduct;
 use Illuminate\Http\Request;
@@ -67,7 +67,7 @@ class ShopController extends Controller
         ]);
     }
 
-    public function show(string $product, AbaPayWayService $abaPaywayService): View
+    public function show(string $product, BakongKhqrService $bakongKhqrService): View
     {
         abort_unless(Schema::hasTable('shop_products'), 404);
 
@@ -102,20 +102,16 @@ class ShopController extends Controller
         $shopKhqrError = null;
 
         try {
-            // Generate a live ABA KHQR for the product detail modal so the shop page avoids static payment images.
-            $abaKhqr = $abaPaywayService->generateKhqr([
-                'tran_id' => $this->generateShopAbaTranId($shopProduct),
+            // Generate a real Bakong KHQR for the product detail modal.
+            $bakongKhqr = $bakongKhqrService->generateCheckoutKhqr([
                 'amount' => (float) ($shopProduct->sale_price ?: 0),
                 'currency' => 'USD',
-                'item_name' => $shopProduct->name,
-                'first_name' => 'TechCourse',
-                'last_name' => 'Shop',
-                'email' => auth()->user()?->email ?: '',
-                'phone' => auth()->user()?->phone ?: '',
+                'order_no' => $this->generateShopBakongRef($shopProduct),
+                'course_title' => $shopProduct->name,
             ]);
 
-            $shopKhqrPreviewUrl = data_get($abaKhqr, 'qrImage') ?: data_get($abaKhqr, 'data.qrImage');
-            $shopKhqrDeepLink = data_get($abaKhqr, 'abapay_deeplink') ?: data_get($abaKhqr, 'data.abapay_deeplink');
+            $shopKhqrPreviewUrl = $bakongKhqr['image_data_uri'] ?? null;
+            $shopKhqrDeepLink = $bakongKhqr['deep_link'] ?? null;
         } catch (Throwable $exception) {
             $shopKhqrError = $exception->getMessage();
         }
@@ -131,11 +127,19 @@ class ShopController extends Controller
         ]);
     }
 
-    // Product detail uses a lightweight ABA transaction id because there is no dedicated shop checkout table flow yet.
+    // Product detail uses a lightweight Bakong bill reference because there is no dedicated shop checkout table flow yet.
+    protected function generateShopBakongRef(ShopProduct $product): string
+    {
+        return 'SHOP-' . $product->id . '-' . now()->format('His');
+    }
+
+    /*
+    // ABA product KHQR helper is paused while the shop modal is switched back to real Bakong KHQR.
     protected function generateShopAbaTranId(ShopProduct $product): string
     {
         return 'TCSHOP' . $product->id . now()->format('His');
     }
+    */
 
     protected function normalizeImagePath(?string $path): ?string
     {
