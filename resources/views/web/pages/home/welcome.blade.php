@@ -12,6 +12,33 @@
     $trackingSectionCopy = $isKhmer
         ? 'មើលចំនួនអ្នកប្រើ guest visits វគ្គសិក្សា និងផលិតផលសរុបក្នុងកន្លែងតែមួយ ដើម្បីតាមដានស្ថានភាពទូទៅរបស់ website បានលឿន។'
         : 'See total users, guest visits, courses, and products in one place for a fast overview of your website activity.';
+    $heroEyebrow = $isKhmer ? 'Platform រៀន និង Digital Services' : 'Learning Platform And Digital Services';
+    $heroTitle = $isKhmer
+        ? 'រៀនជំនាញ Tech និងស្វែងរក Web Service ដែលសមនឹងអាជីវកម្មរបស់អ្នក'
+        : 'Learn Tech Skills And Find Web Services That Fit Your Business';
+    $heroCopy = $isKhmer
+        ? 'TechCourse បង្កើតឡើងសម្រាប់អ្នកចង់រៀនជំនាញ tech ជាមួយ course ដែលអាចចាប់ផ្តើមបានលឿន និង service សម្រាប់ web, mobile app, UI/UX និង digital growth ក្នុងកន្លែងតែមួយ។'
+        : 'TechCourse brings together practical courses and digital services for web, mobile app, UI/UX, and online growth in one place.';
+    $heroPrimaryCta = $isKhmer ? 'មើលវគ្គសិក្សា' : 'Browse Courses';
+    $heroSecondaryCta = $isKhmer ? 'មើលសេវាកម្ម' : 'View Services';
+    $heroHighlights = $isKhmer
+        ? [
+            ['icon' => 'fa-solid fa-graduation-cap', 'label' => 'វគ្គសិក្សាចាប់ផ្តើមបានលឿន'],
+            ['icon' => 'fa-solid fa-laptop-code', 'label' => 'Web និង Mobile Service'],
+            ['icon' => 'fa-solid fa-headset', 'label' => 'Support ងាយស្រួលទំនាក់ទំនង'],
+        ]
+        : [
+            ['icon' => 'fa-solid fa-graduation-cap', 'label' => 'Courses you can start quickly'],
+            ['icon' => 'fa-solid fa-laptop-code', 'label' => 'Web and mobile services'],
+            ['icon' => 'fa-solid fa-headset', 'label' => 'Friendly support flow'],
+        ];
+    $heroMockupLabel = $isKhmer ? 'TechCourse Overview' : 'TechCourse Overview';
+    $heroMockupTitle = $isKhmer ? 'Learning + Service ក្នុងកន្លែងតែមួយ' : 'Learning + Services In One Place';
+    $heroMockupCopy = $isKhmer
+        ? 'មើល course, service និងស្ថិតិទូទៅបានលឿនពីទំព័រដើម។'
+        : 'Quickly view courses, services, and overall platform activity from the homepage.';
+    $heroMockupFile = $isKhmer ? 'techcourse_home.php' : 'techcourse_home.php';
+    $heroMockupStatus = $isKhmer ? 'Homepage ready · Live sections' : 'Homepage ready · Live sections';
     $homeNoticeTitle = $isKhmer ? 'សេចក្ដីជូនដំណឹងសម្រាប់ Test Website' : 'Test Website Notice';
     $homeNoticeCopy = $isKhmer
         ? 'Website នេះសម្រាប់សាកល្បងតែប៉ុណ្ណោះ។ បើមានការទូទាត់ ឬប្រតិបត្តិការណាមួយ យើងអាចមិនទទួលយក complaint ឬ issue ពាក់ព័ន្ធនឹង test transaction ទេ។'
@@ -128,6 +155,378 @@
 
 @section('content')
     <style>
+        .home-hero {
+            position: relative;
+            overflow: hidden;
+            width: 100vw;
+            margin-left: calc(50% - 50vw);
+            padding: 42px 0 72px;
+            background: linear-gradient(180deg, #edf4ff 0%, #eef4ff 42%, #f5f9ff 100%);
+        }
+
+        .home-hero__bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .home-hero__blob {
+            position: absolute;
+            border-radius: 999px;
+            filter: blur(48px);
+            opacity: 0.9;
+        }
+
+        .home-hero__blob.is-primary {
+            top: -150px;
+            right: -110px;
+            width: 460px;
+            height: 460px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(147, 197, 253, 0.08));
+        }
+
+        .home-hero__blob.is-secondary {
+            bottom: -130px;
+            left: -70px;
+            width: 280px;
+            height: 280px;
+            background: linear-gradient(135deg, rgba(191, 219, 254, 0.18), rgba(125, 211, 252, 0.08));
+        }
+
+        .home-hero__pattern {
+            position: absolute;
+            inset: 0;
+            opacity: 0.32;
+            background-image: radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.1) 1px, transparent 0);
+            background-size: 28px 28px;
+        }
+
+        .home-hero__inner {
+            position: relative;
+            z-index: 1;
+            width: min(1180px, calc(100% - 36px));
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 1.04fr) minmax(300px, 0.88fr);
+            gap: 28px;
+            align-items: center;
+        }
+
+        .home-hero__content {
+            max-width: 620px;
+            width: 100%;
+        }
+
+        .home-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 34px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(191, 219, 254, 0.92);
+            color: #1d4ed8;
+            font-size: 0.76rem;
+            font-weight: 700;
+            box-shadow: 0 12px 22px rgba(59, 130, 246, 0.08);
+        }
+
+        .home-hero__eyebrow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #2563eb;
+            box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.12);
+        }
+
+        .home-hero__title {
+            margin: 18px 0 0;
+            color: #0f172a;
+            font-family: var(--font-lato);
+            font-size: clamp(1.15rem, 2vw, 1.7rem);
+            line-height: 1.22;
+            letter-spacing: -0.02em;
+            font-weight: 900;
+        }
+
+        .home-hero__copy {
+            margin: 16px 0 0;
+            max-width: 590px;
+            color: #64748b;
+            font-size: 0.98rem;
+            line-height: 1.85;
+        }
+
+        .home-hero__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .home-hero__button {
+            min-height: 46px;
+            padding: 0 18px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            font-size: 0.84rem;
+            font-weight: 800;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .home-hero__button:hover {
+            transform: translateY(-2px);
+        }
+
+        .home-hero__button.is-primary {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            color: #ffffff;
+            box-shadow: 0 18px 32px rgba(37, 99, 235, 0.2);
+        }
+
+        .home-hero__button.is-secondary {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(191, 219, 254, 0.96);
+            color: #1e3a8a;
+            box-shadow: 0 12px 22px rgba(15, 23, 42, 0.06);
+        }
+
+        .home-hero__highlights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .home-hero__highlight {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #475569;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .home-hero__highlight-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(219, 234, 254, 0.92);
+            color: #2563eb;
+            flex-shrink: 0;
+        }
+
+        .home-hero__mockup {
+            position: relative;
+            max-width: 430px;
+            width: 100%;
+            margin: 0 auto 0 auto;
+            transition: transform 0.25s ease-out;
+            will-change: transform;
+        }
+
+        .home-hero__window {
+            position: relative;
+            overflow: hidden;
+            border-radius: 22px;
+            background: linear-gradient(180deg, #1a2331 0%, #111827 100%);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.14);
+            transition: transform 0.14s ease-out, box-shadow 0.14s ease-out;
+            will-change: transform;
+        }
+
+        .home-hero__window-bar {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 11px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            background: rgba(15, 23, 42, 0.88);
+        }
+
+        .home-hero__window-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+        }
+
+        .home-hero__window-dot.is-red { background: #fb7185; }
+        .home-hero__window-dot.is-yellow { background: #fbbf24; }
+        .home-hero__window-dot.is-green { background: #34d399; }
+
+        .home-hero__window-label {
+            margin-left: 8px;
+            color: #94a3b8;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: none;
+        }
+
+        .home-hero__window-tag {
+            margin-left: auto;
+            min-height: 22px;
+            padding: 0 8px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(99, 102, 241, 0.12);
+            color: #93c5fd;
+            font-size: 0.64rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+
+        .home-hero__window-body {
+            padding: 12px 14px 10px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .home-hero__window-copy {
+            display: grid;
+            gap: 8px;
+        }
+
+        .home-hero__window-title {
+            margin: 0;
+            color: #f8fafc;
+            font-size: 0.86rem;
+            line-height: 1.3;
+            font-weight: 800;
+        }
+
+        .home-hero__window-text {
+            margin: 0;
+            color: rgba(226, 232, 240, 0.76);
+            font-size: 0.7rem;
+            line-height: 1.52;
+        }
+
+        .home-hero__code {
+            margin: 0;
+            padding: 10px 12px 14px;
+            border-radius: 0;
+            background: rgba(15, 23, 42, 0.16);
+            border: 0;
+            color: #e2e8f0;
+            font-size: 0.64rem;
+            line-height: 1.62;
+            overflow-x: auto;
+        }
+
+        .home-hero__code code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        .home-hero__code .is-keyword {
+            color: #93c5fd;
+        }
+
+        .home-hero__code .is-string {
+            color: #86efac;
+        }
+
+        .home-hero__code .is-number {
+            color: #f9a8d4;
+        }
+
+        .home-hero__window-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 14px 5px;
+            color: #86efac;
+            font-size: 0.64rem;
+            font-weight: 700;
+            border-top: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .home-hero__window-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #4ade80;
+            box-shadow: 0 0 0 6px rgba(74, 222, 128, 0.12);
+        }
+
+        .home-hero__window-glare {
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+            z-index: 6;
+            opacity: 0;
+            transition: opacity 0.28s ease;
+            border-radius: inherit;
+            background: linear-gradient(168deg, rgba(255, 255, 255, 0.18) 0%, transparent 52%);
+        }
+
+        .home-hero__floating {
+            position: absolute;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(219, 234, 254, 0.96);
+            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.12);
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s ease-out;
+            will-change: transform;
+        }
+
+        .home-hero__floating.is-top {
+            top: -10px;
+            left: -16px;
+            padding: 8px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .home-hero__floating.is-bottom {
+            right: -8px;
+            bottom: -12px;
+            padding: 10px 12px;
+            min-width: 164px;
+        }
+
+        .home-hero__floating-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(219, 234, 254, 0.94);
+            color: #2563eb;
+            flex-shrink: 0;
+        }
+
+        .home-hero__floating-title {
+            margin: 0;
+            color: #0f172a;
+            font-size: 0.82rem;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+
+        .home-hero__floating-copy {
+            margin: 4px 0 0;
+            color: #64748b;
+            font-size: 0.74rem;
+            line-height: 1.5;
+        }
+
         .home-tracking {
             position: relative;
             width: 100vw;
@@ -778,6 +1177,18 @@
         }
 
         @media (max-width: 1080px) {
+            .home-hero__inner {
+                grid-template-columns: 1fr;
+            }
+
+            .home-hero__content {
+                max-width: 100%;
+            }
+
+            .home-hero__mockup {
+                margin: 6px auto 0;
+            }
+
             .home-tracking__grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 width: min(620px, calc(100% - 24px));
@@ -793,6 +1204,73 @@
         }
 
         @media (max-width: 768px) {
+            .home-hero {
+                padding: 34px 0 56px;
+            }
+
+            .home-hero__inner {
+                width: min(100%, calc(100% - 20px));
+                gap: 20px;
+            }
+
+            .home-hero__title {
+                font-size: clamp(1.05rem, 5.4vw, 1.35rem);
+            }
+
+            .home-hero__copy {
+                font-size: 0.92rem;
+            }
+
+            .home-hero__actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .home-hero__button {
+                width: 100%;
+            }
+
+            .home-hero__highlights {
+                gap: 10px;
+            }
+
+            .home-hero__highlight {
+                width: 100%;
+                font-size: 0.8rem;
+            }
+
+            .home-hero__window-body {
+                padding: 14px 12px 12px;
+            }
+
+            .home-hero__code {
+                padding: 12px 12px 18px;
+                font-size: 0.7rem;
+                line-height: 1.74;
+            }
+
+            .home-hero__mockup,
+            .home-hero__window,
+            .home-hero__floating {
+                transform: none !important;
+            }
+
+            .home-hero__floating.is-top {
+                left: 10px;
+                top: 12px;
+            }
+
+            .home-hero__floating.is-bottom {
+                right: 10px;
+                bottom: 12px;
+            }
+
+            .home-hero__floating.is-bottom,
+            .home-hero__floating.is-top {
+                position: static;
+                margin-top: 12px;
+            }
+
             .home-notice-popup {
                 width: min(420px, calc(100vw - 20px));
                 padding: 14px 14px;
@@ -887,6 +1365,100 @@
         }
     </style>
 
+    {{-- Home hero section follows the reference layout but uses TechCourse-specific content and actions. --}}
+    <section class="home-hero" id="home-hero-section">
+        <div class="home-hero__bg" aria-hidden="true">
+            <div class="home-hero__blob is-primary"></div>
+            <div class="home-hero__blob is-secondary"></div>
+            <div class="home-hero__pattern"></div>
+        </div>
+
+        <div class="home-hero__inner">
+            <div class="home-hero__content">
+                <span class="home-hero__eyebrow">
+                    <span class="home-hero__eyebrow-dot"></span>
+                    {{ $heroEyebrow }}
+                </span>
+
+                <h1 class="home-hero__title">{{ $heroTitle }}</h1>
+                <p class="home-hero__copy">{{ $heroCopy }}</p>
+
+                <div class="home-hero__actions">
+                    <a href="#home-featured-section" class="home-hero__button is-primary">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        {{ $heroPrimaryCta }}
+                    </a>
+                    <a href="#home-services-section" class="home-hero__button is-secondary">
+                        <i class="fa-solid fa-arrow-right"></i>
+                        {{ $heroSecondaryCta }}
+                    </a>
+                </div>
+
+                <div class="home-hero__highlights">
+                    @foreach ($heroHighlights as $highlight)
+                        <div class="home-hero__highlight">
+                            <span class="home-hero__highlight-icon">
+                                <i class="{{ $highlight['icon'] }}"></i>
+                            </span>
+                            <span>{{ $highlight['label'] }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="home-hero__mockup" data-hero-mockup>
+                <div class="home-hero__window" data-hero-window>
+                    <div class="home-hero__window-bar">
+                        <span class="home-hero__window-dot is-red"></span>
+                        <span class="home-hero__window-dot is-yellow"></span>
+                        <span class="home-hero__window-dot is-green"></span>
+                        <span class="home-hero__window-label">{{ $heroMockupFile }}</span>
+                        <span class="home-hero__window-tag">PHP</span>
+                    </div>
+
+                    <div class="home-hero__window-body">
+                        <div class="home-hero__window-copy">
+                            <h2 class="home-hero__window-title">{{ $heroMockupTitle }}</h2>
+                            <p class="home-hero__window-text">{{ $heroMockupCopy }}</p>
+                        </div>
+
+                        {{-- Hero mockup uses a compact code-style panel to stay visually close to the shared video reference. --}}
+                        <pre class="home-hero__code"><code><span class="is-keyword">$courseList</span>   = <span class="is-string">'featured_courses'</span>;
+<span class="is-keyword">$serviceSet</span>  = <span class="is-string">'web_mobile_uiux'</span>;
+<span class="is-keyword">$audience</span>    = <span class="is-string">'learners_business'</span>;
+
+<span class="is-string">'courses'</span>      =&gt; <span class="is-number">{{ (int) ($trackingStats['courses'] ?? 0) }}</span>,
+<span class="is-string">'products'</span>     =&gt; <span class="is-number">{{ (int) ($trackingStats['products'] ?? 0) }}</span>,
+<span class="is-string">'support'</span>      =&gt; <span class="is-string">'friendly_flow'</span>,
+<span class="is-string">'platform'</span>     =&gt; <span class="is-string">'TechCourse'</span>;</code></pre>
+
+                        <div class="home-hero__window-status">
+                            <span class="home-hero__window-status-dot"></span>
+                            <span>{{ $heroMockupStatus }}</span>
+                        </div>
+                    </div>
+
+                    <div class="home-hero__window-glare" data-hero-glare></div>
+                </div>
+
+                <div class="home-hero__floating is-top" data-hero-badge="top">
+                    <span class="home-hero__floating-icon">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </span>
+                    <div>
+                        <p class="home-hero__floating-title">{{ $isKhmer ? 'Platform Ready' : 'Platform Ready' }}</p>
+                        <p class="home-hero__floating-copy">{{ $isKhmer ? 'Course និង service flow នៅ homepage' : 'Course and service flow on homepage' }}</p>
+                    </div>
+                </div>
+
+                <div class="home-hero__floating is-bottom" data-hero-badge="bottom">
+                    <p class="home-hero__floating-title">{{ $isKhmer ? 'Featured Flow' : 'Featured Flow' }}</p>
+                    <p class="home-hero__floating-copy">{{ $isKhmer ? 'មើល courses និង services បានលឿន' : 'Open courses and services quickly' }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="home-tracking" id="home-tracking-section">
         <div class="home-notice-backdrop" data-home-notice-backdrop></div>
         <div class="home-notice-popup" data-home-notice-popup>
@@ -929,7 +1501,7 @@
         </div>
     </section>
 
-    <section class="home-services">
+    <section class="home-services" id="home-services-section">
         <div class="home-services__inner">
             <div class="home-services__head">
                 <span class="home-services__badge">{{ __('Our Services') }}</span>
@@ -981,7 +1553,7 @@
         </div>
     </section>
 
-    <section class="home-compact-section">
+    <section class="home-compact-section" id="home-featured-section">
         <div class="home-compact-head">
             <h2 class="home-compact-head__title">{{ $featuredSectionTitle }}</h2>
             <p class="home-compact-head__copy">{{ $featuredSectionCopy }}</p>
@@ -1031,6 +1603,10 @@
         (() => {
             const homeNotice = document.querySelector('[data-home-notice-popup]');
             const homeNoticeBackdrop = document.querySelector('[data-home-notice-backdrop]');
+            const heroMockup = document.querySelector('[data-hero-mockup]');
+            const heroWindow = document.querySelector('[data-hero-window]');
+            const heroGlare = document.querySelector('[data-hero-glare]');
+            const heroBadges = Array.from(document.querySelectorAll('[data-hero-badge]'));
             const whyItems = Array.from(document.querySelectorAll('[data-why-item]'));
             const homeNoticeStorageKey = 'techcourse_home_notice_seen';
 
@@ -1058,6 +1634,58 @@
                         }, 300);
                     }, 6000);
                 }
+            }
+
+            // Add gentle pointer-follow motion so the hero mockup behaves closer to the shared reference video.
+            if (heroMockup && heroWindow && window.matchMedia('(pointer: fine)').matches) {
+                const resetHeroMotion = () => {
+                    heroMockup.style.transform = 'translate3d(0, 0, 0)';
+                    heroWindow.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+                    heroWindow.style.boxShadow = '0 32px 68px rgba(15, 23, 42, 0.18)';
+
+                    heroBadges.forEach((badge) => {
+                        badge.style.transform = 'translate3d(0, 0, 0)';
+                    });
+
+                    if (heroGlare) {
+                        heroGlare.style.opacity = '0';
+                        heroGlare.style.background = 'linear-gradient(168deg, rgba(255, 255, 255, 0.18) 0%, transparent 52%)';
+                    }
+                };
+
+                heroMockup.addEventListener('pointermove', (event) => {
+                    const rect = heroMockup.getBoundingClientRect();
+                    const relativeX = (event.clientX - rect.left) / rect.width;
+                    const relativeY = (event.clientY - rect.top) / rect.height;
+                    const offsetX = relativeX - 0.5;
+                    const offsetY = relativeY - 0.5;
+                    const rotateY = offsetX * 8;
+                    const rotateX = offsetY * -8;
+                    const mockupShiftX = offsetX * 8;
+                    const mockupShiftY = offsetY * 8;
+                    const badgeShiftX = offsetX * 18;
+                    const badgeShiftY = offsetY * 12;
+
+                    heroMockup.style.transform = `translate3d(${mockupShiftX}px, ${mockupShiftY}px, 0)`;
+                    heroWindow.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.01)`;
+                    heroWindow.style.boxShadow = '0 36px 84px rgba(15, 23, 42, 0.24)';
+
+                    heroBadges.forEach((badge, index) => {
+                        const direction = index === 0 ? -1 : 1;
+                        badge.style.transform = `translate3d(${badgeShiftX * direction}px, ${badgeShiftY * direction}px, 0)`;
+                    });
+
+                    if (heroGlare) {
+                        const glareX = relativeX * 100;
+                        const glareY = relativeY * 100;
+                        heroGlare.style.opacity = '1';
+                        heroGlare.style.background = `linear-gradient(168deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 18%, transparent 54%), radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.2), transparent 34%)`;
+                    }
+                });
+
+                heroMockup.addEventListener('pointerleave', resetHeroMotion);
+                heroMockup.addEventListener('pointercancel', resetHeroMotion);
+                resetHeroMotion();
             }
 
             // Animate accordion panels slowly and keep only one item open at a time.
