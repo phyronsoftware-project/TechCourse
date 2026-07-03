@@ -745,6 +745,19 @@
             const openButton = document.querySelector('[data-khqr-open]');
             const closeButtons = document.querySelectorAll('[data-khqr-close]');
 
+            // Track when a learner reaches the course checkout flow.
+            window.trackEvent('begin_checkout', {
+                currency: @json($payment->currency),
+                value: {{ (float) $payment->amount }},
+                items: [{
+                    item_id: @json('course_' . $course->id),
+                    item_name: @json($course->title),
+                    item_category: 'course',
+                    price: {{ (float) $payment->amount }},
+                    quantity: 1,
+                }],
+            });
+
             // Auto-hide the checkout test popup after 3 seconds.
             if (testAlert) {
                 window.setTimeout(() => {

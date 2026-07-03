@@ -117,6 +117,21 @@ class CourseCheckoutController extends Controller
 
         if ($normalizedStatus === 'success') {
             $this->finalizeSuccessfulCheckout($courseModel, $order, $payment, $verification, $payload);
+            $request->session()->flash('ga4_events', [[
+                'name' => 'purchase',
+                'params' => [
+                    'transaction_id' => $order->order_no,
+                    'currency' => $payment->currency,
+                    'value' => (float) $payment->amount,
+                    'items' => [[
+                        'item_id' => 'course_' . $courseModel->id,
+                        'item_name' => $courseModel->title,
+                        'item_category' => 'course',
+                        'price' => (float) $payment->amount,
+                        'quantity' => 1,
+                    ]],
+                ],
+            ]]);
 
             $firstLesson = $courseModel->lessons->first();
 

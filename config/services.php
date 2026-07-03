@@ -64,6 +64,11 @@ return [
         'service_account_json_path' => env('GOOGLE_CLOUD_TTS_SERVICE_ACCOUNT_JSON_PATH'),
     ],
 
+    'ga4' => [
+        'property_id' => env('GA4_PROPERTY_ID'),
+        'service_account_json_path' => env('GA4_SERVICE_ACCOUNT_JSON_PATH', 'storage/app/google/ga4-service-account.json'),
+    ],
+
     'elevenlabs' => [
         'api_key' => env('ELEVENLABS_API_KEY'),
         'model' => env('ELEVENLABS_TTS_MODEL', 'eleven_multilingual_v2'),

@@ -1961,6 +1961,28 @@
 @push('web_scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Keep a readable custom event name for product reporting in GA4.
+            window.trackEvent('product_view', {
+                product_id: @json($product->id),
+                product_name: @json($product->name),
+                product_category: @json($product->category?->name ?: 'product'),
+                currency: 'USD',
+                value: {{ (float) $salePrice }},
+            });
+
+            // Track product detail views with GA4 recommended ecommerce format.
+            window.trackEvent('view_item', {
+                currency: 'USD',
+                value: {{ (float) $salePrice }},
+                items: [{
+                    item_id: @json('product_' . $product->id),
+                    item_name: @json($product->name),
+                    item_category: @json($product->category?->name ?: 'product'),
+                    price: {{ (float) $salePrice }},
+                    quantity: 1,
+                }],
+            });
+
             const images = @json($galleryItems->values());
             const mainImage = document.querySelector('[data-detail-main-image]');
             const downloadButton = document.querySelector('[data-detail-download]');
@@ -2009,6 +2031,19 @@
             }
 
             const openModal = () => {
+                // Track product checkout intent when the payment modal is opened.
+                window.trackEvent('begin_checkout', {
+                    currency: 'USD',
+                    value: {{ (float) $salePrice }},
+                    items: [{
+                        item_id: @json('product_' . $product->id),
+                        item_name: @json($product->name),
+                        item_category: @json($product->category?->name ?: 'product'),
+                        price: {{ (float) $salePrice }},
+                        quantity: 1,
+                    }],
+                });
+
                 modal.hidden = false;
                 document.body.style.overflow = 'hidden';
 

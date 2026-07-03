@@ -274,6 +274,9 @@ class UserAuthController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
         $this->notificationService->flashPopupNotification($user, $registeredNow ? 'register' : 'login');
+        $this->flashGa4Event($request, $registeredNow ? 'sign_up' : 'login', [
+            'method' => 'telegram',
+        ]);
 
         if ($redirectTo) {
             return redirect()->to($redirectTo);
@@ -484,6 +487,9 @@ class UserAuthController extends Controller
         Auth::login($user, (bool) ($pending['remember'] ?? false));
         $request->session()->regenerate();
         $this->notificationService->flashPopupNotification($user, $mode === 'register' ? 'register' : 'login');
+        $this->flashGa4Event($request, $mode === 'register' ? 'sign_up' : 'login', [
+            'method' => $mode === 'register' ? 'email_otp_register' : 'email_otp_login',
+        ]);
 
         $redirectTo = $this->validatedRedirect((string) ($pending['redirect_to'] ?? ''));
         $request->session()->forget('auth_email_otp');
@@ -691,8 +697,23 @@ class UserAuthController extends Controller
         Auth::login($user, true);
         request()->session()->regenerate();
         $this->notificationService->flashPopupNotification($user, $registeredNow ? 'register' : 'login');
+        $this->flashGa4Event(request(), $registeredNow ? 'sign_up' : 'login', [
+            'method' => $provider,
+        ]);
 
         return redirect()->route('home');
+    }
+
+    // Flash lightweight GA4 events so analytics only fires after confirmed auth outcomes.
+    protected function flashGa4Event(Request $request, string $name, array $params = []): void
+    {
+        $events = $request->session()->get('ga4_events', []);
+        $events[] = [
+            'name' => $name,
+            'params' => $params,
+        ];
+
+        $request->session()->flash('ga4_events', $events);
     }
 
     protected function validatedTelegramUser(Request $request, string $botToken): ?array

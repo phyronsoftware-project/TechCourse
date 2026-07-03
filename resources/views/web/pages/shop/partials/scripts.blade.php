@@ -39,6 +39,7 @@
             };
 
             const formatMoney = (value) => `$${Number(value || 0).toFixed(2)}`;
+            const parseMoneyValue = (value) => Number(String(value || '0').replace(/[^0-9.]/g, '')) || 0;
 
             const setState = (payload = {}) => {
                 currentCart = Array.isArray(payload.cart) ? payload.cart : [];
@@ -407,6 +408,18 @@
                     }
                     await refreshShopState();
                     showToast('success', `{{ __('Added to cart') }}`, `{{ __('This product was added to your shopping cart.') }}`);
+                    // Track successful cart additions only after the backend accepts the change.
+                    window.trackEvent('add_to_cart', {
+                        currency: 'USD',
+                        value: parseMoneyValue(button.getAttribute('data-sale')) * initialQty,
+                        items: [{
+                            item_id: `product_${id}`,
+                            item_name: button.getAttribute('data-name') || 'Product',
+                            item_category: button.getAttribute('data-category') || 'product',
+                            price: parseMoneyValue(button.getAttribute('data-sale')),
+                            quantity: initialQty,
+                        }],
+                    });
                 }
             };
 

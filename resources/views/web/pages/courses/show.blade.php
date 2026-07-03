@@ -34,6 +34,33 @@
         ->values();
 @endphp
 
+@push('web_scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Keep a readable custom event name for course reporting in GA4.
+            window.trackEvent('course_view', {
+                course_id: @json($course->id),
+                course_title: @json($course->title),
+                currency: @json($course->currency ?: 'USD'),
+                value: {{ (float) ($course->price ?? 0) }},
+            });
+
+            // Track course detail views with GA4 recommended ecommerce format.
+            window.trackEvent('view_item', {
+                currency: @json($course->currency ?: 'USD'),
+                value: {{ (float) ($course->price ?? 0) }},
+                items: [{
+                    item_id: @json('course_' . $course->id),
+                    item_name: @json($course->title),
+                    item_category: 'course',
+                    price: {{ (float) ($course->price ?? 0) }},
+                    quantity: 1,
+                }],
+            });
+        });
+    </script>
+@endpush
+
 @section('content')
     <style>
         .learning-shell {

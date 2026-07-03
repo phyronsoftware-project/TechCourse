@@ -5,21 +5,42 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseCategory;
+use App\Services\GoogleAnalyticsRealtimeService;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Throwable;
 
 class HomeController extends Controller
 {
+    public function __construct(protected GoogleAnalyticsRealtimeService $googleAnalyticsRealtimeService)
+    {
+    }
+
     public function index(): View
     {
+        $ga4ActiveUsers = $this->googleAnalyticsRealtimeService->activeUsers();
+        $ga4HomeViews = $this->googleAnalyticsRealtimeService->pageViewsByPath(
+            parse_url(route('home'), PHP_URL_PATH) ?: '/'
+        );
+        $guestViewsSource = $ga4HomeViews !== null ? __('GA4 Report') : __('Laravel DB');
+        $guestViewsLabel = $ga4HomeViews !== null ? __('Website Views') : __('Guest Website Views');
+        $guestViewsDescription = $ga4HomeViews !== null
+            ? __('Total homepage views from Google Analytics. Active users in the last 30 minutes: :count', [
+                'count' => number_format((int) ($ga4ActiveUsers ?? 0)),
+            ])
+            : __('Guest visitor total from DB tracking table if that table is available.');
+
         return view('web.pages.home.welcome', [
             'featuredCourses' => $this->featuredCourses(),
             'categories' => $this->categories(),
-            // Provide homepage tracking stats from DB only to keep the section stable.
+            // Prefer GA4 report totals for homepage views and fall back to DB when setup is incomplete.
             'trackingStats' => [
                 'login_users' => $this->safeCount('users'),
-                'guest_views' => $this->safeCount('website_guest_views'),
+                'guest_views' => $ga4HomeViews ?? $this->safeCount('website_guest_views'),
+                'guest_live_views' => (int) ($ga4ActiveUsers ?? 0),
+                'guest_views_label' => $guestViewsLabel,
+                'guest_views_description' => $guestViewsDescription,
+                'guest_views_source' => $guestViewsSource,
                 'courses' => $this->safeCount('courses'),
                 'products' => $this->safeCount('shop_products'),
             ],

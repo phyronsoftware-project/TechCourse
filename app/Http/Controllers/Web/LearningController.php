@@ -9,6 +9,7 @@ use App\Models\CourseFavorite;
 use App\Models\CourseLesson;
 use App\Models\CourseSave;
 use App\Models\LessonComment;
+use App\Services\GoogleAnalyticsRealtimeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -17,6 +18,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class LearningController extends Controller
 {
+    public function __construct(protected GoogleAnalyticsRealtimeService $googleAnalyticsRealtimeService)
+    {
+    }
+
     public function show(string $course, string $lesson): View|RedirectResponse
     {
         $courseModel = Course::query()
@@ -58,6 +63,11 @@ class LearningController extends Controller
                 ->with('warning', __('This lesson is locked. Please pay for this course to continue.'));
         }
 
+        $lessonPath = parse_url(
+            route('learning.show', [$courseModel->slug ?: $courseModel->id, $lessonModel->slug ?: $lessonModel->id]),
+            PHP_URL_PATH
+        ) ?: '/';
+
         return view('web.pages.learning.show', [
             'course' => $courseModel,
             'activeLesson' => $lessonModel,
@@ -66,6 +76,11 @@ class LearningController extends Controller
             'lessonComments' => $this->lessonComments($lessonModel->id),
             'isLiked' => $this->isLiked($courseModel->id),
             'isSaved' => $this->isSaved($courseModel->id),
+            // Read lesson and video counts from GA4 using the current lesson page path.
+            'lessonAnalytics' => [
+                'page_views' => $this->googleAnalyticsRealtimeService->pageViewsByPath($lessonPath),
+                'video_views' => $this->googleAnalyticsRealtimeService->eventCountByPath('video_view', $lessonPath),
+            ],
         ]);
     }
 

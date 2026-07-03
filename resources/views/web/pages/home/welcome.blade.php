@@ -86,12 +86,13 @@
         ],
         [
             'key' => 'guest-views',
-            'label' => __('Guest Website Views'),
+            'label' => $trackingStats['guest_views_label'] ?? __('Guest Website Views'),
             'value' => number_format((int) ($trackingStats['guest_views'] ?? 0)),
+            'live_value' => number_format((int) ($trackingStats['guest_live_views'] ?? 0)),
             'icon' => 'fa-solid fa-eye',
             'tone' => 'is-emerald',
-            'description' => __('Guest visitor total from DB tracking table if that table is available.'),
-            'source' => __('Laravel DB'),
+            'description' => $trackingStats['guest_views_description'] ?? __('Guest visitor total from DB tracking table if that table is available.'),
+            'source' => $trackingStats['guest_views_source'] ?? __('Laravel DB'),
         ],
         [
             'key' => 'total-courses',
@@ -1501,7 +1502,11 @@
                             <p class="home-tracking-card__text">{{ $trackingItem['description'] }}</p>
                             <span class="home-tracking-card__meta">
                                 <i class="fa-solid fa-signal"></i>
-                                {{ __('Live total') }}
+                                @if (($trackingItem['key'] ?? '') === 'guest-views')
+                                    {{ __('Live viewers') }}: {{ $trackingItem['live_value'] ?? '0' }}
+                                @else
+                                    {{ __('Live total') }}
+                                @endif
                             </span>
                         </div>
                     </article>

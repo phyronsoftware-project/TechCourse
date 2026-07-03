@@ -19,6 +19,7 @@
     $lessonRouteKey = $activeLesson->slug ?: $activeLesson->id;
     $courseRouteKey = $course->slug ?: $course->id;
     $currentLessonRoute = route('learning.show', [$courseRouteKey, $lessonRouteKey]);
+    $lessonViewCount = (int) (($lessonAnalytics['video_views'] ?? null) ?: ($lessonAnalytics['page_views'] ?? 0));
     $embedUrl = null;
 
     if ($videoUrl) {
@@ -41,6 +42,58 @@
         })
         ->values();
 @endphp
+
+@push('web_scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const lessonPayload = {
+                course_id: @json($course->id),
+                course_title: @json($course->title),
+                lesson_id: @json($activeLesson->id),
+                lesson_title: @json($activeLesson->title),
+                page_path: @json(parse_url($currentLessonRoute, PHP_URL_PATH) ?: '/'),
+                is_preview: @json((bool) $activeLesson->is_preview),
+            };
+
+            // Send one simple lesson video/open event for GA4 reporting.
+            if (@json((bool) ($videoUrl || $embedUrl))) {
+                window.trackEvent('video_view', lessonPayload);
+            }
+
+            // Track video progress milestones for HTML5 videos on the lesson page.
+            const video = document.querySelector('[data-ga4-lesson-video]');
+
+            if (!video) {
+                return;
+            }
+
+            const sentMilestones = new Set();
+            const milestones = [25, 50, 75, 100];
+
+            video.addEventListener('timeupdate', () => {
+                const duration = Number(video.duration || 0);
+                const currentTime = Number(video.currentTime || 0);
+
+                if (!duration || duration <= 0) {
+                    return;
+                }
+
+                const percent = Math.min(100, Math.floor((currentTime / duration) * 100));
+
+                milestones.forEach((milestone) => {
+                    if (percent >= milestone && !sentMilestones.has(milestone)) {
+                        sentMilestones.add(milestone);
+
+                        window.trackEvent('video_progress', {
+                            ...lessonPayload,
+                            video_percent: milestone,
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+@endpush
 
 @section('content')
     <style>
@@ -648,7 +701,7 @@
                         @if ($embedUrl)
                             <iframe src="{{ $embedUrl }}" title="{{ $activeLesson->title }}" frameborder="0" allowfullscreen></iframe>
                         @elseif ($videoUrl)
-                            <video controls playsinline preload="metadata" src="{{ $videoUrl }}"></video>
+                            <video controls playsinline preload="metadata" src="{{ $videoUrl }}" data-ga4-lesson-video></video>
                         @else
                             <div class="lesson-video-empty">{{ __('Video Display') }}</div>
                         @endif
@@ -676,6 +729,7 @@
                         <span><i class="fa-regular fa-clock"></i> {{ gmdate('i:s', (int) ($activeLesson->duration_seconds ?: 0)) }}</span>
                         <span><i class="fa-solid fa-book-open"></i> {{ __('Lesson') }} {{ $course->lessons->search(fn ($lesson) => $lesson->id === $activeLesson->id) + 1 }}</span>
                         <span><i class="fa-solid fa-eye"></i> {{ $activeLesson->is_preview ? __('Preview enabled') : __('Full lesson') }}</span>
+                        <span><i class="fa-solid fa-chart-line"></i> {{ number_format($lessonViewCount) }} {{ __('Views') }}</span>
                     </div>
 
                     <div class="lesson-chip-row">

@@ -15,6 +15,36 @@
         <meta name="twitter:title" content="@yield('title', 'TechCourse')">
         <meta name="twitter:description" content="@yield('meta_description', 'TechCourse is a learning platform for app development, web development, and useful IT skills.')">
         @stack('meta')
+        {{-- Load GA4 base tracking so page_view starts collecting immediately. --}}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-6EP9GQSD30"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+
+            gtag('js', new Date());
+            gtag('config', 'G-6EP9GQSD30');
+
+            // Keep one simple helper for custom GA4 events across the website.
+            window.trackEvent = function (eventName, params = {}) {
+                if (typeof window.gtag !== 'function') {
+                    return;
+                }
+
+                window.gtag('event', eventName, params);
+            };
+        </script>
+        @php
+            $ga4FlashEvents = session('ga4_events', []);
+        @endphp
+        @if (!empty($ga4FlashEvents))
+            <script>
+                // Prepare one-time analytics events confirmed by the backend flow.
+                window.__techCourseGa4FlashEvents = @json(array_values($ga4FlashEvents));
+            </script>
+        @endif
         {{-- //logo --}}
         <link rel="icon" type="image/png" href="{{ asset('logo/logo1.png') }}">
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -2828,6 +2858,18 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', () => {
+                if (Array.isArray(window.__techCourseGa4FlashEvents)) {
+                    window.__techCourseGa4FlashEvents.forEach((eventPayload) => {
+                        if (!eventPayload || !eventPayload.name) {
+                            return;
+                        }
+
+                        window.trackEvent(eventPayload.name, eventPayload.params || {});
+                    });
+
+                    window.__techCourseGa4FlashEvents = [];
+                }
+
                 const body = document.body;
                 const header = document.querySelector('header');
                 const menuToggle = document.querySelector('[data-web-menu-toggle]');
