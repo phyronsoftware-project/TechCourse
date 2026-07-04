@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseCategory;
+use App\Models\TechCategory;
+use App\Models\TechDetail;
 use App\Services\GoogleAnalyticsRealtimeService;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -61,7 +63,32 @@ class HomeController extends Controller
 
     public function service(): View
     {
-        return view('web.pages.home.service');
+        return view('web.pages.home.service', [
+            'techCategories' => $this->technologyCategories(),
+        ]);
+    }
+
+    public function technologyCategoryShow(TechCategory $techCategory): View
+    {
+        return view('web.pages.home.technology-category-detail', [
+            'category' => $techCategory->load([
+                'technologies' => fn ($query) => $query
+                    ->where('status', 'active')
+                    ->orderBy('sort_order')
+                    ->orderBy('name'),
+            ]),
+            'otherCategories' => $this->technologyCategories()
+                ->where('id', '!=', $techCategory->id)
+                ->values(),
+        ]);
+    }
+
+    public function technologyShow(TechDetail $technology): View
+    {
+        return view('web.pages.home.technology-detail', [
+            'technology' => $technology->load('category'),
+            'relatedTechnologies' => $this->relatedTechnologyItems($technology),
+        ]);
     }
 
     public function faq(): View
@@ -110,6 +137,52 @@ class HomeController extends Controller
             }
 
             return CourseCategory::query()->orderBy('name')->limit(8)->get();
+        } catch (Throwable) {
+            return collect();
+        }
+    }
+
+    protected function technologyCategories()
+    {
+        try {
+            // Load active technology categories with their active public cards.
+            if (!Schema::hasTable('tech_categories') || !Schema::hasTable('tech_details')) {
+                return collect();
+            }
+
+            return TechCategory::query()
+                ->where('status', 'active')
+                ->with([
+                    'technologies' => fn ($query) => $query
+                        ->where('status', 'active')
+                        ->orderBy('sort_order')
+                        ->orderBy('name'),
+                ])
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+        } catch (Throwable) {
+            return collect();
+        }
+    }
+
+    protected function relatedTechnologyItems(TechDetail $technology)
+    {
+        try {
+            // Show small related cards from the same category on detail page.
+            if (!Schema::hasTable('tech_details')) {
+                return collect();
+            }
+
+            return TechDetail::query()
+                ->with('category')
+                ->where('status', 'active')
+                ->where('category_id', $technology->category_id)
+                ->whereKeyNot($technology->id)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->limit(6)
+                ->get();
         } catch (Throwable) {
             return collect();
         }

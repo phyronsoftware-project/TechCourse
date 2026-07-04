@@ -19,6 +19,8 @@ use App\Http\Controllers\Admin\ShopPaymentController;
 use App\Http\Controllers\Admin\ShopProductController;
 use App\Http\Controllers\Admin\SocialMediaController;
 use App\Http\Controllers\Admin\SoundToolController;
+use App\Http\Controllers\Admin\TechCategoryController;
+use App\Http\Controllers\Admin\TechDetailController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Web\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -42,6 +44,12 @@ Route::middleware(['auth', 'admin'])
 
         Route::resource('users', UserController::class)->only(['index', 'show', 'edit', 'destroy']);
         Route::resource('categories', CategoryController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::resource('tech-categories', TechCategoryController::class)
+            ->parameters(['tech-categories' => 'techCategory'])
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::resource('tech-details', TechDetailController::class)
+            ->parameters(['tech-details' => 'techDetail'])
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::resource('shop-categories', ShopCategoryController::class)
             ->parameters(['shop-categories' => 'shopCategory'])
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);

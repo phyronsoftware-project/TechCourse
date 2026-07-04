@@ -18,7 +18,7 @@
     $navItems = [
         ['label' => __('Home'), 'href' => route('home'), 'active' => request()->routeIs('home')],
         ['label' => __('Course'), 'href' => route('courses.index'), 'active' => request()->routeIs('courses.*')],
-        ['label' => app()->getLocale() === 'km' ? 'សេវាកម្ម' : 'Service', 'href' => route('service'), 'active' => request()->routeIs('service')],
+        ['label' => app()->getLocale() === 'km' ? 'បច្ចេកវិទ្យា' : 'Technology', 'href' => route('service'), 'active' => request()->routeIs('service')],
         ['label' => __('Shop'), 'href' => route('shop.index'), 'active' => request()->routeIs('shop.*')],
         ['label' => __('About Us'), 'href' => route('about'), 'active' => request()->routeIs('about')],
     ];

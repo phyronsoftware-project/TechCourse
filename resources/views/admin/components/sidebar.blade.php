@@ -98,6 +98,18 @@
                     'icon' => 'star',
                     'children' => [
                         [
+                            'label' => 'Tech Categories',
+                            'icon' => 'grid',
+                            'route' => route('admin.tech-categories.index'),
+                            'active' => request()->routeIs('admin.tech-categories.*'),
+                        ],
+                        [
+                            'label' => 'Tech Detail',
+                            'icon' => 'book',
+                            'route' => route('admin.tech-details.index'),
+                            'active' => request()->routeIs('admin.tech-details.*'),
+                        ],
+                        [
                             'label' => 'Reviews',
                             'icon' => 'star',
                             'route' => route('admin.reviews.index'),

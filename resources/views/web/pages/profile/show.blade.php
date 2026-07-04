@@ -13,6 +13,7 @@
             margin: 0 auto;
             display: grid;
             gap: 18px;
+            padding-top: 18px;
             padding-bottom: 36px;
         }
 

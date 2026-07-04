@@ -15,7 +15,10 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/service', [HomeController::class, 'service'])->name('service');
+Route::redirect('/service', '/technology');
+Route::get('/technology', [HomeController::class, 'service'])->name('service');
+Route::get('/technology/category/{techCategory}', [HomeController::class, 'technologyCategoryShow'])->name('technology.category.show');
+Route::get('/technology/{technology}', [HomeController::class, 'technologyShow'])->name('technology.show');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
 Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');
