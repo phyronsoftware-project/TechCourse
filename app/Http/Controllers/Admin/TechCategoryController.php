@@ -6,16 +6,30 @@ use App\Http\Controllers\Controller;
 use App\Models\TechCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class TechCategoryController extends Controller
 {
     public function index(Request $request): View
     {
+        if (!Schema::hasTable('tech_categories')) {
+            return view('admin.pages.tech-categories.index', [
+                'pageTitle' => 'Tech Categories',
+                'categories' => $this->emptyPaginator($request),
+                'tableMissing' => true,
+            ]);
+        }
+
         // Keep admin category listing searchable for quick content setup.
-        $query = TechCategory::query()
-            ->withCount('technologies')
-            ->latest('id');
+        $query = TechCategory::query()->latest('id');
+
+        if (Schema::hasTable('tech_details')) {
+            $query->withCount('technologies');
+        } else {
+            $query->selectRaw('tech_categories.*, 0 as technologies_count');
+        }
 
         if ($request->filled('search')) {
             $search = $request->string('search');
@@ -37,8 +51,14 @@ class TechCategoryController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        if (!Schema::hasTable('tech_categories')) {
+            return redirect()
+                ->route('admin.tech-categories.index')
+                ->with('error', 'Tech categories table is missing on this server. Please run the SQL first.');
+        }
+
         return view('admin.pages.tech-categories.create', [
             'pageTitle' => 'Create Tech Category',
         ]);
@@ -46,6 +66,12 @@ class TechCategoryController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if (!Schema::hasTable('tech_categories')) {
+            return redirect()
+                ->route('admin.tech-categories.index')
+                ->with('error', 'Tech categories table is missing on this server. Please run the SQL first.');
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],
@@ -64,8 +90,14 @@ class TechCategoryController extends Controller
             ->with('success', 'Tech category created successfully.');
     }
 
-    public function edit(TechCategory $techCategory): View
+    public function edit(TechCategory $techCategory): View|RedirectResponse
     {
+        if (!Schema::hasTable('tech_categories')) {
+            return redirect()
+                ->route('admin.tech-categories.index')
+                ->with('error', 'Tech categories table is missing on this server. Please run the SQL first.');
+        }
+
         return view('admin.pages.tech-categories.edit', [
             'pageTitle' => 'Edit Tech Category',
             'category' => $techCategory,
@@ -75,6 +107,12 @@ class TechCategoryController extends Controller
 
     public function update(Request $request, TechCategory $techCategory): RedirectResponse
     {
+        if (!Schema::hasTable('tech_categories')) {
+            return redirect()
+                ->route('admin.tech-categories.index')
+                ->with('error', 'Tech categories table is missing on this server. Please run the SQL first.');
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],
@@ -95,10 +133,24 @@ class TechCategoryController extends Controller
 
     public function destroy(TechCategory $techCategory): RedirectResponse
     {
+        if (!Schema::hasTable('tech_categories')) {
+            return redirect()
+                ->route('admin.tech-categories.index')
+                ->with('error', 'Tech categories table is missing on this server. Please run the SQL first.');
+        }
+
         $techCategory->delete();
 
         return redirect()
             ->route('admin.tech-categories.index')
             ->with('success', 'Tech category deleted successfully.');
+    }
+
+    protected function emptyPaginator(Request $request): LengthAwarePaginator
+    {
+        return new LengthAwarePaginator([], 0, 10, (int) $request->integer('page', 1), [
+            'path' => $request->url(),
+            'query' => $request->query(),
+        ]);
     }
 }

@@ -4,276 +4,171 @@
 
 @section('content')
     @php
-        // Keep category detail page focused on technologies inside the selected category.
+        // Keep the category detail page clean and text-focused like the provided reference.
         $isKhmer = app()->getLocale() === 'km';
     @endphp
 
     <style>
-        .tech-category-shell {
-            width: min(1200px, calc(100% - 32px));
+        .tech-detail-shell {
+            width: min(1040px, calc(100% - 32px));
             margin: 0 auto;
-            padding: 24px 0 56px;
+            padding: 28px 0 64px;
         }
 
-        .tech-category-back {
+        .tech-detail-back {
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 18px;
+            margin-bottom: 24px;
             color: #2563eb;
             font-size: 14px;
             font-weight: 700;
             text-decoration: none;
         }
 
-        .tech-category-hero {
-            padding: 30px;
-            border: 1px solid #dbe8f6;
-            border-radius: 30px;
-            background: linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
-            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.06);
+        .tech-detail-heading {
+            margin-bottom: 18px;
         }
 
-        .tech-category-badge {
-            width: 84px;
-            height: 84px;
-            border-radius: 24px;
-            background: linear-gradient(180deg, #edf4ff 0%, #dbeafe 100%);
-            color: #2563eb;
+        .tech-detail-category {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            font-size: 34px;
+            gap: 10px;
+            color: #2563eb;
+            font-size: 14px;
+            font-weight: 800;
         }
 
-        .tech-category-title {
-            margin: 18px 0 0;
+        .tech-detail-title {
+            margin: 12px 0 0;
             color: #0f172a;
             font-family: var(--font-lato);
             font-size: clamp(2rem, 3vw, 3rem);
             line-height: 1.12;
         }
 
-        .tech-category-copy {
-            margin: 12px 0 0;
+        .tech-detail-copy {
+            margin: 14px 0 0;
             color: #64748b;
             font-size: 15px;
             line-height: 1.95;
         }
 
-        .tech-category-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 22px;
-            margin-top: 28px;
+        .tech-detail-list {
+            margin-top: 26px;
+            border-top: 1px solid #e5e7eb;
         }
 
-        .tech-item-card {
-            display: block;
-            padding: 26px 18px 20px;
-            border: 1px dashed #dde7f4;
-            background: #ffffff;
-            text-align: center;
-            text-decoration: none;
-            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        /* Show each technology as clean text sections without cards or boxes. */
+        .tech-detail-item {
+            padding: 38px 0;
+            border-bottom: 1px solid #e5e7eb;
         }
 
-        .tech-item-card:hover {
-            transform: translateY(-5px);
-            border-color: #bfd3f6;
-            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.07);
-        }
-
-        .tech-item-card__icon {
-            width: 82px;
-            height: 82px;
-            margin: 0 auto;
-            border-radius: 22px;
-            background: linear-gradient(180deg, #edf4ff 0%, #dbeafe 100%);
-            color: #2563eb;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-        }
-
-        .tech-item-card__name {
-            margin: 22px 0 0;
+        .tech-detail-item__title {
+            margin: 0;
             color: #111827;
-            font-size: 17px;
+            font-size: clamp(1.8rem, 2.5vw, 2.3rem);
+            font-weight: 900;
+            line-height: 1.25;
+        }
+
+        .tech-detail-item__subtitle {
+            margin: 18px 0 0;
+            color: #111827;
+            font-size: 18px;
             font-weight: 800;
-            line-height: 1.45;
+            line-height: 1.6;
         }
 
-        .tech-item-card__title {
-            margin: 10px 0 0;
-            color: #64748b;
-            font-size: 13px;
-            line-height: 1.8;
-            min-height: 44px;
+        .tech-detail-item__body {
+            margin: 18px 0 0;
+            color: #4b5563;
+            font-size: 15px;
+            line-height: 2;
+            white-space: pre-line;
         }
 
-        .tech-item-card__action {
+        .tech-detail-item__link {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            min-width: 142px;
-            margin-top: 20px;
-            padding: 12px 18px;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 800;
-            line-height: 1;
-        }
-
-        .tech-item-card__hint {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 16px;
+            gap: 10px;
+            margin-top: 18px;
             color: #2563eb;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
+            text-decoration: none;
         }
 
-        .tech-category-empty {
-            margin-top: 28px;
-            padding: 32px 24px;
-            border: 1px dashed #cfdcf0;
-            background: #ffffff;
+        .tech-detail-empty {
+            margin-top: 26px;
+            padding: 24px 0;
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
             color: #64748b;
-            text-align: center;
+            font-size: 15px;
             line-height: 1.9;
         }
 
-        .tech-category-section {
-            margin-top: 34px;
-        }
-
-        .tech-category-section__title {
-            margin: 0 0 16px;
-            color: #0f172a;
-            font-size: 22px;
-            font-weight: 800;
-        }
-
-        .tech-other-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 16px;
-        }
-
-        .tech-other-card {
-            padding: 18px;
-            border: 1px solid #e4edf8;
-            background: #ffffff;
-            text-decoration: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .tech-other-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.07);
-        }
-
-        .tech-other-card__name {
-            margin: 0;
-            color: #0f172a;
-            font-size: 16px;
-            font-weight: 800;
-        }
-
-        .tech-other-card__subtitle {
-            margin: 8px 0 0;
-            color: #64748b;
-            font-size: 13px;
-            line-height: 1.75;
-        }
-
-        @media (max-width: 1120px) {
-            .tech-category-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 820px) {
-            .tech-category-grid,
-            .tech-other-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 520px) {
-            .tech-category-grid,
-            .tech-other-grid {
-                grid-template-columns: 1fr;
+        @media (max-width: 640px) {
+            .tech-detail-item {
+                padding: 28px 0;
             }
 
-            .tech-category-hero {
-                padding: 24px 18px;
+            .tech-detail-item__title {
+                font-size: 1.7rem;
             }
         }
     </style>
 
-    <section class="tech-category-shell">
-        <a href="{{ route('service') }}" class="tech-category-back">
+    <section class="tech-detail-shell">
+        <a href="{{ route('service') }}" class="tech-detail-back">
             <i class="fa-solid fa-arrow-left"></i>
             {{ $isKhmer ? 'ត្រឡប់ទៅបញ្ជី Category' : 'Back to Category List' }}
         </a>
 
-        <div class="tech-category-hero">
-            <span class="tech-category-badge">
+        <div class="tech-detail-heading">
+            <div class="tech-detail-category">
                 <i class="{{ $category->icon ?: 'fa-solid fa-microchip' }}"></i>
-            </span>
+                <span>{{ $category->name }}</span>
+            </div>
 
-            <h1 class="tech-category-title">{{ $category->name }}</h1>
-            <p class="tech-category-copy">
-                {{ $category->subtitle ?: ($isKhmer ? 'ជ្រើសរើស technology នៅក្នុង category នេះ ដើម្បីមើលព័ត៌មានលម្អិតបន្ថែម។' : 'Choose a technology inside this category to see more detailed information.') }}
-            </p>
+            <h1 class="tech-detail-title">{{ $category->name }}</h1>
+
+            @if ($category->subtitle)
+                <p class="tech-detail-copy">{{ $category->subtitle }}</p>
+            @endif
         </div>
 
         @if ($category->technologies->isEmpty())
-            <div class="tech-category-empty">
-                {{ $isKhmer ? 'Category នេះមិនទាន់មាន technology detail នៅឡើយទេ។ ដូច្នេះនៅ list page អ្នកឃើញ category 2 តែ content ខាងក្នុងមិនទាន់មាន។' : 'This category does not have technology details yet. That is why you could see the categories, but there was no inside content to show before.' }}
+            <div class="tech-detail-empty">
+                {{ $isKhmer ? 'Category នេះមិនទាន់មាន detail នៅឡើយទេ។ សូមបន្ថែម Tech Detail ក្នុង Admin Dashboard ជាមុន។' : 'This category does not have detail content yet. Please add Tech Detail rows from the admin dashboard first.' }}
             </div>
         @else
-            <div class="tech-category-grid">
+            <div class="tech-detail-list">
                 @foreach ($category->technologies as $technology)
-                    {{-- Each technology in this category opens its own detail page. --}}
-                    <a href="{{ route('technology.show', $technology) }}" class="tech-item-card">
-                        <span class="tech-item-card__icon">
-                            <i class="{{ $category->icon ?: 'fa-solid fa-microchip' }}"></i>
-                        </span>
+                    {{-- Render the category details as numbered content sections. --}}
+                    <article class="tech-detail-item">
+                        <h2 class="tech-detail-item__title">
+                            {{ $loop->iteration }}. {{ $technology->name }}
+                        </h2>
 
-                        <h2 class="tech-item-card__name">{{ $technology->name }}</h2>
-                        <p class="tech-item-card__title">{{ $technology->title ?: ($isKhmer ? 'Technology Detail' : 'Technology Detail') }}</p>
+                        @if ($technology->title)
+                            <p class="tech-detail-item__subtitle">{{ $technology->title }}</p>
+                        @endif
 
-                        <span class="tech-item-card__action">
-                            {{ $isKhmer ? 'មើលលម្អិត' : 'View Detail' }}
-                        </span>
+                        <div class="tech-detail-item__body">
+                            {{ $technology->detail ?: ($isKhmer ? 'មិនទាន់មានអត្ថបទលម្អិតសម្រាប់ផ្នែកនេះនៅឡើយទេ។' : 'No detailed content has been added for this section yet.') }}
+                        </div>
 
-                        <span class="tech-item-card__hint">
-                            {{ $isKhmer ? 'ចូលទៅកាន់ page បន្ទាប់' : 'Go to detail page' }}
-                        </span>
-                    </a>
+                        @if ($technology->website_url)
+                            <a href="{{ $technology->website_url }}" target="_blank" rel="noopener noreferrer" class="tech-detail-item__link">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                {{ $isKhmer ? 'ចូលមើល Website' : 'Visit Website' }}
+                            </a>
+                        @endif
+                    </article>
                 @endforeach
-            </div>
-        @endif
-
-        @if ($otherCategories->isNotEmpty())
-            <div class="tech-category-section">
-                <h2 class="tech-category-section__title">{{ $isKhmer ? 'Category ផ្សេងទៀត' : 'Other Categories' }}</h2>
-
-                <div class="tech-other-grid">
-                    @foreach ($otherCategories as $item)
-                        {{-- Keep quick links to other categories from the detail page. --}}
-                        <a href="{{ route('technology.category.show', $item) }}" class="tech-other-card">
-                            <h3 class="tech-other-card__name">{{ $item->name }}</h3>
-                            <p class="tech-other-card__subtitle">{{ $item->subtitle ?: '-' }}</p>
-                        </a>
-                    @endforeach
-                </div>
             </div>
         @endif
     </section>

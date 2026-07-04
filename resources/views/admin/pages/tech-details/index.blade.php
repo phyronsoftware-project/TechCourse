@@ -3,6 +3,14 @@
 @section('title', 'Tech Detail')
 
 @section('content')
+    @if (!empty($tableMissing))
+        <section class="admin-filter-card p-6 mb-6">
+            <p class="text-sm text-amber-700">
+                Tech tables are missing on this server. Please run the SQL for `tech_categories` and `tech_details` first.
+            </p>
+        </section>
+    @endif
+
     <section class="admin-filter-card p-6">
         <form method="GET" action="{{ route('admin.tech-details.index') }}" class="space-y-4">
             <div class="admin-filter-grid">

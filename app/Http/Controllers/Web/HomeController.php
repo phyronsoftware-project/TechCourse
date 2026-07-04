@@ -8,13 +8,18 @@ use App\Models\CourseCategory;
 use App\Models\TechCategory;
 use App\Models\TechDetail;
 use App\Services\GoogleAnalyticsRealtimeService;
+use App\Services\TechnologyPdfService;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Throwable;
 
 class HomeController extends Controller
 {
-    public function __construct(protected GoogleAnalyticsRealtimeService $googleAnalyticsRealtimeService)
+    public function __construct(
+        protected GoogleAnalyticsRealtimeService $googleAnalyticsRealtimeService,
+        protected TechnologyPdfService $technologyPdfService,
+    )
     {
     }
 
@@ -68,19 +73,49 @@ class HomeController extends Controller
         ]);
     }
 
-    public function technologyCategoryShow(TechCategory $techCategory): View
+    public function technologyCategoryShow(string $categorySlug): View
     {
-        return view('web.pages.home.technology-category-detail', [
-            'category' => $techCategory->load([
+        $techCategory = $this->technologyCategories()
+            ->first(fn ($category) => Str::slug((string) $category->name) === $categorySlug);
+
+        abort_unless($techCategory, 404);
+
+        // Load detail rows only when the tech_details table exists.
+        if (Schema::hasTable('tech_details')) {
+            $techCategory->load([
                 'technologies' => fn ($query) => $query
                     ->where('status', 'active')
                     ->orderBy('sort_order')
                     ->orderBy('name'),
-            ]),
-            'otherCategories' => $this->technologyCategories()
-                ->where('id', '!=', $techCategory->id)
-                ->values(),
+            ]);
+        } else {
+            $techCategory->setRelation('technologies', collect());
+        }
+
+        return view('web.pages.home.technology-category-detail', [
+            'category' => $techCategory,
         ]);
+    }
+
+    public function technologyCategoryDownload(string $categorySlug)
+    {
+        $techCategory = $this->technologyCategories()
+            ->first(fn ($category) => Str::slug((string) $category->name) === $categorySlug);
+
+        abort_unless($techCategory, 404);
+
+        if (Schema::hasTable('tech_details')) {
+            $techCategory->load([
+                'technologies' => fn ($query) => $query
+                    ->where('status', 'active')
+                    ->orderBy('sort_order')
+                    ->orderBy('name'),
+            ]);
+        } else {
+            $techCategory->setRelation('technologies', collect());
+        }
+
+        return $this->technologyPdfService->downloadCategoryPdf($techCategory);
     }
 
     public function technologyShow(TechDetail $technology): View
@@ -145,22 +180,26 @@ class HomeController extends Controller
     protected function technologyCategories()
     {
         try {
-            // Load active technology categories with their active public cards.
-            if (!Schema::hasTable('tech_categories') || !Schema::hasTable('tech_details')) {
+            // Load active technology categories and include details only when that table exists.
+            if (!Schema::hasTable('tech_categories')) {
                 return collect();
             }
 
-            return TechCategory::query()
+            $query = TechCategory::query()
                 ->where('status', 'active')
-                ->with([
-                    'technologies' => fn ($query) => $query
+                ->orderBy('sort_order')
+                ->orderBy('name');
+
+            if (Schema::hasTable('tech_details')) {
+                $query->with([
+                    'technologies' => fn ($builder) => $builder
                         ->where('status', 'active')
                         ->orderBy('sort_order')
                         ->orderBy('name'),
-                ])
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get();
+                ]);
+            }
+
+            return $query->get();
         } catch (Throwable) {
             return collect();
         }

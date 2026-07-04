@@ -7,12 +7,23 @@ use App\Models\TechCategory;
 use App\Models\TechDetail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class TechDetailController extends Controller
 {
     public function index(Request $request): View
     {
+        if (!Schema::hasTable('tech_details') || !Schema::hasTable('tech_categories')) {
+            return view('admin.pages.tech-details.index', [
+                'pageTitle' => 'Tech Detail',
+                'technologies' => $this->emptyPaginator($request),
+                'categories' => collect(),
+                'tableMissing' => true,
+            ]);
+        }
+
         // Load technology rows with category filter support for admin usage.
         $query = TechDetail::query()
             ->with('category')
@@ -43,8 +54,14 @@ class TechDetailController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        if (!Schema::hasTable('tech_details') || !Schema::hasTable('tech_categories')) {
+            return redirect()
+                ->route('admin.tech-details.index')
+                ->with('error', 'Tech tables are missing on this server. Please run the SQL first.');
+        }
+
         return view('admin.pages.tech-details.create', [
             'pageTitle' => 'Create Tech Detail',
             'categories' => TechCategory::query()->where('status', 'active')->orderBy('name')->get(),
@@ -53,6 +70,12 @@ class TechDetailController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if (!Schema::hasTable('tech_details') || !Schema::hasTable('tech_categories')) {
+            return redirect()
+                ->route('admin.tech-details.index')
+                ->with('error', 'Tech tables are missing on this server. Please run the SQL first.');
+        }
+
         $data = $this->validateTechnology($request);
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
@@ -63,8 +86,14 @@ class TechDetailController extends Controller
             ->with('success', 'Tech detail created successfully.');
     }
 
-    public function edit(TechDetail $techDetail): View
+    public function edit(TechDetail $techDetail): View|RedirectResponse
     {
+        if (!Schema::hasTable('tech_details') || !Schema::hasTable('tech_categories')) {
+            return redirect()
+                ->route('admin.tech-details.index')
+                ->with('error', 'Tech tables are missing on this server. Please run the SQL first.');
+        }
+
         return view('admin.pages.tech-details.edit', [
             'pageTitle' => 'Edit Tech Detail',
             'technology' => $techDetail,
@@ -75,6 +104,12 @@ class TechDetailController extends Controller
 
     public function update(Request $request, TechDetail $techDetail): RedirectResponse
     {
+        if (!Schema::hasTable('tech_details') || !Schema::hasTable('tech_categories')) {
+            return redirect()
+                ->route('admin.tech-details.index')
+                ->with('error', 'Tech tables are missing on this server. Please run the SQL first.');
+        }
+
         $data = $this->validateTechnology($request);
         $data['sort_order'] = $data['sort_order'] ?? 0;
 
@@ -87,6 +122,12 @@ class TechDetailController extends Controller
 
     public function destroy(TechDetail $techDetail): RedirectResponse
     {
+        if (!Schema::hasTable('tech_details') || !Schema::hasTable('tech_categories')) {
+            return redirect()
+                ->route('admin.tech-details.index')
+                ->with('error', 'Tech tables are missing on this server. Please run the SQL first.');
+        }
+
         $techDetail->delete();
 
         return redirect()
@@ -105,6 +146,14 @@ class TechDetailController extends Controller
             'website_url' => ['nullable', 'url', 'max:500'],
             'status' => ['required', 'in:active,inactive'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]);
+    }
+
+    protected function emptyPaginator(Request $request): LengthAwarePaginator
+    {
+        return new LengthAwarePaginator([], 0, 10, (int) $request->integer('page', 1), [
+            'path' => $request->url(),
+            'query' => $request->query(),
         ]);
     }
 }

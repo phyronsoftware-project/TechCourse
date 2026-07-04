@@ -30,6 +30,7 @@ php artisan package:discover --ansi || true
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
+php artisan migrate --force || true
 
 php-fpm -D
 exec nginx -g "daemon off;"

@@ -6,6 +6,7 @@
     @php
         // Render category boxes first because the user wants category-based navigation.
         $isKhmer = app()->getLocale() === 'km';
+        $slugCategory = static fn ($name) => \Illuminate\Support\Str::slug((string) $name);
     @endphp
 
     <style>
@@ -44,6 +45,7 @@
 
         /* Show category cards in the same box direction as the user reference. */
         .technology-card {
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -54,6 +56,12 @@
             text-align: center;
             text-decoration: none;
             transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        }
+
+        .technology-card__link {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
         }
 
         .technology-card:hover {
@@ -72,6 +80,8 @@
             align-items: center;
             justify-content: center;
             font-size: 30px;
+            position: relative;
+            z-index: 2;
         }
 
         .technology-card__name {
@@ -80,6 +90,8 @@
             font-size: 16px;
             font-weight: 800;
             line-height: 1.45;
+            position: relative;
+            z-index: 2;
         }
 
         .technology-card__subtitle {
@@ -88,6 +100,8 @@
             font-size: 12px;
             line-height: 1.8;
             min-height: 40px;
+            position: relative;
+            z-index: 2;
         }
 
         .technology-card__action {
@@ -102,6 +116,9 @@
             font-size: 13px;
             font-weight: 800;
             line-height: 1;
+            text-decoration: none;
+            position: relative;
+            z-index: 3;
         }
 
         .technology-card__hint {
@@ -112,6 +129,8 @@
             color: #2563eb;
             font-size: 12px;
             font-weight: 700;
+            position: relative;
+            z-index: 2;
         }
 
         .technology-empty {
@@ -175,7 +194,9 @@
             <div class="technology-grid">
                 @foreach ($techCategories as $category)
                     {{-- Each box is one public category card that opens its own detail page. --}}
-                    <a href="{{ route('technology.category.show', $category) }}" class="technology-card">
+                    <article class="technology-card">
+                        <a href="{{ route('technology.category.show', ['categorySlug' => $slugCategory($category->name)]) }}" class="technology-card__link" aria-label="{{ $category->name }}"></a>
+
                         <span class="technology-card__icon">
                             <i class="{{ $category->icon ?: 'fa-solid fa-microchip' }}"></i>
                         </span>
@@ -186,14 +207,14 @@
                             {{ $category->subtitle ?: ($isKhmer ? 'ចូលមើលព័ត៌មាន technology នៅក្នុង category នេះ។' : 'Open the technologies inside this category.') }}
                         </p>
 
-                        <span class="technology-card__action">
-                            {{ $isKhmer ? 'មើលលម្អិត' : 'View Detail' }}
-                        </span>
+                        <a href="{{ route('technology.category.download', ['categorySlug' => $slugCategory($category->name)]) }}" class="technology-card__action">
+                            {{ $isKhmer ? 'ទាញយក' : 'Download' }}
+                        </a>
 
                         <span class="technology-card__hint">
                             {{ $isKhmer ? 'ចូលទៅកាន់ page បន្ទាប់' : 'Go to detail page' }}
                         </span>
-                    </a>
+                    </article>
                 @endforeach
             </div>
         @endif
