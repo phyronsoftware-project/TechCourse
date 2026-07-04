@@ -24,8 +24,8 @@
     $aboutKicker = $isKhmer ? 'អំពីយើង' : 'About Us';
     $aboutObjectiveTitle = $isKhmer ? 'គោលបំណង Platform' : 'Platform Objective';
     $aboutObjectiveCopy = $isKhmer
-        ? 'TechCourse មានគោលបំណងផ្តល់ជូនវគ្គសិក្សា និងផលិតផលដែលជួយឲ្យអ្នកប្រើអាចរៀនជំនាញថ្មីៗ និងជ្រើសរើស tools ឬ item ដែលសមស្របសម្រាប់ការងារ និងអាជីវកម្មរបស់ខ្លួនបានក្នុងកន្លែងតែមួយ។'
-        : 'TechCourse aims to provide courses and products that help users learn new skills and choose useful tools or items for their work and business in one place.';
+        ? 'TechCourse ត្រូវបានបង្កើតឡើងដោយមានបំណងចង់ជួយអ្នកប្រើ ឲ្យអាចរៀនជំនាញថ្មីៗ និងស្វែងរកផលិតផល ឬ tools ដែលសមស្របសម្រាប់ការងារ និងអាជីវកម្មរបស់ខ្លួនបានកាន់តែងាយស្រួល។ យើងមិនហ៊ាននិយាយថា Platform នេះល្អឥតខ្ចោះទេ ប៉ុន្តែយើងព្យាយាមរៀបចំឲ្យមានទាំង course និង product នៅក្នុងកន្លែងតែមួយ ដើម្បីជួយសន្សំពេលវេលា និងធ្វើឲ្យការរៀន និងការជ្រើសប្រើធនធានផ្សេងៗ មានភាពងាយស្រួលជាងមុន។'
+        : 'TechCourse was created to help users learn new skills and find products or tools that better fit their work and business needs. We do not claim the platform is perfect, but we try to keep courses and products together in one place to save time and make learning and choosing resources easier.';
     $certificateTitle = $isKhmer ? 'វិញ្ញាបនបត្រ' : 'Certificates';
 
     $timelineItems = $isKhmer

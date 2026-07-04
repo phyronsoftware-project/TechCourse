@@ -109,8 +109,13 @@ class User extends Authenticatable
                     return $this->avatar;
                 }
 
+                // Serve uploaded avatar files through the public media route so local and production match.
                 if (str_starts_with($this->avatar, 'storage/')) {
-                    return asset($this->avatar);
+                    return route('media.public', ['path' => ltrim((string) str($this->avatar)->after('storage/'), '/')]);
+                }
+
+                if (Storage::disk('public')->exists($this->avatar)) {
+                    return route('media.public', ['path' => ltrim((string) $this->avatar, '/')]);
                 }
 
                 return Storage::url($this->avatar);

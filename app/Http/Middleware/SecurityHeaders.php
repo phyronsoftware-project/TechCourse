@@ -21,9 +21,9 @@ class SecurityHeaders
             "img-src 'self' data: blob: https:",
             "font-src 'self' data: https://fonts.gstatic.com https://fonts.bunny.net https://cdnjs.cloudflare.com",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.bunny.net https://cdnjs.cloudflare.com",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://telegram.org https://cdn.tailwindcss.com",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://telegram.org https://cdn.tailwindcss.com https://www.googletagmanager.com",
             "frame-src 'self' https://www.google.com https://www.recaptcha.net https://oauth.telegram.org https://telegram.org",
-            "connect-src 'self' https:",
+            "connect-src 'self' https: https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com",
             "form-action 'self'",
             app()->environment('production') ? 'upgrade-insecure-requests' : null,
         ]));
