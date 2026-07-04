@@ -52,9 +52,9 @@ class BakongKhqrService
             currency: $currency === 'USD' ? KHQRData::CURRENCY_USD : KHQRData::CURRENCY_KHR,
             amount: $amount,
             billNumber: $orderNo !== '' ? $orderNo : null,
-            storeLabel: $courseTitle !== '' ? mb_substr($courseTitle, 0, 25) : null,
+            storeLabel: null,
             terminalLabel: null,
-            mobileNumber: $summary['mobile_number'] !== '' ? $summary['mobile_number'] : null,
+            mobileNumber: null,
         );
 
         $response = BakongKHQR::generateIndividual($individualInfo);
