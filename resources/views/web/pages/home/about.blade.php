@@ -11,6 +11,8 @@
             'វិញ្ញាបនបត្រ Front-End Web Design',
             'វិញ្ញាបនបត្រ Internship Program',
             'វិញ្ញាបនបត្រ Microsoft Office (Word, Excel, PowerPoint)',
+            'វិញ្ញាបនបត្រស្មោះស្នេហ៍',
+            'វិញ្ញាបនបត្រពូកែដើរលេង',
         ]
         : [
             'Certificate in Front-End Web Design',
