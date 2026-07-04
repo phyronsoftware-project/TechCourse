@@ -4,16 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class TechTableSetupController extends Controller
 {
     public function __invoke(): RedirectResponse
     {
-        Artisan::call('migrate', ['--force' => true]);
-
         if (! Schema::hasTable('tech_categories')) {
             Schema::create('tech_categories', function (Blueprint $table) {
                 $table->id();
