@@ -8,6 +8,10 @@
             <p class="text-sm text-amber-700">
                 Tech categories table is missing on this server. Please run the SQL for `tech_categories` and `tech_details` first.
             </p>
+            <form method="POST" action="{{ route('admin.tech-tables.setup') }}" class="mt-4">
+                @csrf
+                <button type="submit" class="admin-btn admin-btn-primary">Run Tech Table Setup</button>
+            </form>
         </section>
     @endif
 

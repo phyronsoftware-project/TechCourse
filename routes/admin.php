@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\SocialMediaController;
 use App\Http\Controllers\Admin\SoundToolController;
 use App\Http\Controllers\Admin\TechCategoryController;
 use App\Http\Controllers\Admin\TechDetailController;
+use App\Http\Controllers\Admin\TechTableSetupController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Web\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +51,7 @@ Route::middleware(['auth', 'admin'])
         Route::resource('tech-details', TechDetailController::class)
             ->parameters(['tech-details' => 'techDetail'])
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::post('tech-tables/setup', TechTableSetupController::class)->name('tech-tables.setup');
         Route::resource('shop-categories', ShopCategoryController::class)
             ->parameters(['shop-categories' => 'shopCategory'])
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
