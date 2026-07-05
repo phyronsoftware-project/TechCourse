@@ -14,18 +14,25 @@ class BakongKhqrService
 {
     public function summary(): array
     {
+        $mode = strtolower((string) config('services.bakong_khqr.mode', 'generated'));
         $accountId = (string) config('services.bakong_khqr.account_id');
+        $staticImageUrl = (string) config('services.bakong_khqr.static_image_url', '');
+        $staticQrString = (string) config('services.bakong_khqr.static_qr_string', '');
+        $localStaticImageUrl = $this->detectLocalStaticImageUrl();
 
         return [
+            'mode' => in_array($mode, ['generated', 'static'], true) ? $mode : 'generated',
             'account_id' => $accountId,
             'merchant_name' => (string) config('services.bakong_khqr.merchant_name', 'TechCourse'),
             'merchant_city' => (string) config('services.bakong_khqr.merchant_city', 'Phnom Penh'),
             'mobile_number' => (string) config('services.bakong_khqr.mobile_number', ''),
+            'static_image_url' => $staticImageUrl !== '' ? $staticImageUrl : $localStaticImageUrl,
+            'static_qr_string' => $staticQrString,
             'app_name' => (string) config('services.bakong_khqr.app_name', 'TechCourse'),
             'app_icon_url' => (string) config('services.bakong_khqr.app_icon_url', ''),
             'callback_url' => (string) config('services.bakong_khqr.callback_url', ''),
             'token' => (string) config('services.bakong_khqr.token', ''),
-            'is_ready' => filled($accountId),
+            'is_ready' => filled($accountId) || filled($staticImageUrl) || filled($localStaticImageUrl) || filled($staticQrString),
         ];
     }
 
@@ -34,7 +41,15 @@ class BakongKhqrService
     {
         $summary = $this->summary();
 
-        if (! $summary['is_ready']) {
+        if (($summary['mode'] ?? 'generated') === 'static') {
+            $staticKhqr = $this->configuredStaticKhqr($summary);
+
+            if ($staticKhqr !== null) {
+                return $staticKhqr;
+            }
+        }
+
+        if (! filled($summary['account_id'] ?? null)) {
             throw new RuntimeException('Bakong KHQR account ID is not configured yet.');
         }
 
@@ -96,5 +111,52 @@ class BakongKhqrService
             'image_data_uri' => $imageResult->getDataUri(),
             'deep_link' => $deepLink,
         ];
+    }
+
+    protected function configuredStaticKhqr(array $summary): ?array
+    {
+        $staticImageUrl = trim((string) ($summary['static_image_url'] ?? ''));
+        $staticQrString = trim((string) ($summary['static_qr_string'] ?? ''));
+
+        if ($staticImageUrl !== '') {
+            return [
+                'qr_string' => $staticQrString !== '' ? $staticQrString : null,
+                'md5' => $staticQrString !== '' ? md5($staticQrString) : null,
+                'image_data_uri' => $staticImageUrl,
+                'deep_link' => null,
+            ];
+        }
+
+        if ($staticQrString === '') {
+            return null;
+        }
+
+        $imageResult = (new Builder())->build(
+            data: $staticQrString,
+            size: 430,
+            margin: 12,
+            errorCorrectionLevel: ErrorCorrectionLevel::Medium,
+        );
+
+        return [
+            'qr_string' => $staticQrString,
+            'md5' => md5($staticQrString),
+            'image_data_uri' => $imageResult->getDataUri(),
+            'deep_link' => null,
+        ];
+    }
+
+    protected function detectLocalStaticImageUrl(): ?string
+    {
+        foreach ([
+            'uploads/khqr/acleda-khqr.png',
+            'uploads/khqr/bakong-khqr.png',
+        ] as $relativePath) {
+            if (is_file(public_path($relativePath))) {
+                return asset($relativePath);
+            }
+        }
+
+        return null;
     }
 }

@@ -97,10 +97,13 @@ return [
 
     // Store Bakong KHQR merchant info for generating live payment QR.
     'bakong_khqr' => [
+        'mode' => env('BAKONG_KHQR_MODE', 'generated'),
         'account_id' => env('BAKONG_KHQR_ACCOUNT_ID'),
         'merchant_name' => env('BAKONG_KHQR_MERCHANT_NAME', 'TechCourse'),
         'merchant_city' => env('BAKONG_KHQR_MERCHANT_CITY', 'Phnom Penh'),
         'mobile_number' => env('BAKONG_KHQR_MOBILE_NUMBER'),
+        'static_image_url' => env('BAKONG_KHQR_STATIC_IMAGE_URL'),
+        'static_qr_string' => env('BAKONG_KHQR_STATIC_QR_STRING'),
         'app_name' => env('BAKONG_KHQR_APP_NAME', 'TechCourse'),
         'app_icon_url' => env('BAKONG_KHQR_APP_ICON_URL'),
         'callback_url' => env('BAKONG_KHQR_CALLBACK_URL', env('APP_URL')),

@@ -182,6 +182,8 @@ class CourseCheckoutController extends Controller
                     ->first();
 
                 if ($existingPayment) {
+                    $paymentProvider = $this->resolvePaymentProviderValue();
+
                     // Keep any pending checkout aligned with the latest course price from dashboard edits.
                     $existingOrder->forceFill([
                         'total_amount' => $amount,
@@ -201,7 +203,7 @@ class CourseCheckoutController extends Controller
 
                     // Reset old ABA QR leftovers so the refreshed checkout uses the latest Bakong data only.
                     $existingPayment->forceFill([
-                        'payment_provider' => 'bakong_open_api',
+                        'payment_provider' => $paymentProvider,
                         'transaction_id' => null,
                         'merchant_id' => null,
                         'abapay_deeplink' => null,
@@ -254,10 +256,12 @@ class CourseCheckoutController extends Controller
                 'price' => $amount,
             ]);
 
+            $paymentProvider = $this->resolvePaymentProviderValue();
+
             $payment = Payment::create([
                 'order_id' => $order->id,
                 'user_id' => $userId,
-                'payment_provider' => 'bakong_open_api',
+                'payment_provider' => $paymentProvider,
                 'amount' => $amount,
                 'currency' => $currency,
                 'status' => 'pending',
@@ -361,10 +365,11 @@ class CourseCheckoutController extends Controller
         DB::transaction(function () use ($course, $order, $payment, $verification, $payload) {
             $paidAt = now();
             $existingResponsePayload = is_array($payment->response_payload) ? $payment->response_payload : [];
+            $paymentProvider = $this->resolvePaymentProviderValue();
 
             $payment->forceFill([
                 'status' => 'success',
-                'payment_provider' => 'bakong_open_api',
+                'payment_provider' => $paymentProvider,
                 'payment_option' => 'bakong_khqr',
                 'transaction_id' => data_get($verification, 'data.hash') ?: data_get($verification, 'data.md5') ?: $payment->transaction_id,
                 'paid_at' => $paidAt,
@@ -423,5 +428,34 @@ class CourseCheckoutController extends Controller
     protected function generateOrderNumber(): string
     {
         return 'TC-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(4));
+    }
+
+    protected function resolvePaymentProviderValue(): string
+    {
+        static $resolvedProvider = null;
+
+        if ($resolvedProvider !== null) {
+            return $resolvedProvider;
+        }
+
+        try {
+            $column = DB::selectOne("
+                select column_type
+                from information_schema.columns
+                where table_schema = schema()
+                  and table_name = 'payments'
+                  and column_name = 'payment_provider'
+                limit 1
+            ");
+
+            $columnType = strtolower((string) ($column->column_type ?? ''));
+            $resolvedProvider = str_contains($columnType, 'bakong_open_api')
+                ? 'bakong_open_api'
+                : 'aba_payway';
+        } catch (Throwable) {
+            $resolvedProvider = 'aba_payway';
+        }
+
+        return $resolvedProvider;
     }
 }

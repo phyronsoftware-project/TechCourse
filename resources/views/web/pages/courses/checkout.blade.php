@@ -712,16 +712,27 @@
                         @if ($khqrPreviewUrl)
                             <img src="{{ $khqrPreviewUrl }}" alt="Bakong KHQR">
                         @else
-                            <div class="khqr-modal__empty">
-                                <strong>{{ __('KHQR preview is not ready yet') }}</strong><br>
-                                {{ __('The Bakong checkout record is prepared. Add your live KHQR generator later and the real QR can be shown here.') }}
+                            <div class="khqr-modal__empty" data-js-khqr-empty>
+                                <strong>{{ __('Official KHQR image is not ready yet') }}</strong><br>
+                                {{ __('We will try to generate a browser-side Bakong KHQR test from your real account configuration now.') }}
                             </div>
                         @endif
+                        <div
+                            data-js-khqr-container
+                            data-account-id="{{ $khqrAccountId }}"
+                            data-merchant-name="{{ $khqrMerchantName }}"
+                            data-merchant-city="{{ data_get($bakong, 'merchant_city', 'Phnom Penh') }}"
+                            data-amount="{{ number_format((float) $payment->amount, 2, '.', '') }}"
+                            data-currency="{{ $payment->currency }}"
+                            data-bill-number="{{ $order->order_no }}"
+                            data-store-label="{{ \Illuminate\Support\Str::limit($course->title, 25, '') }}"
+                            @if ($khqrPreviewUrl) hidden @endif
+                        ></div>
                     </div>
                 </div>
             </div>
 
-            <p class="khqr-modal__caption">{{ __('Scan with Bakong app or any Mobile Banking App supporting KHQR') }}</p>
+            <p class="khqr-modal__caption">{{ __('Scan our official Bakong or ACLEDA KHQR with any banking app that supports KHQR, then verify your payment reference below.') }}</p>
             {{-- Show the checkout amount in a small centered line under the KHQR image. --}}
             <p class="khqr-modal__price">{{ $payment->currency }} {{ number_format((float) $payment->amount, 2) }}</p>
 
@@ -737,6 +748,8 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/gh/davidhuotkeo/bakong-khqr@master/khqr-1.0.20.min.js"></script>
     <script>
         (() => {
             const testAlert = document.querySelector('[data-checkout-test-alert]');
@@ -744,6 +757,8 @@
             const modal = document.querySelector('[data-khqr-modal]');
             const openButton = document.querySelector('[data-khqr-open]');
             const closeButtons = document.querySelectorAll('[data-khqr-close]');
+            const jsKhqrContainer = document.querySelector('[data-js-khqr-container]');
+            const jsKhqrEmpty = document.querySelector('[data-js-khqr-empty]');
 
             // Track when a learner reaches the course checkout flow.
             window.trackEvent('begin_checkout', {
@@ -777,9 +792,73 @@
                 return;
             }
 
+            const buildBrowserKhqr = () => {
+                if (!jsKhqrContainer || jsKhqrContainer.hasChildNodes()) {
+                    return;
+                }
+
+                if (typeof window.QRCode !== 'function' || !window.BakongKHQR) {
+                    return;
+                }
+
+                const sdk = window.BakongKHQR;
+                const accountId = jsKhqrContainer.dataset.accountId || '';
+                const merchantName = jsKhqrContainer.dataset.merchantName || 'TechCourse';
+                const merchantCity = jsKhqrContainer.dataset.merchantCity || 'Phnom Penh';
+                const amount = Number(jsKhqrContainer.dataset.amount || '0');
+                const currencyCode = String(jsKhqrContainer.dataset.currency || 'USD').toUpperCase();
+                const billNumber = jsKhqrContainer.dataset.billNumber || '';
+                const storeLabel = jsKhqrContainer.dataset.storeLabel || '';
+
+                if (!accountId || !sdk.IndividualInfo || !sdk.BakongKHQR || !sdk.khqrData) {
+                    return;
+                }
+
+                try {
+                    const optionalData = {
+                        amount,
+                        billNumber: billNumber || undefined,
+                        storeLabel: storeLabel || undefined,
+                        expirationTimestamp: Date.now() + (10 * 60 * 1000),
+                    };
+
+                    const individualInfo = new sdk.IndividualInfo(
+                        accountId,
+                        currencyCode === 'USD' ? sdk.khqrData.currency.usd : sdk.khqrData.currency.khr,
+                        merchantName,
+                        merchantCity,
+                        optionalData
+                    );
+
+                    const khqr = new sdk.BakongKHQR();
+                    const response = khqr.generateIndividual(individualInfo);
+                    const qrString = response?.data?.qr || response?.qr || '';
+
+                    if (!qrString) {
+                        return;
+                    }
+
+                    jsKhqrContainer.hidden = false;
+                    jsKhqrContainer.innerHTML = '';
+                    new window.QRCode(jsKhqrContainer, {
+                        text: qrString,
+                        width: 220,
+                        height: 220,
+                        correctLevel: window.QRCode.CorrectLevel.M,
+                    });
+
+                    if (jsKhqrEmpty) {
+                        jsKhqrEmpty.hidden = true;
+                    }
+                } catch (error) {
+                    console.error('Browser KHQR generation failed.', error);
+                }
+            };
+
             const openModal = () => {
                 modal.hidden = false;
                 document.body.style.overflow = 'hidden';
+                buildBrowserKhqr();
 
                 requestAnimationFrame(() => {
                     modal.classList.add('is-open');
