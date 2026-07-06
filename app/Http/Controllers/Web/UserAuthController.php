@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -657,6 +658,10 @@ class UserAuthController extends Controller
 
         if (! $user) {
             $registeredNow = true;
+            $socialAvatar = $this->storeSocialAvatar(
+                avatarUrl: $socialUser->getAvatar(),
+                userEmail: $email,
+            );
             $payload = [
                 'name' => $socialUser->getName() ?: $socialUser->getNickname() ?: Str::before($email, '@'),
                 'email' => $email,
@@ -664,8 +669,8 @@ class UserAuthController extends Controller
                 'email_verified_at' => now(),
             ];
 
-            if (Schema::hasColumn('users', 'avatar')) {
-                $payload['avatar'] = $socialUser->getAvatar();
+            if (Schema::hasColumn('users', 'avatar') && filled($socialAvatar)) {
+                $payload['avatar'] = $socialAvatar;
             }
 
             if (Schema::hasColumn('users', 'role')) {
@@ -680,13 +685,17 @@ class UserAuthController extends Controller
         } else {
             $registeredNow = false;
             $updates = [];
+            $socialAvatar = $this->storeSocialAvatar(
+                avatarUrl: $socialUser->getAvatar(),
+                userEmail: $email,
+            );
 
             if (! $user->email_verified_at) {
                 $updates['email_verified_at'] = now();
             }
 
-            if (Schema::hasColumn('users', 'avatar') && filled($socialUser->getAvatar())) {
-                $updates['avatar'] = $socialUser->getAvatar();
+            if (Schema::hasColumn('users', 'avatar') && filled($socialAvatar)) {
+                $updates['avatar'] = $socialAvatar;
             }
 
             if ($updates !== []) {
@@ -767,6 +776,36 @@ class UserAuthController extends Controller
             'username' => filled($authData['username'] ?? null) ? (string) $authData['username'] : null,
             'photo_url' => filled($authData['photo_url'] ?? null) ? (string) $authData['photo_url'] : null,
         ];
+    }
+
+    // Store social avatars locally when possible so profile photos keep rendering reliably.
+    protected function storeSocialAvatar(?string $avatarUrl, string $userEmail): ?string
+    {
+        if (! filled($avatarUrl)) {
+            return null;
+        }
+
+        try {
+            $response = Http::timeout(12)->get($avatarUrl);
+
+            if (! $response->successful()) {
+                return $avatarUrl;
+            }
+
+            $contentType = strtolower((string) $response->header('Content-Type', ''));
+            $extension = str_contains($contentType, 'png')
+                ? 'png'
+                : (str_contains($contentType, 'webp')
+                    ? 'webp'
+                    : (str_contains($contentType, 'gif') ? 'gif' : 'jpg'));
+
+            $path = 'avatars/social/' . Str::slug(Str::before($userEmail, '@') ?: 'user') . '-' . Str::random(10) . '.' . $extension;
+            Storage::disk('public')->put($path, $response->body());
+
+            return $path;
+        } catch (Throwable) {
+            return $avatarUrl;
+        }
     }
 
     protected function telegramPlaceholderEmail(int $telegramId): string

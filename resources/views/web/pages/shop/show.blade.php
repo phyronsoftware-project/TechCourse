@@ -63,7 +63,7 @@
     <style>
         .shop-detail-page {
             width: min(1320px, calc(100% - 32px));
-            margin: 0 auto;
+            margin: 18px auto 0;
             display: grid;
             gap: 26px;
             padding-bottom: 44px;
@@ -1537,6 +1537,7 @@
         @media (max-width: 768px) {
             .shop-detail-page {
                 width: min(100%, calc(100% - 8px));
+                margin-top: 14px;
             }
 
             .shop-detail-main {
@@ -1635,6 +1636,7 @@
         @media (max-width: 560px) {
             .shop-detail-page {
                 width: min(100%, calc(100% - 6px));
+                margin-top: 12px;
             }
 
             .shop-grid,
