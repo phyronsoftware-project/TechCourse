@@ -296,7 +296,8 @@ class CourseCheckoutController extends Controller
     {
         $existingPayload = is_array($payment->response_payload) ? $payment->response_payload : [];
 
-        if (filled($payment->khqr_deeplink) || filled($payment->qr_image_url) || filled(data_get($existingPayload, 'qrImage'))) {
+        // Regenerate the ABA KHQR whenever the stored payment has no QR image yet.
+        if (filled($payment->qr_image_url) || filled(data_get($existingPayload, 'qrImage')) || filled(data_get($existingPayload, 'data.qrImage'))) {
             return $payment;
         }
 

@@ -6,7 +6,7 @@
     $courseDescription = $course->short_description ?: \Illuminate\Support\Str::limit(strip_tags((string) $course->description), 180);
     // Course checkout can switch between ABA and Bakong QR providers while keeping the same modal layout.
     $paymentMethods = [
-        ['name' => ($checkoutQrProvider ?? 'bakong') === 'aba' ? 'ABA KHQR' : 'Bakong KHQR', 'copy' => ($checkoutQrProvider ?? 'bakong') === 'aba' ? __('Scan to pay with ABA KHQR checkout') : __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => ($checkoutQrProvider ?? 'bakong') === 'aba' ? asset('ABA_Images/card_icon.png') : asset('logo/logo.png'), 'actionable' => true],
+        ['name' => ($checkoutQrProvider ?? 'bakong') === 'aba' ? 'ABA KHQR' : 'Bakong KHQR', 'copy' => ($checkoutQrProvider ?? 'bakong') === 'aba' ? __('Scan to pay with ABA KHQR checkout') : __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => ($checkoutQrProvider ?? 'bakong') === 'aba' ? asset('ABA_Images/ABA-BANK.svg') : asset('logo/logo.png'), 'actionable' => true],
         [
             'name' => __('Card'),
             'copy' => __('Credit/Debit Card'),
@@ -702,10 +702,6 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
-            <div class="khqr-modal__top">
-                <h2 class="khqr-modal__title" id="khqr-modal-title">{{ $khqrModalTitle ?? 'KHQR' }}</h2>
-            </div>
-
             <div class="khqr-modal__card">
                 <div class="khqr-modal__card-body">
                     <div class="khqr-modal__qr">
@@ -723,10 +719,8 @@
                 </div>
             </div>
 
-            <p class="khqr-modal__caption">{{ $khqrCaption ?? __('Scan to pay with KHQR.') }}</p>
-            {{-- Show the checkout amount in a small centered line under the KHQR image. --}}
-            <p class="khqr-modal__price">{{ $payment->currency }} {{ number_format((float) $payment->amount, 2) }}</p>
-
+            {{--
+                Hide the payment deeplink button in the course checkout KHQR modal for now.
             @if (!empty($khqrDeepLink))
                 <div class="khqr-actions">
                     @if (!empty($khqrDeepLink))
@@ -736,6 +730,7 @@
                     @endif
                 </div>
             @endif
+            --}}
         </div>
     </div>
 

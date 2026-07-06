@@ -25,7 +25,7 @@
         ['label' => __('Address'), 'value' => $clientAddress],
     ];
     $paymentMethods = [
-        ['name' => ($checkoutQrProvider ?? 'aba') === 'aba' ? 'ABA KHQR' : 'Bakong KHQR', 'copy' => ($checkoutQrProvider ?? 'aba') === 'aba' ? __('Scan to pay with ABA KHQR checkout') : __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => ($checkoutQrProvider ?? 'aba') === 'aba' ? asset('ABA_Images/card_icon.png') : asset('logo/logo.png')],
+        ['name' => ($checkoutQrProvider ?? 'aba') === 'aba' ? 'ABA KHQR' : 'Bakong KHQR', 'copy' => ($checkoutQrProvider ?? 'aba') === 'aba' ? __('Scan to pay with ABA KHQR checkout') : __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => ($checkoutQrProvider ?? 'aba') === 'aba' ? asset('ABA_Images/ABA-BANK.svg') : asset('logo/logo.png')],
         [
             'name' => __('Card'),
             'copy' => __('Credit/Debit Card'),
@@ -1921,10 +1921,6 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
-            <div class="shop-khqr-modal__top">
-                <h2 class="shop-khqr-modal__title" id="shop-khqr-title">{{ $shopKhqrModalTitle ?? 'KHQR' }}</h2>
-            </div>
-
             <div class="shop-khqr-modal__card">
                 <div class="shop-khqr-modal__card-body">
                     <div class="shop-khqr-modal__qr">
@@ -1941,17 +1937,16 @@
                 </div>
             </div>
 
-            <p class="shop-khqr-modal__caption">{{ $shopKhqrCaption ?? __('Scan to pay with KHQR.') }}</p>
-            <p class="shop-khqr-modal__caption">{{ 'USD ' . number_format($salePrice, 2) }}</p>
-
+            {{--
+                Hide the payment deeplink button in the shop KHQR modal for now.
             @if (!empty($shopKhqrDeepLink))
                 <div class="shop-khqr-modal__link-wrap">
-                    {{-- Product payment modal exposes the live Bakong deeplink so users can open the Bakong app directly. --}}
                     <a href="{{ $shopKhqrDeepLink }}" target="_blank" rel="noopener noreferrer" class="shop-khqr-modal__link">
                         {{ ($checkoutQrProvider ?? 'bakong') === 'aba' ? __('Open ABA Deeplink') : __('Open Bakong Deeplink') }}
                     </a>
                 </div>
             @endif
+            --}}
         </div>
     </div>
 

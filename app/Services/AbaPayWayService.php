@@ -74,13 +74,12 @@ class AbaPayWayService
             'items' => $items,
             'currency' => (string) ($payload['currency'] ?? $summary['currency'] ?? 'USD'),
             'callback_url' => $callbackUrlBase64,
-            'return_deeplink' => null,
-            'custom_fields' => null,
-            'return_params' => null,
-            'payout' => null,
             'lifetime' => (int) ($payload['lifetime'] ?? 6),
             'qr_image_template' => (string) ($payload['qr_image_template'] ?? 'template3_color'),
         ];
+
+        // Keep the ABA QR request payload aligned with the working SDK by omitting null fields entirely.
+        $request = array_filter($request, static fn ($value) => $value !== null);
 
         $request['hash'] = $this->generateQrHash(
             $request,
@@ -181,27 +180,50 @@ class AbaPayWayService
     // ABA QR API hash follows the documented field sequence for generate-qr requests.
     protected function generateQrHash(array $request, string $hashKey): string
     {
-        $string = implode('', [
+        $values = [
             (string) ($request['req_time'] ?? ''),
             (string) ($request['merchant_id'] ?? ''),
             (string) ($request['tran_id'] ?? ''),
-            (string) ($request['first_name'] ?? ''),
-            (string) ($request['last_name'] ?? ''),
-            (string) ($request['email'] ?? ''),
-            (string) ($request['phone'] ?? ''),
-            number_format((float) ($request['amount'] ?? 0), 2, '.', ''),
-            (string) ($request['purchase_type'] ?? ''),
-            (string) ($request['payment_option'] ?? ''),
-            (string) ($request['items'] ?? ''),
-            (string) ($request['currency'] ?? ''),
-            (string) ($request['callback_url'] ?? ''),
-            (string) ($request['return_deeplink'] ?? ''),
-            (string) ($request['custom_fields'] ?? ''),
-            (string) ($request['return_params'] ?? ''),
-            (string) ($request['payout'] ?? ''),
-            (string) ($request['lifetime'] ?? ''),
-            (string) ($request['qr_image_template'] ?? ''),
-        ]);
+            (string) ($request['amount'] ?? ''),
+        ];
+
+        if (array_key_exists('items', $request)) {
+            $values[] = (string) $request['items'];
+        }
+
+        $values[] = (string) ($request['first_name'] ?? '');
+        $values[] = (string) ($request['last_name'] ?? '');
+        $values[] = (string) ($request['email'] ?? '');
+        $values[] = (string) ($request['phone'] ?? '');
+        $values[] = (string) ($request['purchase_type'] ?? '');
+        $values[] = (string) ($request['payment_option'] ?? '');
+
+        if (array_key_exists('callback_url', $request)) {
+            $values[] = (string) $request['callback_url'];
+        }
+
+        if (array_key_exists('return_deeplink', $request)) {
+            $values[] = (string) $request['return_deeplink'];
+        }
+
+        $values[] = (string) ($request['currency'] ?? '');
+
+        if (array_key_exists('custom_fields', $request)) {
+            $values[] = (string) $request['custom_fields'];
+        }
+
+        if (array_key_exists('return_params', $request)) {
+            $values[] = (string) $request['return_params'];
+        }
+
+        if (array_key_exists('payout', $request)) {
+            $values[] = (string) $request['payout'];
+        }
+
+        $values[] = (string) ($request['lifetime'] ?? '');
+        $values[] = (string) ($request['qr_image_template'] ?? '');
+
+        $string = implode('', $values);
 
         return base64_encode(hash_hmac('sha512', $string, $hashKey, true));
     }
