@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\SocialMediaController;
@@ -64,4 +65,6 @@ Route::prefix('app')->group(function () {
 Route::middleware('throttle:api-public')->group(function () {
     Route::get('/web/banners', [BannerController::class, 'index'])->name('api.web.banners.index');
     Route::get('/social-media', [SocialMediaController::class, 'index'])->name('api.social-media.index');
+    Route::post('/v1/payments/aba/return', [PaymentController::class, 'abaReturn'])->name('api.payments.aba.return');
+    Route::match(['get', 'post'], '/v1/payments/aba/cancel', [PaymentController::class, 'abaCancel'])->name('api.payments.aba.cancel');
 });

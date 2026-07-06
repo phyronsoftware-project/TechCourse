@@ -25,7 +25,7 @@
         ['label' => __('Address'), 'value' => $clientAddress],
     ];
     $paymentMethods = [
-        ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/logo.png')],
+        ['name' => ($checkoutQrProvider ?? 'aba') === 'aba' ? 'ABA KHQR' : 'Bakong KHQR', 'copy' => ($checkoutQrProvider ?? 'aba') === 'aba' ? __('Scan to pay with ABA KHQR checkout') : __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => ($checkoutQrProvider ?? 'aba') === 'aba' ? asset('ABA_Images/card_icon.png') : asset('logo/logo.png')],
         [
             'name' => __('Card'),
             'copy' => __('Credit/Debit Card'),
@@ -1922,42 +1922,33 @@
             </button>
 
             <div class="shop-khqr-modal__top">
-                <h2 class="shop-khqr-modal__title" id="shop-khqr-title">Bakong KHQR</h2>
+                <h2 class="shop-khqr-modal__title" id="shop-khqr-title">{{ $shopKhqrModalTitle ?? 'KHQR' }}</h2>
             </div>
 
             <div class="shop-khqr-modal__card">
                 <div class="shop-khqr-modal__card-body">
                     <div class="shop-khqr-modal__qr">
                         @if ($shopKhqrPreviewUrl)
-                            <img src="{{ $shopKhqrPreviewUrl }}" alt="Bakong KHQR">
+                            <img src="{{ $shopKhqrPreviewUrl }}" alt="{{ $shopKhqrModalTitle ?? 'KHQR' }}">
                         @else
                             <div class="shop-khqr-modal__caption" style="padding: 18px 16px;" data-shop-js-khqr-empty>
-                                {{ $shopKhqrError ?: __('We will try to generate a browser-side Bakong KHQR test from your real account configuration now.') }}
+                                {{ $shopKhqrError ?: (($checkoutQrProvider ?? 'aba') === 'aba'
+                                    ? __('Please check your ABA PayWay sandbox config and generate the ABA KHQR again.')
+                                    : __('We will try to generate a browser-side Bakong KHQR test from your real account configuration now.')) }}
                             </div>
                         @endif
-                        <div
-                            data-shop-js-khqr-container
-                            data-account-id="{{ $shopKhqrAccountId }}"
-                            data-merchant-name="{{ $shopKhqrMerchantName }}"
-                            data-merchant-city="Phnom Penh"
-                            data-amount="{{ number_format((float) $salePrice, 2, '.', '') }}"
-                            data-currency="USD"
-                            data-bill-number="SHOP-{{ $product->id }}"
-                            data-store-label="{{ \Illuminate\Support\Str::limit($product->name, 25, '') }}"
-                            @if ($shopKhqrPreviewUrl) hidden @endif
-                        ></div>
                     </div>
                 </div>
             </div>
 
-            <p class="shop-khqr-modal__caption">{{ __('Scan our official Bakong or ACLEDA KHQR with any banking app that supports KHQR.') }}</p>
+            <p class="shop-khqr-modal__caption">{{ $shopKhqrCaption ?? __('Scan to pay with KHQR.') }}</p>
             <p class="shop-khqr-modal__caption">{{ 'USD ' . number_format($salePrice, 2) }}</p>
 
             @if (!empty($shopKhqrDeepLink))
                 <div class="shop-khqr-modal__link-wrap">
                     {{-- Product payment modal exposes the live Bakong deeplink so users can open the Bakong app directly. --}}
                     <a href="{{ $shopKhqrDeepLink }}" target="_blank" rel="noopener noreferrer" class="shop-khqr-modal__link">
-                        {{ __('Open Bakong Deeplink') }}
+                        {{ ($checkoutQrProvider ?? 'bakong') === 'aba' ? __('Open ABA Deeplink') : __('Open Bakong Deeplink') }}
                     </a>
                 </div>
             @endif
@@ -1970,8 +1961,6 @@
 @include('web.pages.shop.partials.scripts')
 
 @push('web_scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" referrerpolicy="no-referrer"></script>
-    <script src="https://cdn.jsdelivr.net/gh/davidhuotkeo/bakong-khqr@master/khqr-1.0.20.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Keep a readable custom event name for product reporting in GA4.
@@ -2038,75 +2027,11 @@
             const modal = document.querySelector('[data-shop-khqr-modal]');
             const openButton = document.querySelector('[data-shop-khqr-open]');
             const closeButtons = document.querySelectorAll('[data-shop-khqr-close]');
-            const jsKhqrContainer = document.querySelector('[data-shop-js-khqr-container]');
             const jsKhqrEmpty = document.querySelector('[data-shop-js-khqr-empty]');
 
             if (!modal || !openButton) {
                 return;
             }
-
-            const buildBrowserKhqr = () => {
-                if (!jsKhqrContainer || jsKhqrContainer.hasChildNodes()) {
-                    return;
-                }
-
-                if (typeof window.QRCode !== 'function' || !window.BakongKHQR) {
-                    return;
-                }
-
-                const sdk = window.BakongKHQR;
-                const accountId = jsKhqrContainer.dataset.accountId || '';
-                const merchantName = jsKhqrContainer.dataset.merchantName || 'TechCourse';
-                const merchantCity = jsKhqrContainer.dataset.merchantCity || 'Phnom Penh';
-                const amount = Number(jsKhqrContainer.dataset.amount || '0');
-                const currencyCode = String(jsKhqrContainer.dataset.currency || 'USD').toUpperCase();
-                const billNumber = jsKhqrContainer.dataset.billNumber || '';
-                const storeLabel = jsKhqrContainer.dataset.storeLabel || '';
-
-                if (!accountId || !sdk.IndividualInfo || !sdk.BakongKHQR || !sdk.khqrData) {
-                    return;
-                }
-
-                try {
-                    const optionalData = {
-                        amount,
-                        billNumber: billNumber || undefined,
-                        storeLabel: storeLabel || undefined,
-                        expirationTimestamp: Date.now() + (10 * 60 * 1000),
-                    };
-
-                    const individualInfo = new sdk.IndividualInfo(
-                        accountId,
-                        currencyCode === 'USD' ? sdk.khqrData.currency.usd : sdk.khqrData.currency.khr,
-                        merchantName,
-                        merchantCity,
-                        optionalData
-                    );
-
-                    const khqr = new sdk.BakongKHQR();
-                    const response = khqr.generateIndividual(individualInfo);
-                    const qrString = response?.data?.qr || response?.qr || '';
-
-                    if (!qrString) {
-                        return;
-                    }
-
-                    jsKhqrContainer.hidden = false;
-                    jsKhqrContainer.innerHTML = '';
-                    new window.QRCode(jsKhqrContainer, {
-                        text: qrString,
-                        width: 220,
-                        height: 220,
-                        correctLevel: window.QRCode.CorrectLevel.M,
-                    });
-
-                    if (jsKhqrEmpty) {
-                        jsKhqrEmpty.hidden = true;
-                    }
-                } catch (error) {
-                    console.error('Browser KHQR generation failed.', error);
-                }
-            };
 
             const openModal = () => {
                 // Track product checkout intent when the payment modal is opened.
@@ -2124,7 +2049,6 @@
 
                 modal.hidden = false;
                 document.body.style.overflow = 'hidden';
-                buildBrowserKhqr();
 
                 requestAnimationFrame(() => {
                     modal.classList.add('is-open');

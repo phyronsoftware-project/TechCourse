@@ -7,6 +7,9 @@ use RuntimeException;
 
 class AbaPayWayService
 {
+    // Keep one place for the success codes returned by ABA PayWay APIs.
+    protected array $successCodes = ['0', '00'];
+
     public function summary(): array
     {
         $merchantId = (string) config('services.aba_payway.merchant_id');
@@ -37,7 +40,7 @@ class AbaPayWayService
     {
         $summary = $this->summary();
 
-        if (! $summary['is_ready'] || blank($summary['purchase_url'])) {
+        if (! $summary['is_ready'] || (blank($summary['generate_qr_url']) && blank($summary['purchase_url']))) {
             throw new RuntimeException('ABA PayWay sandbox config is not ready.');
         }
 
@@ -54,36 +57,40 @@ class AbaPayWayService
         $email = $this->limitField((string) ($payload['email'] ?? ''), 50);
         $phone = $this->limitField((string) ($payload['phone'] ?? ''), 20);
 
-        $returnUrl = (string) ($payload['return_url'] ?? $summary['return_url'] ?? '');
-        $cancelUrl = (string) ($payload['cancel_url'] ?? $summary['cancel_url'] ?? '');
-        $continueSuccessUrl = (string) ($payload['continue_success_url'] ?? $summary['return_url'] ?? '');
+        $callbackUrl = (string) ($payload['callback_url'] ?? $summary['callback_url'] ?? '');
+        $callbackUrlBase64 = $callbackUrl !== '' ? base64_encode($callbackUrl) : null;
 
         $request = [
             'req_time' => $reqTime,
             'merchant_id' => (string) $summary['merchant_id'],
             'tran_id' => (string) $payload['tran_id'],
-            'firstname' => $firstName,
-            'lastname' => $lastName,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'email' => $email,
             'phone' => $phone,
             'amount' => (float) ($payload['amount'] ?? 0),
-            'type' => 'purchase',
+            'purchase_type' => 'purchase',
             'payment_option' => 'abapay_khqr',
             'items' => $items,
             'currency' => (string) ($payload['currency'] ?? $summary['currency'] ?? 'USD'),
-            'return_url' => $returnUrl,
-            'cancel_url' => $cancelUrl,
-            'continue_success_url' => $continueSuccessUrl,
-            'return_deeplink' => '',
+            'callback_url' => $callbackUrlBase64,
+            'return_deeplink' => null,
             'custom_fields' => null,
             'return_params' => null,
+            'payout' => null,
+            'lifetime' => (int) ($payload['lifetime'] ?? 6),
+            'qr_image_template' => (string) ($payload['qr_image_template'] ?? 'template3_color'),
         ];
 
-        $request['hash'] = $this->generatePurchaseHash($request, (string) $summary['api_key']);
+        $request['hash'] = $this->generateQrHash(
+            $request,
+            (string) $summary['api_key']
+        );
 
-        $response = Http::asForm()
+        $response = Http::acceptJson()
+            ->asJson()
             ->acceptJson()
-            ->post((string) $summary['purchase_url'], $request);
+            ->post((string) ($summary['generate_qr_url'] ?: $summary['purchase_url']), $request);
 
         if (! $response->successful()) {
             $errorMessage = (string) data_get($response->json(), 'status.message', '');
@@ -108,40 +115,107 @@ class AbaPayWayService
         $data = $response->json();
         $statusCode = (string) data_get($data, 'status.code', '');
 
-        if ($statusCode !== '0' && $statusCode !== '00') {
+        if (! in_array($statusCode, $this->successCodes, true)) {
             throw new RuntimeException((string) data_get($data, 'status.message', 'Unable to generate ABA KHQR.'));
         }
 
         return $data;
     }
 
-    // ABA purchase hash follows the documented field sequence for QR/deeplink generation on sandbox checkout.
-    protected function generatePurchaseHash(array $request, string $apiKey): string
+    public function checkTransaction(string $tranId): array
+    {
+        $summary = $this->summary();
+
+        if (! $summary['is_ready'] || blank($summary['check_transaction_url'])) {
+            throw new RuntimeException('ABA PayWay check transaction config is not ready.');
+        }
+
+        $request = [
+            'req_time' => now()->format('YmdHis'),
+            'merchant_id' => (string) $summary['merchant_id'],
+            'tran_id' => $tranId,
+        ];
+
+        $request['hash'] = $this->generateCheckTransactionHash($request, (string) $summary['api_key']);
+
+        $response = Http::acceptJson()
+            ->asJson()
+            ->post((string) $summary['check_transaction_url'], $request);
+
+        if (! $response->successful()) {
+            throw new RuntimeException('ABA PayWay check transaction failed with HTTP ' . $response->status() . '.');
+        }
+
+        return $response->json();
+    }
+
+    // Verify the callback signature sent by ABA PayWay before trusting the payload.
+    public function verifyCallbackSignature(array $payload, ?string $signature): bool
+    {
+        if (blank($signature)) {
+            return false;
+        }
+
+        ksort($payload);
+
+        $beforeHash = '';
+
+        foreach ($payload as $value) {
+            $beforeHash .= is_array($value)
+                ? json_encode($value, JSON_UNESCAPED_SLASHES)
+                : (string) $value;
+        }
+
+        $expected = base64_encode(
+            hash_hmac('sha512', $beforeHash, (string) config('services.aba_payway.api_key'), true)
+        );
+
+        return hash_equals($expected, (string) $signature);
+    }
+
+    public function isSuccessStatus(?string $statusCode): bool
+    {
+        return in_array((string) $statusCode, $this->successCodes, true);
+    }
+
+    // ABA QR API hash follows the documented field sequence for generate-qr requests.
+    protected function generateQrHash(array $request, string $hashKey): string
     {
         $string = implode('', [
             (string) ($request['req_time'] ?? ''),
             (string) ($request['merchant_id'] ?? ''),
             (string) ($request['tran_id'] ?? ''),
-            number_format((float) ($request['amount'] ?? 0), 2, '.', ''),
-            (string) ($request['items'] ?? ''),
-            '',
-            '',
-            (string) ($request['firstname'] ?? ''),
-            (string) ($request['lastname'] ?? ''),
+            (string) ($request['first_name'] ?? ''),
+            (string) ($request['last_name'] ?? ''),
             (string) ($request['email'] ?? ''),
             (string) ($request['phone'] ?? ''),
-            (string) ($request['type'] ?? ''),
+            number_format((float) ($request['amount'] ?? 0), 2, '.', ''),
+            (string) ($request['purchase_type'] ?? ''),
             (string) ($request['payment_option'] ?? ''),
-            (string) ($request['return_url'] ?? ''),
-            (string) ($request['cancel_url'] ?? ''),
-            (string) ($request['continue_success_url'] ?? ''),
-            (string) ($request['return_deeplink'] ?? ''),
+            (string) ($request['items'] ?? ''),
             (string) ($request['currency'] ?? ''),
+            (string) ($request['callback_url'] ?? ''),
+            (string) ($request['return_deeplink'] ?? ''),
             (string) ($request['custom_fields'] ?? ''),
             (string) ($request['return_params'] ?? ''),
+            (string) ($request['payout'] ?? ''),
+            (string) ($request['lifetime'] ?? ''),
+            (string) ($request['qr_image_template'] ?? ''),
         ]);
 
-        return base64_encode(hash_hmac('sha512', $string, $apiKey, true));
+        return base64_encode(hash_hmac('sha512', $string, $hashKey, true));
+    }
+
+    // ABA check-transaction hash uses the compact field order from the official API example.
+    protected function generateCheckTransactionHash(array $request, string $hashKey): string
+    {
+        $string = implode('', [
+            (string) ($request['req_time'] ?? ''),
+            (string) ($request['merchant_id'] ?? ''),
+            (string) ($request['tran_id'] ?? ''),
+        ]);
+
+        return base64_encode(hash_hmac('sha512', $string, $hashKey, true));
     }
 
     protected function mask(string $value, int $prefix = 3, int $suffix = 3): string

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Services\BakongKhqrService;
+use App\Services\AbaPayWayService;
 use App\Models\ShopCategory;
 use App\Models\ShopProduct;
 use Illuminate\Http\Request;
@@ -67,10 +67,10 @@ class ShopController extends Controller
         ]);
     }
 
-    public function show(string $product, BakongKhqrService $bakongKhqrService): View
+    public function show(string $product, AbaPayWayService $abaPaywayService): View
     {
         abort_unless(Schema::hasTable('shop_products'), 404);
-        $bakongKhqrSummary = $bakongKhqrService->summary();
+        $checkoutQrProvider = $this->resolveCheckoutQrProvider($abaPaywayService);
 
         $shopProduct = ShopProduct::query()
             ->with(['category', 'images'])
@@ -101,18 +101,25 @@ class ShopController extends Controller
         $shopKhqrPreviewUrl = null;
         $shopKhqrDeepLink = null;
         $shopKhqrError = null;
+        $shopKhqrModalTitle = $checkoutQrProvider === 'aba' ? 'ABA KHQR' : 'Bakong KHQR';
+        $shopKhqrCaption = $checkoutQrProvider === 'aba'
+            ? __('Scan with ABA app or any banking app that supports ABA KHQR.')
+            : __('Scan our official Bakong or ACLEDA KHQR with any banking app that supports KHQR.');
 
         try {
-            // Generate a real Bakong KHQR for the product detail modal.
-            $bakongKhqr = $bakongKhqrService->generateCheckoutKhqr([
+            $abaKhqr = $abaPaywayService->generateKhqr([
+                'tran_id' => $this->generateShopAbaTranId($shopProduct),
                 'amount' => (float) ($shopProduct->sale_price ?: 0),
                 'currency' => 'USD',
-                'order_no' => $this->generateShopBakongRef($shopProduct),
-                'course_title' => $shopProduct->name,
+                'item_name' => $shopProduct->name,
+                'first_name' => 'TechCourse',
+                'last_name' => 'Shop',
+                'email' => '',
+                'phone' => '',
             ]);
 
-            $shopKhqrPreviewUrl = $bakongKhqr['image_data_uri'] ?? null;
-            $shopKhqrDeepLink = $bakongKhqr['deep_link'] ?? null;
+            $shopKhqrPreviewUrl = data_get($abaKhqr, 'qrImage') ?: data_get($abaKhqr, 'data.qrImage');
+            $shopKhqrDeepLink = data_get($abaKhqr, 'abapay_deeplink');
         } catch (Throwable $exception) {
             $shopKhqrError = $exception->getMessage();
         }
@@ -121,9 +128,9 @@ class ShopController extends Controller
             'product' => $shopProduct,
             'gallery' => $gallery,
             'relatedProducts' => $relatedProducts,
-            // Expose KHQR merchant details so the modal card can follow the Bakong layout more closely.
-            'shopKhqrMerchantName' => data_get($bakongKhqrSummary, 'merchant_name'),
-            'shopKhqrAccountId' => data_get($bakongKhqrSummary, 'account_id'),
+            'checkoutQrProvider' => $checkoutQrProvider,
+            'shopKhqrModalTitle' => $shopKhqrModalTitle,
+            'shopKhqrCaption' => $shopKhqrCaption,
             'shopKhqrPreviewUrl' => $shopKhqrPreviewUrl,
             'shopKhqrDeepLink' => $shopKhqrDeepLink,
             'shopKhqrError' => $shopKhqrError,
@@ -131,19 +138,10 @@ class ShopController extends Controller
         ]);
     }
 
-    // Product detail uses a lightweight Bakong bill reference because there is no dedicated shop checkout table flow yet.
-    protected function generateShopBakongRef(ShopProduct $product): string
-    {
-        return 'SHOP-' . $product->id . '-' . now()->format('His');
-    }
-
-    /*
-    // ABA product KHQR helper is paused while the shop modal is switched back to real Bakong KHQR.
     protected function generateShopAbaTranId(ShopProduct $product): string
     {
-        return 'TCSHOP' . $product->id . now()->format('His');
+        return 'TCSHOP' . $product->id . now()->format('His') . strtoupper(\Illuminate\Support\Str::random(4));
     }
-    */
 
     protected function normalizeImagePath(?string $path): ?string
     {
@@ -160,5 +158,10 @@ class ShopController extends Controller
             : ltrim($path, '/');
 
         return route('media.public', ['path' => $normalizedPath]);
+    }
+
+    protected function resolveCheckoutQrProvider(AbaPayWayService $abaPaywayService): string
+    {
+        return $abaPaywayService->summary()['is_ready'] ? 'aba' : 'aba';
     }
 }

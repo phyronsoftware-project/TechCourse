@@ -2,6 +2,10 @@
 
 return [
 
+    'checkout' => [
+        'qr_provider' => env('CHECKOUT_QR_PROVIDER', 'aba'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
