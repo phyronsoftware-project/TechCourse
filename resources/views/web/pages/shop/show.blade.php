@@ -24,8 +24,9 @@
         ['label' => __('Gmail'), 'value' => $authUser?->email],
         ['label' => __('Address'), 'value' => $clientAddress],
     ];
+    // Keep Bakong as the active shop QR while ABA work is paused for later.
     $paymentMethods = [
-        ['name' => ($checkoutQrProvider ?? 'aba') === 'aba' ? 'ABA KHQR' : 'Bakong KHQR', 'copy' => ($checkoutQrProvider ?? 'aba') === 'aba' ? __('Scan to pay with ABA KHQR checkout') : __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => ($checkoutQrProvider ?? 'aba') === 'aba' ? asset('ABA_Images/ABA-BANK.svg') : asset('logo/logo.png')],
+        ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/logo.png')],
         [
             'name' => __('Card'),
             'copy' => __('Credit/Debit Card'),
@@ -1930,9 +1931,7 @@
                             <img src="{{ $shopKhqrPreviewUrl }}" alt="{{ $shopKhqrModalTitle ?? 'KHQR' }}">
                         @else
                             <div class="shop-khqr-modal__caption" style="padding: 18px 16px;" data-shop-js-khqr-empty>
-                                {{ $shopKhqrError ?: (($checkoutQrProvider ?? 'aba') === 'aba'
-                                    ? __('Please check your ABA PayWay sandbox config and generate the ABA KHQR again.')
-                                    : __('We will try to generate a browser-side Bakong KHQR test from your real account configuration now.')) }}
+                                {{ $shopKhqrError ?: __('Please check your Bakong account config and generate the KHQR again.') }}
                             </div>
                         @endif
                     </div>

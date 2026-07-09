@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('payments')) {
+            return;
+        }
+
         // Add the ABA payment fields that the current checkout flow stores on each payment record.
         Schema::table('payments', function (Blueprint $table) {
             if (! Schema::hasColumn('payments', 'merchant_id')) {
@@ -50,6 +54,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasTable('payments')) {
+            return;
+        }
+
         // Keep rollback limited to the ABA fields added by this migration.
         Schema::table('payments', function (Blueprint $table) {
             $columns = [

@@ -14,24 +14,24 @@ class BakongKhqrService
 {
     public function summary(): array
     {
-        $mode = strtolower((string) config('services.bakong_khqr.mode', 'generated'));
-        $accountId = (string) config('services.bakong_khqr.account_id');
-        $staticImageUrl = (string) config('services.bakong_khqr.static_image_url', '');
-        $staticQrString = (string) config('services.bakong_khqr.static_qr_string', '');
+        $mode = 'generated';
+        $accountId = (string) config('bakong.khqr_account_id');
+        $staticImageUrl = '';
+        $staticQrString = '';
         $localStaticImageUrl = $this->detectLocalStaticImageUrl();
 
         return [
-            'mode' => in_array($mode, ['generated', 'static'], true) ? $mode : 'generated',
+            'mode' => $mode,
             'account_id' => $accountId,
-            'merchant_name' => (string) config('services.bakong_khqr.merchant_name', 'TechCourse'),
-            'merchant_city' => (string) config('services.bakong_khqr.merchant_city', 'Phnom Penh'),
-            'mobile_number' => (string) config('services.bakong_khqr.mobile_number', ''),
+            'merchant_name' => (string) config('bakong.merchant_name', 'TechCourse'),
+            'merchant_city' => (string) config('bakong.merchant_city', 'Phnom Penh'),
+            'mobile_number' => (string) config('bakong.mobile_number', ''),
             'static_image_url' => $staticImageUrl !== '' ? $staticImageUrl : $localStaticImageUrl,
             'static_qr_string' => $staticQrString,
-            'app_name' => (string) config('services.bakong_khqr.app_name', 'TechCourse'),
-            'app_icon_url' => (string) config('services.bakong_khqr.app_icon_url', ''),
-            'callback_url' => (string) config('services.bakong_khqr.callback_url', ''),
-            'token' => (string) config('services.bakong_khqr.token', ''),
+            'app_name' => (string) config('bakong.app_name', 'TechCourse'),
+            'app_icon_url' => (string) config('bakong.app_icon_url', ''),
+            'callback_url' => (string) config('bakong.callback_url', ''),
+            'token' => (string) config('bakong.khqr_token', ''),
             'is_ready' => filled($accountId) || filled($staticImageUrl) || filled($localStaticImageUrl) || filled($staticQrString),
         ];
     }
@@ -56,7 +56,7 @@ class BakongKhqrService
         $currency = strtoupper((string) ($payload['currency'] ?? 'KHR'));
         $amount = (float) ($payload['amount'] ?? 0);
         $orderNo = (string) ($payload['order_no'] ?? '');
-        $courseTitle = (string) ($payload['course_title'] ?? 'TechCourse');
+        $billNumber = (string) ($payload['bill_number'] ?? $payload['order_no'] ?? '');
 
         $individualInfo = new IndividualInfo(
             bakongAccountID: $summary['account_id'],
@@ -66,10 +66,10 @@ class BakongKhqrService
             accountInformation: null,
             currency: $currency === 'USD' ? KHQRData::CURRENCY_USD : KHQRData::CURRENCY_KHR,
             amount: $amount,
-            billNumber: $orderNo !== '' ? $orderNo : null,
-            storeLabel: null,
+            billNumber: $billNumber !== '' ? $billNumber : null,
+            storeLabel: $summary['app_name'] !== '' ? $summary['app_name'] : null,
             terminalLabel: null,
-            mobileNumber: null,
+            mobileNumber: $summary['mobile_number'] !== '' ? $summary['mobile_number'] : null,
         );
 
         $response = BakongKHQR::generateIndividual($individualInfo);

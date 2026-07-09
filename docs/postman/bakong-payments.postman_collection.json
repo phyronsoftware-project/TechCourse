@@ -1,0 +1,104 @@
+{
+  "info": {
+    "name": "TechCourse Bakong Payments",
+    "_postman_id": "5d17430d-63f7-4e7f-85ba-76b7c8ed3810",
+    "description": "Bakong KHQR payment endpoints for TechCourse.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Payment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 5000,\n  \"order_id\": 1,\n  \"user_id\": 1\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/bakong/payments/create",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "bakong",
+            "payments",
+            "create"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Show Payment",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/bakong/payments/{{payment_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "bakong",
+            "payments",
+            "{{payment_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check Status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/bakong/payments/{{payment_id}}/status",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "bakong",
+            "payments",
+            "{{payment_id}}",
+            "status"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost"
+    },
+    {
+      "key": "payment_id",
+      "value": "1"
+    }
+  ]
+}

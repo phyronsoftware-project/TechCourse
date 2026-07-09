@@ -4,9 +4,9 @@
 
 @php
     $courseDescription = $course->short_description ?: \Illuminate\Support\Str::limit(strip_tags((string) $course->description), 180);
-    // Course checkout can switch between ABA and Bakong QR providers while keeping the same modal layout.
+    // Keep Bakong as the active checkout QR while ABA work is paused for later.
     $paymentMethods = [
-        ['name' => ($checkoutQrProvider ?? 'bakong') === 'aba' ? 'ABA KHQR' : 'Bakong KHQR', 'copy' => ($checkoutQrProvider ?? 'bakong') === 'aba' ? __('Scan to pay with ABA KHQR checkout') : __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => ($checkoutQrProvider ?? 'bakong') === 'aba' ? asset('ABA_Images/ABA-BANK.svg') : asset('logo/logo.png'), 'actionable' => true],
+        ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/logo.png'), 'actionable' => true],
         [
             'name' => __('Card'),
             'copy' => __('Credit/Debit Card'),
@@ -709,10 +709,8 @@
                             <img src="{{ $khqrPreviewUrl }}" alt="{{ $khqrModalTitle ?? 'KHQR' }}">
                         @else
                             <div class="khqr-modal__empty" data-js-khqr-empty>
-                                <strong>{{ ($checkoutQrProvider ?? 'aba') === 'aba' ? __('ABA KHQR preview is not ready yet') : __('Official KHQR image is not ready yet') }}</strong><br>
-                                {{ ($checkoutQrProvider ?? 'aba') === 'aba'
-                                    ? __('Please check your ABA PayWay sandbox config and generate the ABA KHQR again.')
-                                    : __('We will try to generate a browser-side Bakong KHQR test from your real account configuration now.') }}
+                                <strong>{{ __('Bakong KHQR preview is not ready yet') }}</strong><br>
+                                {{ __('Please check your Bakong account config and generate the KHQR again.') }}
                             </div>
                         @endif
                     </div>

@@ -13,13 +13,18 @@ class Payment extends Model
     protected $fillable = [
         'order_id',
         'user_id',
+        'payment_no',
         'payment_provider',
         'transaction_id',
+        'transaction_hash',
         'merchant_id',
         'req_time',
         'payment_option',
         'amount',
         'currency',
+        'khqr_string',
+        'khqr_md5',
+        'bakong_response',
         'status',
         'checkout_url',
         'abapay_deeplink',
@@ -28,15 +33,18 @@ class Payment extends Model
         'response_payload',
         'callback_payload',
         'paid_at',
+        'expired_at',
     ];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
+            'bakong_response' => 'array',
             'response_payload' => 'array',
             'callback_payload' => 'array',
             'paid_at' => 'datetime',
+            'expired_at' => 'datetime',
         ];
     }
 
@@ -48,5 +56,22 @@ class Payment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Keep Bakong status checks readable inside services and controllers.
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isSuccess(): bool
+    {
+        return $this->status === 'success';
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->status === 'expired'
+            || ($this->expired_at !== null && $this->expired_at->isPast() && ! $this->isSuccess());
     }
 }

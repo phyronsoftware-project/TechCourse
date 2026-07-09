@@ -10,10 +10,10 @@ class BakongOpenApiService
     // Expose safe config details so checkout can know whether Bakong verification is ready.
     public function summary(): array
     {
-        $token = (string) config('services.bakong_open_api.token');
+        $token = (string) config('bakong.open_api_token');
 
         return [
-            'base_url' => rtrim((string) config('services.bakong_open_api.base_url', 'https://api-bakong.nbc.gov.kh'), '/'),
+            'base_url' => rtrim((string) config('bakong.open_api_base_url', 'https://api-bakong.nbc.gov.kh'), '/'),
             'has_token' => filled($token),
             'token_masked' => $this->mask($token),
         ];
@@ -60,7 +60,8 @@ class BakongOpenApiService
         }
 
         $response = Http::acceptJson()
-            ->withToken((string) config('services.bakong_open_api.token'))
+            ->timeout(15)
+            ->withToken((string) config('bakong.open_api_token'))
             ->post($summary['base_url'] . '/local/v1/' . $endpointMap[$referenceType], $payload);
 
         if (! $response->successful()) {
