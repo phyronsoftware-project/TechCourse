@@ -43,4 +43,9 @@ class Order extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function paymentHistories(): HasMany
+    {
+        return $this->hasMany(PaymentHistory::class)->latest('id');
+    }
 }

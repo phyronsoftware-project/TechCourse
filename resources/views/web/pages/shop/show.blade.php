@@ -9,8 +9,8 @@
     $shareDescription = trim((string) ($product->description ?: 'Useful IT product for app development, web development, learning, and daily productivity setup.'));
     $salePrice = (float) $product->sale_price;
     $costPrice = (float) $product->cost_price;
-    // Keep the shop KHQR currency explicit because Bakong checkout now uses KHR only.
-    $shopKhqrCurrencyCode = 'KHR';
+    // Keep the shop KHQR currency explicit because Bakong checkout now uses USD pricing.
+    $shopKhqrCurrencyCode = 'USD';
     $saveAmount = max($costPrice - $salePrice, 0);
     $monthlyPrice = $salePrice > 0 ? ceil(($salePrice / 12) * 100) / 100 : 0;
     $galleryItems = $gallery->values();

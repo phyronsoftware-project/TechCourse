@@ -6,7 +6,7 @@
     <div class="admin-page-header">
         <div>
             <h3 class="admin-page-title">Order Detail</h3>
-            <p class="admin-page-copy">Placeholder detail page for order ID: {{ $recordId }}</p>
+            <p class="admin-page-copy">Backend order record with related payment history.</p>
         </div>
         <a href="{{ route('admin.orders.index') }}" class="admin-btn admin-btn-secondary">Back</a>
     </div>
@@ -20,7 +20,8 @@
                 <tr><th>Phone</th><td>{{ $order->user?->phone ?: '-' }}</td></tr>
                 <tr><th>Status</th><td><span class="admin-status-badge admin-status-badge-{{ \Illuminate\Support\Str::slug($order->status) }}">{{ $order->status }}</span></td></tr>
                 <tr><th>Payment Method</th><td>{{ $order->payment_method ?: '-' }}</td></tr>
-                <tr><th>Total Amount</th><td>${{ number_format((float) $order->total_amount, 2) }}</td></tr>
+                <tr><th>Total Amount</th><td>${{ number_format((float) $order->total_amount, 2) }} {{ $order->currency }}</td></tr>
+                <tr><th>Paid At</th><td>{{ optional($order->paid_at)->format('Y-m-d H:i:s') ?: '-' }}</td></tr>
             </table>
         </div>
 
@@ -48,6 +49,72 @@
                         @empty
                             <tr>
                                 <td colspan="5" class="admin-empty">No items found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-form-card p-6">
+            <h4 class="admin-section-title">Payments</h4>
+
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Payment No</th>
+                            <th>Provider</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                            <th>Paid At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($order->payments as $payment)
+                            <tr>
+                                <td>{{ $payment->payment_no ?: '-' }}</td>
+                                <td>{{ $payment->payment_provider }}</td>
+                                <td>{{ $payment->status }}</td>
+                                <td>${{ number_format((float) $payment->amount, 2) }} {{ $payment->currency }}</td>
+                                <td>{{ optional($payment->paid_at)->format('Y-m-d H:i:s') ?: '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="admin-empty">No payments found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-form-card p-6">
+            <h4 class="admin-section-title">Payment History</h4>
+
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Event</th>
+                            <th>Payment Status</th>
+                            <th>Order Status</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($order->paymentHistories as $history)
+                            <tr>
+                                <td>{{ optional($history->created_at)->format('Y-m-d H:i:s') ?: '-' }}</td>
+                                <td>{{ $history->event }}</td>
+                                <td>{{ $history->payment_status ?: '-' }}</td>
+                                <td>{{ $history->order_status ?: '-' }}</td>
+                                <td>{{ $history->message ?: '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="admin-empty">No payment history found.</td>
                             </tr>
                         @endforelse
                     </tbody>

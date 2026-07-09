@@ -275,6 +275,16 @@
             word-break: break-word;
         }
 
+        .checkout-pay-status {
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid #dbe6f1;
+            background: #f8fbff;
+            color: #28405f;
+            font-size: 0.74rem;
+            line-height: 1.6;
+        }
+
         .checkout-pay-logos {
             display: flex;
             align-items: center;
@@ -687,6 +697,10 @@
                     @endforeach
                 </div>
 
+                <div class="checkout-pay-status" data-payment-status-box>
+                    {{ __('Payment status') }}: <span data-payment-status-text>{{ ucfirst($payment->status) }}</span>
+                </div>
+
                 @if (!empty($khqrError))
                     <div class="checkout-pay-copy">{{ $khqrError }}</div>
                 @endif
@@ -740,6 +754,14 @@
             const openButton = document.querySelector('[data-khqr-open]');
             const closeButtons = document.querySelectorAll('[data-khqr-close]');
             const jsKhqrEmpty = document.querySelector('[data-js-khqr-empty]');
+            const paymentId = @json($payment->id);
+            const paymentStatusUrl = @json(url('/api/bakong/payments/' . $payment->id . '/status'));
+            const successRedirectUrl = @json($course->lessons->first()
+                ? route('learning.show', [$course->slug ?: $course->id, $course->lessons->first()->slug ?: $course->lessons->first()->id])
+                : route('courses.show', $course->slug ?: $course->id));
+            const statusText = document.querySelector('[data-payment-status-text]');
+            let pollTimer = null;
+            let statusLocked = false;
 
             // Track when a learner reaches the course checkout flow.
             window.trackEvent('begin_checkout', {
@@ -780,9 +802,12 @@
                 requestAnimationFrame(() => {
                     modal.classList.add('is-open');
                 });
+
+                startStatusPolling();
             };
 
             const closeModal = () => {
+                stopStatusPolling();
                 modal.classList.remove('is-open');
 
                 window.setTimeout(() => {
@@ -799,6 +824,73 @@
                     closeModal();
                 }
             });
+
+            // Poll backend-confirmed Bakong payment status so success is shown only after real API verification.
+            function startStatusPolling() {
+                if (pollTimer || !paymentId || statusLocked) {
+                    return;
+                }
+
+                checkPaymentStatus();
+                pollTimer = window.setInterval(checkPaymentStatus, 5000);
+            }
+
+            function stopStatusPolling() {
+                if (!pollTimer) {
+                    return;
+                }
+
+                window.clearInterval(pollTimer);
+                pollTimer = null;
+            }
+
+            async function checkPaymentStatus() {
+                if (statusLocked) {
+                    return;
+                }
+
+                try {
+                    const response = await window.fetch(paymentStatusUrl, {
+                        headers: {
+                            Accept: 'application/json',
+                        },
+                        credentials: 'same-origin',
+                    });
+
+                    const result = await response.json();
+                    const status = result?.data?.status;
+
+                     if (statusText && status) {
+                        statusText.textContent = status;
+                    }
+
+                    if (status === 'success') {
+                        statusLocked = true;
+                        stopStatusPolling();
+                        window.alert('Payment success. Your course is now unlocked.');
+                        window.location.href = successRedirectUrl;
+                        return;
+                    }
+
+                    if (status === 'expired') {
+                        statusLocked = true;
+                        stopStatusPolling();
+                        window.alert('This payment QR has expired. Please refresh and create a new payment.');
+                        return;
+                    }
+
+                    if (status === 'failed') {
+                        statusLocked = true;
+                        stopStatusPolling();
+                        window.alert('Payment was found but verification failed. Please contact support or try again.');
+                    }
+                } catch (error) {
+                    console.error('Bakong payment status polling failed.', error);
+                    if (statusText) {
+                        statusText.textContent = 'check_error';
+                    }
+                }
+            }
         })();
     </script>
 @endsection

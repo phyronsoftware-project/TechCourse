@@ -44,7 +44,7 @@ class PaymentController extends Controller
 
     public function show(Payment $payment): View
     {
-        $payment->load(['order', 'user']);
+        $payment->load(['order', 'user', 'histories.user']);
 
         return view('admin.pages.payments.show', [
             'pageTitle' => 'Payment Details',

@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\CourseEnrollment;
+use App\Models\OrderItem;
 use App\Models\Payment;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -13,7 +16,8 @@ use Throwable;
 class BakongPaymentService
 {
     public function __construct(
-        protected BakongKhqrService $bakongKhqrService
+        protected BakongKhqrService $bakongKhqrService,
+        protected PaymentHistoryService $paymentHistoryService
     ) {
     }
 
@@ -22,16 +26,16 @@ class BakongPaymentService
     {
         $this->assertCreateConfig();
 
-        // Normalize API-created KHR payments to whole riel because Bakong KHQR does not accept decimal KHR values.
-        $amount = max(1, (float) round((float) ($data['amount'] ?? 0)));
-        if ($amount < 100) {
+        // Keep API-created USD KHQR payments at 2 decimal places for dollar-based checkout.
+        $amount = round((float) ($data['amount'] ?? 0), 2);
+        if ($amount < 1) {
             throw new RuntimeException('Invalid amount.', 422);
         }
 
         $paymentNo = $this->generatePaymentNo();
         $khqr = $this->bakongKhqrService->generateCheckoutKhqr([
             'amount' => $amount,
-            'currency' => 'KHR',
+            'currency' => 'USD',
             'bill_number' => $paymentNo,
             'order_no' => $paymentNo,
         ]);
@@ -41,14 +45,14 @@ class BakongPaymentService
             throw new RuntimeException('Unable to generate Bakong KHQR string.');
         }
 
-        return Payment::query()->create([
+        $payment = Payment::query()->create([
             'order_id' => $data['order_id'] ?? null,
             'user_id' => $data['user_id'] ?? null,
             'payment_no' => $paymentNo,
             'payment_provider' => 'bakong_open_api',
             'payment_option' => 'bakong_khqr',
             'amount' => $amount,
-            'currency' => 'KHR',
+            'currency' => 'USD',
             'khqr_string' => $khqrString,
             'khqr_md5' => md5($khqrString),
             'status' => 'pending',
@@ -60,6 +64,14 @@ class BakongPaymentService
                 ],
             ],
         ]);
+
+        // Record the first backend entry for API-generated Bakong payments.
+        $this->paymentHistoryService->log($payment, 'api_payment_created', 'Bakong payment QR created from API.', [
+            'amount' => $amount,
+            'currency' => 'USD',
+        ]);
+
+        return $payment;
     }
 
     // Only backend verification with Bakong Open API can move the payment to success.
@@ -71,6 +83,7 @@ class BakongPaymentService
 
         if ($payment->isExpired()) {
             $payment->forceFill(['status' => 'expired'])->save();
+            $this->paymentHistoryService->log($payment->fresh(), 'payment_expired', 'Bakong payment expired before confirmation.');
 
             return $payment->fresh();
         }
@@ -80,6 +93,9 @@ class BakongPaymentService
         try {
             $result = $this->callCheckTransactionByMd5((string) $payment->khqr_md5);
             $payment = $this->storeBakongResponse($payment, $result);
+            $this->paymentHistoryService->log($payment, 'status_checked', 'Bakong payment status checked from Open API.', [
+                'bakong_response' => $result,
+            ]);
         } catch (RuntimeException $exception) {
             if ($exception->getCode() >= 500 || $exception->getCode() === 0) {
                 Log::warning('Bakong payment status check failed.', [
@@ -112,6 +128,9 @@ class BakongPaymentService
             ]);
 
             $payment->forceFill(['status' => 'failed'])->save();
+            $this->paymentHistoryService->log($payment->fresh(), 'payment_failed', 'Bakong amount mismatch detected.', [
+                'bakong_response' => $result,
+            ]);
 
             throw new RuntimeException('Bakong amount mismatch detected.', 409);
         }
@@ -123,6 +142,9 @@ class BakongPaymentService
             ]);
 
             $payment->forceFill(['status' => 'failed'])->save();
+            $this->paymentHistoryService->log($payment->fresh(), 'payment_failed', 'Bakong currency mismatch detected.', [
+                'bakong_response' => $result,
+            ]);
 
             throw new RuntimeException('Bakong currency mismatch detected.', 409);
         }
@@ -133,7 +155,13 @@ class BakongPaymentService
                 'transaction_hash' => $this->extractTransactionHash($result),
                 'paid_at' => $this->extractPaidAt($result) ?? now(),
             ])->save();
+
+            $this->paymentHistoryService->log($payment->fresh(), 'payment_confirmed_by_api', 'Bakong payment confirmed by backend API verification.', [
+                'bakong_response' => $result,
+            ]);
         }
+
+        $payment = $this->finalizeConfirmedPayment($payment);
 
         return $payment->fresh();
     }
@@ -300,5 +328,57 @@ class BakongPaymentService
         } catch (Throwable) {
             return null;
         }
+    }
+
+    protected function finalizeConfirmedPayment(Payment $payment): Payment
+    {
+        if (! $payment->isSuccess()) {
+            return $payment;
+        }
+
+        $payment->loadMissing('order.items');
+        $order = $payment->order;
+
+        if (! $order) {
+            return $payment;
+        }
+
+        // Finalize the related order and unlock the purchased course only after backend Bakong confirmation.
+        DB::transaction(function () use ($payment, $order) {
+            $paidAt = $payment->paid_at ?? now();
+
+            $order->forceFill([
+                'status' => 'paid',
+                'payment_method' => 'bakong_khqr',
+                'paid_at' => $paidAt,
+            ])->save();
+
+            $courseItem = OrderItem::query()
+                ->where('order_id', $order->id)
+                ->whereNotNull('course_id')
+                ->first();
+
+            if (! $courseItem || ! $payment->user_id) {
+                return;
+            }
+
+            CourseEnrollment::query()->updateOrCreate(
+                [
+                    'user_id' => $payment->user_id,
+                    'course_id' => $courseItem->course_id,
+                ],
+                [
+                    'order_id' => $order->id,
+                    'access_type' => 'paid',
+                    'status' => 'active',
+                    'started_at' => $paidAt,
+                ],
+            );
+        });
+
+        // Keep the related order state change visible in backend history.
+        $this->paymentHistoryService->log($payment->fresh('order'), 'order_paid', 'Order marked as paid after Bakong confirmation.');
+
+        return $payment->fresh();
     }
 }

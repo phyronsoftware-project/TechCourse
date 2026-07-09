@@ -34,7 +34,7 @@ class OrderController extends Controller
 
     public function show(Order $order): View
     {
-        $order->load(['user', 'items.course', 'payments']);
+        $order->load(['user', 'items.course', 'payments', 'paymentHistories.user']);
 
         return view('admin.pages.orders.show', [
             'pageTitle' => 'Order Details',

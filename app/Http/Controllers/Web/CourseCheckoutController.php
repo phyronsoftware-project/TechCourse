@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Services\BakongKhqrService;
+use App\Services\PaymentHistoryService;
 use App\Services\BakongOpenApiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,11 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CourseCheckoutController extends Controller
 {
+    public function __construct(
+        protected PaymentHistoryService $paymentHistoryService
+    ) {
+    }
+
     public function show(
         string $course,
         BakongOpenApiService $bakongOpenApiService,
@@ -109,7 +115,7 @@ class CourseCheckoutController extends Controller
                 (string) $payload['reference_value'],
                 [
                     'amount' => (float) $payment->amount,
-                    'currency' => 'KHR',
+                    'currency' => 'USD',
                 ],
             );
         } catch (Throwable $exception) {
@@ -160,6 +166,13 @@ class CourseCheckoutController extends Controller
 
         $payment->forceFill(['status' => 'failed'])->save();
 
+        // Keep unsuccessful Bakong verification attempts visible in backend history.
+        $this->paymentHistoryService->log($payment->fresh('order'), 'verification_failed', 'Bakong verification did not return a successful status.', [
+            'reference_type' => $payload['reference_type'],
+            'reference_value' => $payload['reference_value'],
+            'bakong_verification' => $verification,
+        ]);
+
         return redirect()
             ->route('courses.checkout', $courseModel->slug ?: $courseModel->id)
             ->with('error', __('Bakong verification shows this transaction is not successful yet.'));
@@ -169,10 +182,9 @@ class CourseCheckoutController extends Controller
     {
         return DB::transaction(function () use ($course, $checkoutQrProvider) {
             $userId = (int) Auth::id();
-            // Normalize course price to whole riel because Bakong KHQR does not accept decimal KHR values.
-            $amount = max(1, (float) round((float) ($course->price ?? 0)));
-            // Force Bakong checkout records to use KHR so the generated KHQR matches the payment app expectation.
-            $currency = 'KHR';
+            // Keep course checkout in USD so the KHQR amount follows the dollar-based pricing shown in the project.
+            $amount = round((float) ($course->price ?? 0), 2);
+            $currency = 'USD';
 
             $existingOrder = Order::query()
                 ->where('user_id', $userId)
@@ -249,6 +261,12 @@ class CourseCheckoutController extends Controller
                         ),
                     ])->save();
 
+                    // Keep each reopened pending checkout visible in backend history.
+                    $this->paymentHistoryService->log($existingPayment->fresh('order'), 'checkout_refreshed', 'Pending Bakong checkout refreshed for course payment.', [
+                        'course_id' => $course->id,
+                        'course_title' => $course->title,
+                    ]);
+
                     $existingOrder->refresh();
                     $existingPayment->refresh();
 
@@ -293,6 +311,12 @@ class CourseCheckoutController extends Controller
                 ],
             ]);
 
+            // Store the first course checkout creation event for backend tracking.
+            $this->paymentHistoryService->log($payment->fresh('order'), 'checkout_created', 'Course checkout order and payment created.', [
+                'course_id' => $course->id,
+                'course_title' => $course->title,
+            ]);
+
             return [$order, $payment];
         });
     }
@@ -304,7 +328,7 @@ class CourseCheckoutController extends Controller
         // Regenerate a fresh Bakong KHQR on every checkout open so customers do not scan an older QR.
         $response = $bakongKhqrService->generateCheckoutKhqr([
             'amount' => (float) $payment->amount,
-            'currency' => 'KHR',
+            'currency' => 'USD',
             'order_no' => $order->order_no,
             'bill_number' => $payment->payment_no ?: $order->order_no,
             'course_title' => $course->title,
@@ -320,7 +344,7 @@ class CourseCheckoutController extends Controller
             'status' => 'pending',
             'payment_option' => 'bakong_khqr',
             'abapay_deeplink' => null,
-            'currency' => 'KHR',
+            'currency' => 'USD',
             'khqr_string' => data_get($response, 'qr_string'),
             'khqr_md5' => data_get($response, 'md5'),
             'khqr_deeplink' => data_get($response, 'deep_link'),
@@ -330,6 +354,13 @@ class CourseCheckoutController extends Controller
                 'bakong_checkout' => $response,
             ]),
         ])->save();
+
+        // Log the fresh KHQR regeneration so backend can trace the exact active QR.
+        $this->paymentHistoryService->log($payment->fresh('order'), 'khqr_regenerated', 'Fresh Bakong KHQR regenerated for checkout page.', [
+            'order_no' => $order->order_no,
+            'payment_no' => $payment->payment_no,
+            'khqr_md5' => data_get($response, 'md5'),
+        ]);
 
         return $payment->fresh();
     }
@@ -374,6 +405,13 @@ class CourseCheckoutController extends Controller
             ]),
         ])->save();
 
+        // Save the latest manual verification request in backend history.
+        $this->paymentHistoryService->log($payment->fresh('order'), 'verification_received', 'Bakong verification response stored on payment.', [
+            'reference_type' => $payload['reference_type'],
+            'reference_value' => $payload['reference_value'],
+            'bakong_verification' => $verification,
+        ]);
+
         return $payment->fresh();
     }
 
@@ -417,6 +455,12 @@ class CourseCheckoutController extends Controller
                 ],
             );
         });
+
+        // Keep the final successful checkout result visible in admin backend.
+        $this->paymentHistoryService->log($payment->fresh('order'), 'checkout_paid', 'Course order marked as paid after Bakong verification.', [
+            'course_id' => $course->id,
+            'course_title' => $course->title,
+        ]);
     }
 
     // ABA checkout uses a short unique tran id for KHQR generation requests.
