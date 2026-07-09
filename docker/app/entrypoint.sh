@@ -17,7 +17,11 @@ else
 fi
 
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+# Make sure Laravel can always create and append its runtime log file on Render.
+touch storage/logs/laravel.log
 chown -R www-data:www-data storage bootstrap/cache
+chmod -R ug+rwX storage bootstrap/cache
+chmod 664 storage/logs/laravel.log
 chmod 755 public/logo || true
 chmod 644 public/logo/* || true
 chmod -R a+rX storage/app/public || true
