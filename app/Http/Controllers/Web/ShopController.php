@@ -105,10 +105,10 @@ class ShopController extends Controller
         $shopKhqrCaption = __('Scan our official Bakong KHQR with any banking app that supports KHQR.');
 
         try {
-            // Pause ABA shop QR generation for now while Bakong is the active QR option.
+            // Generate the live Bakong KHQR in KHR so customers always scan a fresh supported payment QR.
             $bakongKhqr = $bakongKhqrService->generateCheckoutKhqr([
-                'amount' => (float) ($shopProduct->sale_price ?: 0),
-                'currency' => 'USD',
+                'amount' => max(1, (float) round((float) ($shopProduct->sale_price ?: 0))),
+                'currency' => 'KHR',
                 'order_no' => 'SHOP-' . $shopProduct->id,
                 'bill_number' => 'SHOP-' . $shopProduct->id . '-' . now()->format('YmdHis'),
                 'course_title' => $shopProduct->name,

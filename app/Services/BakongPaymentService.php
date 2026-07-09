@@ -22,7 +22,8 @@ class BakongPaymentService
     {
         $this->assertCreateConfig();
 
-        $amount = round((float) ($data['amount'] ?? 0), 2);
+        // Normalize API-created KHR payments to whole riel because Bakong KHQR does not accept decimal KHR values.
+        $amount = max(1, (float) round((float) ($data['amount'] ?? 0)));
         if ($amount < 100) {
             throw new RuntimeException('Invalid amount.', 422);
         }
@@ -51,7 +52,7 @@ class BakongPaymentService
             'khqr_string' => $khqrString,
             'khqr_md5' => md5($khqrString),
             'status' => 'pending',
-            'expired_at' => now()->addMinutes(10),
+            'expired_at' => now()->addMinutes(max(1, (int) config('bakong.dynamic_expire_minutes', 10))),
             'bakong_response' => [
                 'khqr_generation' => [
                     'md5' => $khqr['md5'] ?? null,

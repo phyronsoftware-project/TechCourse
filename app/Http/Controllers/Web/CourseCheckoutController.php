@@ -109,7 +109,7 @@ class CourseCheckoutController extends Controller
                 (string) $payload['reference_value'],
                 [
                     'amount' => (float) $payment->amount,
-                    'currency' => $payment->currency,
+                    'currency' => 'KHR',
                 ],
             );
         } catch (Throwable $exception) {
@@ -169,8 +169,10 @@ class CourseCheckoutController extends Controller
     {
         return DB::transaction(function () use ($course, $checkoutQrProvider) {
             $userId = (int) Auth::id();
-            $amount = (float) ($course->price ?? 0);
-            $currency = $course->currency ?: 'USD';
+            // Normalize course price to whole riel because Bakong KHQR does not accept decimal KHR values.
+            $amount = max(1, (float) round((float) ($course->price ?? 0)));
+            // Force Bakong checkout records to use KHR so the generated KHQR matches the payment app expectation.
+            $currency = 'KHR';
 
             $existingOrder = Order::query()
                 ->where('user_id', $userId)
@@ -225,7 +227,7 @@ class CourseCheckoutController extends Controller
                         'khqr_md5' => null,
                         'bakong_response' => null,
                         'payment_option' => $paymentOption,
-                        'expired_at' => now()->addMinutes(10),
+                        'expired_at' => now()->addMinutes(max(1, (int) config('bakong.dynamic_expire_minutes', 10))),
                         'response_payload' => array_merge(
                             collect($existingPayload)
                                 ->except([
@@ -283,7 +285,7 @@ class CourseCheckoutController extends Controller
                 'payment_option' => 'bakong_khqr',
                 'merchant_id' => null,
                 'req_time' => now()->format('YmdHis'),
-                'expired_at' => now()->addMinutes(10),
+                'expired_at' => now()->addMinutes(max(1, (int) config('bakong.dynamic_expire_minutes', 10))),
                 'response_payload' => [
                     'course_id' => $course->id,
                     'course_title' => $course->title,
@@ -299,20 +301,10 @@ class CourseCheckoutController extends Controller
     {
         $existingPayload = is_array($payment->response_payload) ? $payment->response_payload : [];
 
-        // Reuse the live Bakong KHQR while the pending payment is still valid.
-        if (
-            filled($payment->qr_image_url)
-            && filled($payment->khqr_string)
-            && filled($payment->khqr_md5)
-            && ! $payment->isExpired()
-        ) {
-            return $payment;
-        }
-
-        // Pause ABA generation for now while the checkout uses Bakong KHQR only.
+        // Regenerate a fresh Bakong KHQR on every checkout open so customers do not scan an older QR.
         $response = $bakongKhqrService->generateCheckoutKhqr([
             'amount' => (float) $payment->amount,
-            'currency' => $payment->currency,
+            'currency' => 'KHR',
             'order_no' => $order->order_no,
             'bill_number' => $payment->payment_no ?: $order->order_no,
             'course_title' => $course->title,
@@ -328,11 +320,12 @@ class CourseCheckoutController extends Controller
             'status' => 'pending',
             'payment_option' => 'bakong_khqr',
             'abapay_deeplink' => null,
+            'currency' => 'KHR',
             'khqr_string' => data_get($response, 'qr_string'),
             'khqr_md5' => data_get($response, 'md5'),
             'khqr_deeplink' => data_get($response, 'deep_link'),
             'qr_image_url' => data_get($response, 'image_data_uri'),
-            'expired_at' => now()->addMinutes(10),
+            'expired_at' => now()->addMinutes(max(1, (int) config('bakong.dynamic_expire_minutes', 10))),
             'response_payload' => array_merge($existingPayload, [
                 'bakong_checkout' => $response,
             ]),

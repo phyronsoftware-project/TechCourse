@@ -6,22 +6,24 @@ use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use KHQR\BakongKHQR;
 use KHQR\Helpers\KHQRData;
+use KHQR\Helpers\Utils;
 use KHQR\Models\IndividualInfo;
 use KHQR\Models\SourceInfo;
+use Illuminate\Support\Carbon;
 use RuntimeException;
 
 class BakongKhqrService
 {
     public function summary(): array
     {
-        $mode = 'generated';
+        $mode = strtolower((string) config('bakong.mode', 'generated'));
         $accountId = (string) config('bakong.khqr_account_id');
-        $staticImageUrl = '';
-        $staticQrString = '';
+        $staticImageUrl = (string) config('bakong.static_image_url', '');
+        $staticQrString = (string) config('bakong.static_qr_string', '');
         $localStaticImageUrl = $this->detectLocalStaticImageUrl();
 
         return [
-            'mode' => $mode,
+            'mode' => in_array($mode, ['generated', 'static'], true) ? $mode : 'static',
             'account_id' => $accountId,
             'merchant_name' => (string) config('bakong.merchant_name', 'TechCourse'),
             'merchant_city' => (string) config('bakong.merchant_city', 'Phnom Penh'),
@@ -54,7 +56,8 @@ class BakongKhqrService
         }
 
         $currency = strtoupper((string) ($payload['currency'] ?? 'KHR'));
-        $amount = (float) ($payload['amount'] ?? 0);
+        // Normalize KHR amounts to whole riel because Bakong KHQR rejects decimal KHR values.
+        $amount = $this->normalizeAmount((float) ($payload['amount'] ?? 0), $currency);
         $orderNo = (string) ($payload['order_no'] ?? '');
         $billNumber = (string) ($payload['bill_number'] ?? $payload['order_no'] ?? '');
 
@@ -79,6 +82,9 @@ class BakongKhqrService
         if ($qrString === '') {
             throw new RuntimeException('Bakong KHQR generation did not return a QR string.');
         }
+
+        // Rewrite the SDK timestamp tag into official creation+expiration subtags so dynamic KHQR stays valid in banking apps.
+        $qrString = $this->applyDynamicTimestampPayload($qrString, now(), $this->dynamicExpiryAt());
 
         $imageResult = (new Builder())->build(
             data: $qrString,
@@ -110,6 +116,8 @@ class BakongKhqrService
             'md5' => (string) ($responseData['md5'] ?? md5($qrString)),
             'image_data_uri' => $imageResult->getDataUri(),
             'deep_link' => $deepLink,
+            'amount' => $amount,
+            'currency' => $currency,
         ];
     }
 
@@ -149,6 +157,7 @@ class BakongKhqrService
     protected function detectLocalStaticImageUrl(): ?string
     {
         foreach ([
+            'ABA_Images/KHQR_Static.png',
             'uploads/khqr/acleda-khqr.png',
             'uploads/khqr/bakong-khqr.png',
         ] as $relativePath) {
@@ -158,5 +167,45 @@ class BakongKhqrService
         }
 
         return null;
+    }
+
+    protected function normalizeAmount(float $amount, string $currency): float|int
+    {
+        if ($currency === 'KHR') {
+            return max(1, (int) round($amount));
+        }
+
+        return round($amount, 2);
+    }
+
+    protected function dynamicExpiryAt(): Carbon
+    {
+        $minutes = max(1, (int) config('bakong.dynamic_expire_minutes', 10));
+
+        return now()->addMinutes($minutes);
+    }
+
+    protected function applyDynamicTimestampPayload(string $qrString, Carbon $createdAt, Carbon $expiresAt): string
+    {
+        $createdAtMs = (string) $createdAt->utc()->valueOf();
+        $expiresAtMs = (string) $expiresAt->utc()->valueOf();
+        $timestampValue =
+            '00' . str_pad((string) strlen($createdAtMs), 2, '0', STR_PAD_LEFT) . $createdAtMs .
+            '01' . str_pad((string) strlen($expiresAtMs), 2, '0', STR_PAD_LEFT) . $expiresAtMs;
+        $timestampField = '99' . str_pad((string) strlen($timestampValue), 2, '0', STR_PAD_LEFT) . $timestampValue;
+
+        $qrWithoutCrc = preg_replace('/63\d{2}[A-Fa-f0-9]{4}$/', '', $qrString);
+        if (! is_string($qrWithoutCrc) || $qrWithoutCrc === '') {
+            throw new RuntimeException('Bakong KHQR CRC payload is invalid.');
+        }
+
+        $qrWithoutTimestamp = preg_replace('/99\d{2}(?:00\d{2}\d{13}(?:01\d{2}\d{13})?|01\d{2}\d{13})/', '', $qrWithoutCrc, 1);
+        if (! is_string($qrWithoutTimestamp)) {
+            throw new RuntimeException('Bakong KHQR timestamp payload is invalid.');
+        }
+
+        $payload = $qrWithoutTimestamp . $timestampField . '6304';
+
+        return $payload . Utils::crc16($payload);
     }
 }
