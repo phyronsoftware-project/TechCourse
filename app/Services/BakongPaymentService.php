@@ -278,6 +278,18 @@ class BakongPaymentService
     {
         $trackingStatus = strtoupper((string) data_get($response, 'data.trackingStatus', ''));
         $status = strtolower((string) data_get($response, 'data.status', data_get($response, 'status', '')));
+        $responseCode = data_get($response, 'responseCode');
+        $transactionHash = (string) (
+            data_get($response, 'data.hash')
+            ?? data_get($response, 'data.transactionHash')
+            ?? data_get($response, 'data.txHash')
+            ?? data_get($response, 'hash')
+        );
+
+        // Official Bakong md5/hash lookup can confirm a paid transaction by returning responseCode=0 with a transaction hash.
+        if ((int) $responseCode === 0 && $transactionHash !== '') {
+            return true;
+        }
 
         return in_array($trackingStatus, ['ACKNOWLEDGED_BY_FI', 'SUCCESS'], true)
             || in_array($status, ['success', 'paid', 'completed'], true);

@@ -99,6 +99,7 @@ class ShopController extends Controller
             ->values();
 
         $shopKhqrPreviewUrl = null;
+        $shopKhqrString = null;
         $shopKhqrDeepLink = null;
         $shopKhqrError = null;
         $shopKhqrModalTitle = 'Bakong KHQR';
@@ -115,6 +116,7 @@ class ShopController extends Controller
             ]);
 
             $shopKhqrPreviewUrl = data_get($bakongKhqr, 'image_data_uri');
+            $shopKhqrString = data_get($bakongKhqr, 'qr_string');
             $shopKhqrDeepLink = data_get($bakongKhqr, 'deep_link');
         } catch (Throwable $exception) {
             $shopKhqrError = $exception->getMessage();
@@ -128,6 +130,7 @@ class ShopController extends Controller
             'shopKhqrModalTitle' => $shopKhqrModalTitle,
             'shopKhqrCaption' => $shopKhqrCaption,
             'shopKhqrPreviewUrl' => $shopKhqrPreviewUrl,
+            'shopKhqrString' => $shopKhqrString,
             'shopKhqrDeepLink' => $shopKhqrDeepLink,
             'shopKhqrError' => $shopKhqrError,
             'shopReady' => Schema::hasTable('shop_categories') && Schema::hasTable('shop_products') && Schema::hasTable('shop_product_images'),

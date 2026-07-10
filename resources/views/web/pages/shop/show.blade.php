@@ -11,6 +11,8 @@
     $costPrice = (float) $product->cost_price;
     // Keep the shop KHQR currency explicit because Bakong checkout now uses USD pricing.
     $shopKhqrCurrencyCode = 'USD';
+    $shopKhqrMerchantName = config('bakong.merchant_name') ?: 'TechCourse';
+    $shopKhqrCardId = 'shop-khqr-card-' . $product->id;
     $saveAmount = max($costPrice - $salePrice, 0);
     $monthlyPrice = $salePrice > 0 ? ceil(($salePrice / 12) * 100) / 100 : 0;
     $galleryItems = $gallery->values();
@@ -62,6 +64,8 @@
 
 @section('content')
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@600;700;800;900&display=swap');
+
         .shop-detail-page {
             width: min(1320px, calc(100% - 32px));
             margin: 18px auto 0;
@@ -755,117 +759,129 @@
 
         .shop-khqr-modal__dialog {
             position: relative;
-            width: min(355px, 100%);
-            background: #ffffff;
-            border-radius: 22px;
-            border: 1px solid rgba(226, 232, 240, 0.95);
-            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.26);
-            padding: 8px 0 8px;
-            overflow: hidden;
-            transform: translateY(20px) scale(0.96);
+            width: min(360px, calc(100vw - 28px));
+            background: transparent;
+            border-radius: 0;
+            border: 0;
+            box-shadow: none;
+            padding: 0;
+            overflow: visible;
+            transform: translateY(20px);
             opacity: 0;
             transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.32s ease;
         }
 
         .shop-khqr-modal.is-open .shop-khqr-modal__dialog {
-            transform: translateY(0) scale(1);
+            transform: translateY(0);
             opacity: 1;
         }
 
         .shop-khqr-modal__close {
-            position: absolute;
-            top: 12px;
-            right: 14px;
-            width: 38px;
-            height: 38px;
-            border: 0;
-            border-radius: 999px;
-            background: transparent;
-            color: #22c7ee;
-            cursor: pointer;
-            font-size: 1.2rem;
+            display: none;
         }
 
-        .shop-khqr-modal__title {
-            margin: 0;
-            color: #0f2a52;
-            font-family: var(--font-lato);
-            font-size: 1.2rem;
-            line-height: 1.2;
-            font-weight: 700;
-        }
-
-        .shop-khqr-modal__top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 0 46px 2px 18px;
-        }
-
-        .shop-khqr-modal__brand-image {
-            width: 170px;
-            display: block;
-            object-fit: contain;
-        }
-
+        /* Keep the shop KHQR card aligned with the visual sample the user provided. */
         .shop-khqr-modal__card {
             width: 100%;
             margin: 0;
-            border-radius: 0;
+            border-radius: 10px;
             overflow: hidden;
-            background: #ffffff;
-            box-shadow: none;
+            background: #e1232d;
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.15);
             border: 0;
+            font-family: 'Nunito Sans', sans-serif;
         }
 
-        .shop-khqr-modal__card-body {
-            padding: 10px 10px 0;
-            background: #ffffff;
-        }
-
-        .shop-khqr-modal__qr {
+        .khqr-official-card__header {
+            position: relative;
+            min-height: 80px;
+            background: #e1232d;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100%;
-            overflow: hidden;
-            background: #ffffff;
+            padding: 20px 20px 14px;
         }
 
-        .shop-khqr-modal__qr img {
-            width: 100%;
-            max-height: 500px;
+        .khqr-official-card__header::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            bottom: -1px;
+            width: 0;
+            height: 0;
+            border-top: 30px solid transparent;
+            border-left: 30px solid #ffffff;
+        }
+
+        .khqr-official-card__logo {
+            width: 98px;
+            max-width: 100%;
             display: block;
+        }
+
+        .khqr-official-card__body {
+            background: #ffffff;
+            padding: 14px 18px 14px;
+        }
+
+        .khqr-official-card__merchant {
+            margin: 0;
+            color: #383c42;
+            font-size: 18px;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+
+        .khqr-official-card__currency {
+            margin-top: 12px;
+            color: #383c42;
+            font-size: 17px;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .khqr-official-card__qr-wrap {
+            width: 100%;
+            margin: 18px auto 0;
+        }
+
+        .khqr-official-card__qr {
+            width: 100%;
+            max-width: 304px;
+            max-height: 304px;
+            display: block;
+            margin: 0 auto;
             object-fit: contain;
+        }
+
+        .khqr-official-card__footer {
+            background: #e1232d;
+            padding: 8px 8px 8px;
         }
 
         .shop-khqr-modal__caption {
             width: 100%;
-            margin: 4px 0 0;
-            padding: 0 12px;
+            margin: 0;
+            padding: 14px 18px 4px;
             text-align: center;
             color: #8a94a6;
             font-size: 11px;
             line-height: 1.65;
         }
 
-        .shop-khqr-modal__link-wrap {
-            padding: 0 18px 14px;
-        }
-
-        .shop-khqr-modal__link {
-            min-height: 42px;
-            border-radius: 14px;
-            display: flex;
+        .shop-khqr-modal__download {
+            width: 100%;
+            min-height: 54px;
+            border: 0;
+            border-radius: 0;
+            background: #ffffff;
+            color: #202020;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #dbeafe;
-            font-size: 0.78rem;
-            font-weight: 800;
+            font-size: 16px;
+            font-weight: 500;
         }
 
         .shop-related {
@@ -1616,20 +1632,43 @@
             }
 
             .shop-khqr-modal__dialog {
-                width: min(355px, 100%);
-                padding: 8px 0 8px;
+                width: min(330px, calc(100vw - 18px));
             }
 
-            .shop-khqr-modal__top {
-                padding: 0 40px 2px 14px;
+            .khqr-official-card__header {
+                min-height: 74px;
+                padding: 18px 18px 12px;
             }
 
-            .shop-khqr-modal__brand-image {
-                width: 138px;
+            .khqr-official-card__header::after {
+                border-top-width: 26px;
+                border-left-width: 26px;
             }
 
-            .shop-khqr-modal__title {
-                font-size: 1.02rem;
+            .khqr-official-card__logo {
+                width: 92px;
+            }
+
+            .khqr-official-card__body {
+                padding: 14px 16px 14px;
+            }
+
+            .khqr-official-card__merchant {
+                font-size: 17px;
+            }
+
+            .khqr-official-card__currency {
+                font-size: 16px;
+            }
+
+            .khqr-official-card__qr {
+                max-width: 286px;
+                max-height: 286px;
+            }
+
+            .shop-khqr-modal__download {
+                min-height: 50px;
+                font-size: 15px;
             }
 
         }
@@ -1924,19 +1963,18 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
-            <div class="shop-khqr-modal__card">
-                <div class="shop-khqr-modal__card-body">
-                    <div class="shop-khqr-modal__qr">
-                        @if ($shopKhqrPreviewUrl)
-                            <img src="{{ $shopKhqrPreviewUrl }}" alt="{{ $shopKhqrModalTitle ?? 'KHQR' }}">
-                        @else
-                            <div class="shop-khqr-modal__caption" style="padding: 18px 16px;" data-shop-js-khqr-empty>
-                                {{ $shopKhqrError ?: __('Please check your Bakong account config and generate the KHQR again.') }}
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
+            @include('components.khqr-card', [
+                'cardId' => $shopKhqrCardId,
+                'merchantName' => $shopKhqrMerchantName,
+                'amount' => $salePrice,
+                'currency' => $shopKhqrCurrencyCode,
+                'khqrString' => $shopKhqrString ?? null,
+                'qrImageUrl' => $shopKhqrPreviewUrl,
+                'status' => 'pending',
+                'showStatusMeta' => false,
+                'showCenterBadge' => true,
+                'emptyMessage' => $shopKhqrError ?: __('Please check your Bakong account config and generate the KHQR again.'),
+            ])
 
             {{--
                 Hide the payment deeplink button in the shop KHQR modal for now.

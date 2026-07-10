@@ -4,6 +4,8 @@
 
 @php
     $courseDescription = $course->short_description ?: \Illuminate\Support\Str::limit(strip_tags((string) $course->description), 180);
+    $khqrMerchantName = config('bakong.merchant_name') ?: 'TechCourse';
+    $khqrCardId = 'course-khqr-card-' . $payment->id;
     // Keep Bakong as the active checkout QR while ABA work is paused for later.
     $paymentMethods = [
         ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/logo.png'), 'actionable' => true],
@@ -25,6 +27,8 @@
 
 @section('content')
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@600;700;800;900&display=swap');
+
         .checkout-shell {
             width: min(1120px, calc(100% - 36px));
             margin: 0 auto;
@@ -376,89 +380,104 @@
 
         .khqr-modal__dialog {
             position: relative;
-            width: min(355px, 100%);
-            background: #ffffff;
-            border-radius: 22px;
-            border: 1px solid rgba(226, 232, 240, 0.95);
-            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.26);
-            padding: 8px 0 8px;
-            overflow: hidden;
-            transform: translateY(20px) scale(0.96);
+            width: min(360px, calc(100vw - 28px));
+            background: transparent;
+            border-radius: 0;
+            border: 0;
+            box-shadow: none;
+            padding: 0;
+            overflow: visible;
+            transform: translateY(20px);
             opacity: 0;
             transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.32s ease;
         }
 
         .khqr-modal.is-open .khqr-modal__dialog {
-            transform: translateY(0) scale(1);
+            transform: translateY(0);
             opacity: 1;
         }
 
         .khqr-modal__close {
-            position: absolute;
-            top: 12px;
-            right: 14px;
-            width: 38px;
-            height: 38px;
-            border: 0;
-            border-radius: 999px;
-            background: transparent;
-            color: #22c7ee;
-            cursor: pointer;
-            font-size: 1.2rem;
+            display: none;
         }
 
-        .khqr-modal__title {
-            margin: 0;
-            color: #0f2a52;
-            font-family: var(--font-lato);
-            font-size: 1.2rem;
-            line-height: 1.2;
-            font-weight: 700;
-        }
-
+        /* Keep the KHQR card aligned with the visual sample the user provided. */
         .khqr-modal__card {
             width: 100%;
             margin: 0;
-            border-radius: 0;
+            border-radius: 10px;
             overflow: hidden;
-            background: #ffffff;
-            box-shadow: none;
+            background: #e1232d;
             border: 0;
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.2);
+            font-family: 'Nunito Sans', sans-serif;
         }
 
-        .khqr-modal__top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 0 46px 2px 18px;
-        }
-
-        .khqr-modal__brand-image {
-            width: 170px;
-            display: block;
-            object-fit: contain;
-        }
-
-        .khqr-modal__card-body {
-            padding: 10px 10px 0;
-            background: #ffffff;
-        }
-
-        .khqr-modal__qr {
+        .khqr-official-card__header {
+            position: relative;
+            min-height: 80px;
+            background: #e1232d;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100%;
-            overflow: hidden;
-            background: #ffffff;
+            padding: 20px 20px 14px;
         }
 
-        .khqr-modal__qr img {
-            width: calc(100% - 4px);
-            max-height: 500px;
+        .khqr-official-card__header::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            bottom: -1px;
+            width: 0;
+            height: 0;
+            border-top: 30px solid transparent;
+            border-left: 30px solid #ffffff;
+        }
+
+        .khqr-official-card__logo {
+            width: 98px;
+            max-width: 100%;
             display: block;
+        }
+
+        .khqr-official-card__body {
+            background: #ffffff;
+            padding: 14px 18px 14px;
+        }
+
+        .khqr-official-card__merchant {
+            margin: 0;
+            color: #383c42;
+            font-size: 18px;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+
+        .khqr-official-card__currency {
+            margin-top: 12px;
+            color: #383c42;
+            font-size: 17px;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .khqr-official-card__qr-wrap {
+            width: 100%;
+            margin: 18px auto 0;
+        }
+
+        .khqr-official-card__qr {
+            width: 100%;
+            max-width: 304px;
+            max-height: 304px;
+            display: block;
+            margin: 0 auto;
             object-fit: contain;
+        }
+
+        .khqr-official-card__footer {
+            background: #e1232d;
+            padding: 8px 8px 8px;
         }
 
         .khqr-modal__empty {
@@ -467,102 +486,34 @@
             color: #64748b;
             font-size: 12px;
             line-height: 1.7;
+            min-height: 240px;
+            display: grid;
+            place-items: center;
         }
 
         .khqr-modal__caption {
             width: 100%;
-            margin: 4px 0 0;
-            padding: 0 12px;
+            margin: 0;
+            padding: 14px 18px 4px;
             text-align: center;
             color: #8a94a6;
             font-size: 11px;
             line-height: 1.65;
         }
 
-        .khqr-modal__price {
+        .khqr-modal__download {
             width: 100%;
-            margin: 8px 0 0;
-            padding: 0 12px;
-            text-align: center;
-            color: #6b7280;
-            font-size: 11px;
-            line-height: 1.55;
-        }
-
-        .khqr-verify {
-            padding: 12px 16px 16px;
-            display: grid;
-            gap: 10px;
-        }
-
-        .khqr-verify__title {
-            margin: 0;
-            color: #0f2a52;
-            font-size: 0.82rem;
-            font-weight: 800;
-            text-align: center;
-        }
-
-        .khqr-verify__grid {
-            display: grid;
-            gap: 10px;
-        }
-
-        .khqr-verify__field,
-        .khqr-verify__select {
-            width: 100%;
-            min-height: 42px;
-            border-radius: 14px;
-            border: 1px solid #dbe6f1;
-            background: #ffffff;
-            padding: 0 12px;
-            color: #0f172a;
-            font-size: 0.78rem;
-        }
-
-        .khqr-verify__field:focus,
-        .khqr-verify__select:focus {
-            outline: none;
-            border-color: #93c5fd;
-        }
-
-        .khqr-verify__button {
-            min-height: 42px;
+            min-height: 54px;
             border: 0;
-            border-radius: 14px;
-            background: #0f2a52;
-            color: #ffffff;
-            font-size: 0.8rem;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        .khqr-verify__copy {
-            margin: 0;
-            color: #64748b;
-            font-size: 0.72rem;
-            line-height: 1.7;
-            text-align: center;
-        }
-
-        .khqr-actions {
-            display: grid;
-            gap: 10px;
-            padding: 0 16px 12px;
-        }
-
-        .khqr-actions__link {
-            min-height: 42px;
-            border-radius: 14px;
-            background: #eff6ff;
-            border: 1px solid #dbeafe;
-            color: #1d4ed8;
+            border-radius: 0;
+            background: #ffffff;
+            color: #202020;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            font-size: 0.78rem;
-            font-weight: 800;
+            font-size: 16px;
+            font-weight: 500;
         }
 
         .khqr-reference {
@@ -598,21 +549,44 @@
             }
 
             .khqr-modal__dialog {
-                width: min(355px, 100%);
+                width: min(330px, calc(100vw - 18px));
             }
 
-            .khqr-modal__top {
-                padding: 0 42px 2px 12px;
+            .khqr-official-card__header {
+                min-height: 74px;
+                padding: 18px 18px 12px;
             }
 
-            .khqr-modal__brand-image {
-                width: 138px;
+            .khqr-official-card__header::after {
+                border-top-width: 26px;
+                border-left-width: 26px;
             }
 
-            .khqr-modal__title {
-                font-size: 1.02rem;
+            .khqr-official-card__logo {
+                width: 92px;
             }
 
+            .khqr-official-card__body {
+                padding: 14px 16px 14px;
+            }
+
+            .khqr-official-card__merchant {
+                font-size: 17px;
+            }
+
+            .khqr-official-card__currency {
+                font-size: 16px;
+            }
+
+            .khqr-official-card__qr {
+                max-width: 286px;
+                max-height: 286px;
+            }
+
+            .khqr-modal__download {
+                min-height: 50px;
+                font-size: 15px;
+            }
         }
     </style>
 
@@ -716,20 +690,20 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
-            <div class="khqr-modal__card">
-                <div class="khqr-modal__card-body">
-                    <div class="khqr-modal__qr">
-                        @if ($khqrPreviewUrl)
-                            <img src="{{ $khqrPreviewUrl }}" alt="{{ $khqrModalTitle ?? 'KHQR' }}">
-                        @else
-                            <div class="khqr-modal__empty" data-js-khqr-empty>
-                                <strong>{{ __('Bakong KHQR preview is not ready yet') }}</strong><br>
-                                {{ __('Please check your Bakong account config and generate the KHQR again.') }}
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
+            @include('components.khqr-card', [
+                'cardId' => $khqrCardId,
+                'merchantName' => $khqrMerchantName,
+                'amount' => $payment->amount,
+                'currency' => $payment->currency,
+                'khqrString' => $payment->khqr_string,
+                'qrImageUrl' => $khqrPreviewUrl,
+                'expiredAt' => $payment->expired_at,
+                'status' => $payment->status,
+                'showStatusMeta' => true,
+                'showCenterBadge' => true,
+                'statusMessage' => $khqrError ?: '',
+                'emptyMessage' => __('Please check your Bakong account config and generate the KHQR again.'),
+            ])
 
             {{--
                 Hide the payment deeplink button in the course checkout KHQR modal for now.
@@ -754,6 +728,7 @@
             const openButton = document.querySelector('[data-khqr-open]');
             const closeButtons = document.querySelectorAll('[data-khqr-close]');
             const jsKhqrEmpty = document.querySelector('[data-js-khqr-empty]');
+            const khqrCardId = @json($khqrCardId);
             const paymentId = @json($payment->id);
             const paymentStatusUrl = @json(url('/api/bakong/payments/' . $payment->id . '/status'));
             const successRedirectUrl = @json($course->lessons->first()
@@ -807,7 +782,6 @@
             };
 
             const closeModal = () => {
-                stopStatusPolling();
                 modal.classList.remove('is-open');
 
                 window.setTimeout(() => {
@@ -825,6 +799,20 @@
                 }
             });
 
+            document.addEventListener('khqr:expired', (event) => {
+                if (event.detail?.cardId !== khqrCardId || statusLocked) {
+                    return;
+                }
+
+                statusLocked = true;
+                stopStatusPolling();
+                if (statusText) {
+                    statusText.textContent = 'expired';
+                }
+                window.TechCourseKhqrCards?.setStatus(khqrCardId, 'expired', 'QR expired. Please create new payment.');
+                window.TechCourseKhqrCards?.showToast('QR expired. Please create new payment.', 'error');
+            });
+
             // Poll backend-confirmed Bakong payment status so success is shown only after real API verification.
             function startStatusPolling() {
                 if (pollTimer || !paymentId || statusLocked) {
@@ -832,7 +820,7 @@
                 }
 
                 checkPaymentStatus();
-                pollTimer = window.setInterval(checkPaymentStatus, 5000);
+                pollTimer = window.setInterval(checkPaymentStatus, 3000);
             }
 
             function stopStatusPolling() {
@@ -860,14 +848,16 @@
                     const result = await response.json();
                     const status = result?.data?.status;
 
-                     if (statusText && status) {
+                    if (statusText && status) {
                         statusText.textContent = status;
                     }
 
                     if (status === 'success') {
                         statusLocked = true;
                         stopStatusPolling();
-                        window.alert('Payment success. Your course is now unlocked.');
+                        window.TechCourseKhqrCards?.setStatus(khqrCardId, 'success', 'Payment success. Redirecting...');
+                        closeModal();
+                        window.TechCourseKhqrCards?.showToast('Payment success', 'success');
                         window.location.href = successRedirectUrl;
                         return;
                     }
@@ -875,22 +865,34 @@
                     if (status === 'expired') {
                         statusLocked = true;
                         stopStatusPolling();
-                        window.alert('This payment QR has expired. Please refresh and create a new payment.');
+                        window.TechCourseKhqrCards?.setStatus(khqrCardId, 'expired', 'QR expired. Please create new payment.');
+                        window.TechCourseKhqrCards?.showToast('QR expired. Please create new payment.', 'error');
                         return;
                     }
 
                     if (status === 'failed') {
                         statusLocked = true;
                         stopStatusPolling();
-                        window.alert('Payment was found but verification failed. Please contact support or try again.');
+                        window.TechCourseKhqrCards?.setStatus(khqrCardId, 'failed', 'Payment verification failed. Please contact support or try again.');
+                        window.TechCourseKhqrCards?.showToast('Payment verification failed.', 'error');
                     }
                 } catch (error) {
                     console.error('Bakong payment status polling failed.', error);
                     if (statusText) {
                         statusText.textContent = 'check_error';
                     }
+                    window.TechCourseKhqrCards?.setStatus(khqrCardId, 'pending', 'Unable to check payment status right now.');
                 }
             }
+
+            // Keep backend payment polling active on the checkout page even after the modal is closed.
+            startStatusPolling();
+
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    checkPaymentStatus();
+                }
+            });
         })();
     </script>
 @endsection
