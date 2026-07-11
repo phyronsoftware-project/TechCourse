@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CourseCategory;
+use App\Models\Course;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Throwable;
 
 class CategoryController extends Controller
 {
@@ -107,14 +110,39 @@ class CategoryController extends Controller
 
     public function destroy(CourseCategory $category): RedirectResponse
     {
-        if ($category->image && !str_starts_with($category->image, 'http') && !str_starts_with($category->image, 'storage/')) {
-            Storage::disk('public')->delete($category->image);
-        }
+        try {
+            DB::transaction(function () use ($category) {
+                Course::query()
+                    ->where('category_id', $category->id)
+                    ->get()
+                    ->each(function (Course $course): void {
+                        DB::table('lesson_progress')->where('course_id', $course->id)->delete();
+                        DB::table('course_favorites')->where('course_id', $course->id)->delete();
+                        DB::table('course_reviews')->where('course_id', $course->id)->delete();
+                        DB::table('course_enrollments')->where('course_id', $course->id)->delete();
+                        DB::table('order_items')->where('course_id', $course->id)->delete();
+                        DB::table('course_resources')->where('course_id', $course->id)->delete();
+                        DB::table('course_lessons')->where('course_id', $course->id)->delete();
 
-        $category->delete();
+                        if ($course->thumbnail && !str_starts_with($course->thumbnail, 'http') && !str_starts_with($course->thumbnail, 'storage/')) {
+                            Storage::disk('public')->delete($course->thumbnail);
+                        }
+
+                        $course->delete();
+                    });
+
+                if ($category->image && !str_starts_with($category->image, 'http') && !str_starts_with($category->image, 'storage/')) {
+                    Storage::disk('public')->delete($category->image);
+                }
+
+                $category->delete();
+            });
+        } catch (Throwable) {
+            return back()->with('error', 'Unable to delete this category and its courses right now.');
+        }
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('success', 'Category deleted successfully.');
+            ->with('success', 'Category and related courses deleted successfully.');
     }
 }

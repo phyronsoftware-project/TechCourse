@@ -299,6 +299,47 @@
                     border: none;
                 }
 
+                .admin-bulk-toolbar {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 12px;
+                    margin-bottom: 12px;
+                    padding: 10px 12px;
+                    border: 1px solid #dbe5f0;
+                    background: #f8fbff;
+                }
+
+                .admin-bulk-count {
+                    color: #64748b;
+                    font-size: 13px;
+                    font-weight: 600;
+                }
+
+                .admin-bulk-delete {
+                    min-height: 36px;
+                    padding: 8px 12px;
+                    border: 1px solid #dc2626;
+                    border-radius: 8px;
+                    background: #dc2626;
+                    color: #fff;
+                    cursor: pointer;
+                    font-size: 13px;
+                    font-weight: 700;
+                }
+
+                .admin-bulk-delete:disabled {
+                    cursor: not-allowed;
+                    opacity: 0.45;
+                }
+
+                .admin-bulk-checkbox {
+                    width: 16px;
+                    height: 16px;
+                    accent-color: #4a90e2;
+                    cursor: pointer;
+                }
+
                 .admin-table {
                     width: 100%;
                     border-collapse: collapse;
@@ -369,6 +410,7 @@
                 .admin-status-badge-active,
                 .admin-status-badge-success,
                 .admin-status-badge-paid,
+                .admin-status-badge-delivered,
                 .admin-status-badge-approved,
                 .admin-status-badge-published,
                 .admin-status-badge-confirmed {
@@ -1063,6 +1105,79 @@
         @unless ($hasViteAssets)
             <script>
                 document.addEventListener('DOMContentLoaded', () => {
+                    // Add bulk delete controls only to tables with existing delete routes.
+                    const excludedBulkPaths = /(^|\/)(orders|payments|shop-orders|shop-payments)(\/|$)/;
+                    if (! excludedBulkPaths.test(window.location.pathname)) {
+                        document.querySelectorAll('.admin-table').forEach((table) => {
+                            const rows = [...table.querySelectorAll('tbody tr')].filter((row) => row.querySelector('form input[name="_method"][value="DELETE"]'));
+                            if (! rows.length) {
+                                return;
+                            }
+
+                            const tableWrap = table.closest('.admin-table-wrap');
+                            if (! tableWrap || tableWrap.previousElementSibling?.classList.contains('admin-bulk-toolbar')) {
+                                return;
+                            }
+
+                            const toolbar = document.createElement('div');
+                            toolbar.className = 'admin-bulk-toolbar';
+                            toolbar.innerHTML = '<span class="admin-bulk-count">0 selected</span><button type="button" class="admin-bulk-delete" disabled>Delete selected</button>';
+                            tableWrap.parentElement.insertBefore(toolbar, tableWrap);
+
+                            const headerRow = table.querySelector('thead tr');
+                            const selectAllCell = document.createElement('th');
+                            selectAllCell.innerHTML = '<input type="checkbox" class="admin-bulk-checkbox" aria-label="Select all rows">';
+                            headerRow?.prepend(selectAllCell);
+
+                            const checkboxes = rows.map((row) => {
+                                const checkboxCell = document.createElement('td');
+                                checkboxCell.innerHTML = '<input type="checkbox" class="admin-bulk-checkbox" aria-label="Select row">';
+                                row.prepend(checkboxCell);
+                                return checkboxCell.querySelector('input');
+                            });
+
+                            const selectAll = selectAllCell.querySelector('input');
+                            const countNode = toolbar.querySelector('.admin-bulk-count');
+                            const deleteButton = toolbar.querySelector('.admin-bulk-delete');
+
+                            const selectedCheckboxes = () => checkboxes.filter((checkbox) => checkbox.checked);
+                            const refreshToolbar = () => {
+                                const selected = selectedCheckboxes();
+                                countNode.textContent = `${selected.length} selected`;
+                                deleteButton.disabled = selected.length === 0;
+                                selectAll.checked = selected.length > 0 && selected.length === checkboxes.length;
+                                selectAll.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
+                            };
+
+                            checkboxes.forEach((checkbox) => checkbox.addEventListener('change', refreshToolbar));
+                            selectAll.addEventListener('change', () => {
+                                checkboxes.forEach((checkbox) => {
+                                    checkbox.checked = selectAll.checked;
+                                });
+                                refreshToolbar();
+                            });
+
+                            deleteButton.addEventListener('click', async () => {
+                                const selectedRows = rows.filter((row) => row.querySelector('.admin-bulk-checkbox')?.checked);
+                                if (! selectedRows.length || ! window.confirm(`Delete ${selectedRows.length} selected item(s)?`)) {
+                                    return;
+                                }
+
+                                deleteButton.disabled = true;
+                                await Promise.all(selectedRows.map((row) => {
+                                    const form = row.querySelector('form input[name="_method"][value="DELETE"]')?.closest('form');
+                                    return form ? window.fetch(form.action, {
+                                        method: 'POST',
+                                        headers: { Accept: 'application/json' },
+                                        credentials: 'same-origin',
+                                        body: new FormData(form),
+                                    }) : Promise.resolve();
+                                }));
+                                window.location.reload();
+                            });
+                        });
+                    }
+
                     const sidebar = document.querySelector('[data-sidebar]');
                     const backdrop = document.querySelector('[data-sidebar-backdrop]');
                     const openButton = document.querySelector('[data-sidebar-toggle]');

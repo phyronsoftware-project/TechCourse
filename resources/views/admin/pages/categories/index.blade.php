@@ -98,7 +98,7 @@
                                             </svg>
                                             <span>Edit category</span>
                                         </a>
-                                        <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Delete this category?');">
+                                        <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Delete this category and all related courses?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="admin-action-link admin-action-link-danger text-left" title="Delete category">

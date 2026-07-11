@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ShopOrder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -25,6 +26,26 @@ class ShopOrderController extends Controller
         ]);
     }
 
+    public function markDelivered(ShopOrder $shopOrder): RedirectResponse
+    {
+        if ($shopOrder->status !== 'paid') {
+            return back()->with('error', 'Only paid orders can be marked as delivered.');
+        }
+
+        if ($shopOrder->delivery_status === 'delivered') {
+            return back()->with('error', 'This order is already marked as delivered.');
+        }
+
+        $payload = ['delivery_status' => 'delivered'];
+        if (Schema::hasColumn('shop_orders', 'delivered_at')) {
+            $payload['delivered_at'] = now();
+        }
+
+        $shopOrder->forceFill($payload)->save();
+
+        return back()->with('success', 'Shop order marked as delivered.');
+    }
+
     public function index(Request $request): View
     {
         $orders = collect();
@@ -39,6 +60,7 @@ class ShopOrderController extends Controller
                     'shop_orders.total_amount',
                     'shop_orders.currency',
                     'shop_orders.status',
+                    'shop_orders.delivery_status',
                     'shop_orders.payment_method',
                     'shop_orders.created_at',
                     'users.name as user_name',

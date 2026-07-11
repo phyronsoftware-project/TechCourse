@@ -25,6 +25,18 @@
                             'route' => route('admin.courses.index'),
                             'active' => request()->routeIs('admin.courses.*'),
                         ],
+                        [
+                            'label' => 'Course Orders',
+                            'icon' => 'ticket',
+                            'route' => route('admin.orders.index'),
+                            'active' => request()->routeIs('admin.orders.*'),
+                        ],
+                        [
+                            'label' => 'Course Payments',
+                            'icon' => 'wallet',
+                            'route' => route('admin.payments.index'),
+                            'active' => request()->routeIs('admin.payments.*'),
+                        ],
                     ],
                 ],
                 [
@@ -72,24 +84,6 @@
                             'icon' => 'wallet',
                             'route' => route('admin.shop-payments.index'),
                             'active' => request()->routeIs('admin.shop-payments.*'),
-                        ],
-                    ],
-                ],
-                [
-                    'label' => 'Course Sales',
-                    'icon' => 'wallet',
-                    'children' => [
-                        [
-                            'label' => 'Course Orders',
-                            'icon' => 'ticket',
-                            'route' => route('admin.orders.index'),
-                            'active' => request()->routeIs('admin.orders.*'),
-                        ],
-                        [
-                            'label' => 'Course Payments',
-                            'icon' => 'wallet',
-                            'route' => route('admin.payments.index'),
-                            'active' => request()->routeIs('admin.payments.*'),
                         ],
                     ],
                 ],

@@ -6,9 +6,13 @@
     $courseDescription = $course->short_description ?: \Illuminate\Support\Str::limit(strip_tags((string) $course->description), 180);
     $khqrMerchantName = config('bakong.merchant_name') ?: 'TechCourse';
     $khqrCardId = 'course-khqr-card-' . $payment->id;
+    $firstLesson = $course->lessons->first();
+    $successRedirectUrl = $firstLesson
+        ? route('learning.show', [$course->slug ?: $course->id, $firstLesson->slug ?: $firstLesson->id])
+        : route('courses.show', $course->slug ?: $course->id);
     // Keep Bakong as the active checkout QR while ABA work is paused for later.
     $paymentMethods = [
-        ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/logo.png'), 'actionable' => true],
+        ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/bakong_logo.png'), 'actionable' => true],
         [
             'name' => __('Card'),
             'copy' => __('Credit/Debit Card'),
@@ -51,56 +55,6 @@
             grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.64fr);
             gap: 22px;
             align-items: start;
-        }
-
-        .checkout-test-alert {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            z-index: 1201;
-            width: min(460px, calc(100vw - 28px));
-            padding: 14px 16px;
-            border-radius: 20px;
-            border: 1px solid #fde68a;
-            background: linear-gradient(180deg, #fff8db, #fff2b8);
-            color: #854d0e;
-            box-shadow: 0 10px 22px rgba(146, 64, 14, 0.08);
-            transform: translate(-50%, -50%);
-            transition: opacity 0.28s ease, transform 0.28s ease;
-        }
-
-        .checkout-test-alert-backdrop {
-            position: fixed;
-            inset: 0;
-            z-index: 1200;
-            background: rgba(15, 23, 42, 0.36);
-            backdrop-filter: blur(2px);
-            -webkit-backdrop-filter: blur(2px);
-            transition: opacity 0.28s ease;
-        }
-
-        .checkout-test-alert.is-hidden {
-            opacity: 0;
-            transform: translate(-50%, calc(-50% - 10px));
-            pointer-events: none;
-        }
-
-        .checkout-test-alert-backdrop.is-hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .checkout-test-alert__title {
-            margin: 0 0 6px;
-            font-family: var(--font-lato);
-            font-size: 0.94rem;
-            font-weight: 800;
-        }
-
-        .checkout-test-alert__copy {
-            margin: 0;
-            font-size: 0.82rem;
-            line-height: 1.65;
         }
 
         .checkout-course-card {
@@ -364,7 +318,7 @@
             justify-content: center;
             padding: 20px;
             opacity: 0;
-            transition: opacity 0.28s ease;
+            transition: opacity 1.5s ease;
         }
 
         .khqr-modal.is-open {
@@ -374,8 +328,7 @@
         .khqr-modal__backdrop {
             position: absolute;
             inset: 0;
-            background: rgba(9, 17, 32, 0.52);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.72);
         }
 
         .khqr-modal__dialog {
@@ -389,7 +342,72 @@
             overflow: visible;
             transform: translateY(20px);
             opacity: 0;
-            transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.32s ease;
+            transition: transform 1.5s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 1.5s ease;
+        }
+
+        .khqr-modal .khqr-card__timer {
+            color: #FFFFFF;
+        }
+
+        .course-payment-success[hidden] {
+            display: none;
+        }
+
+        .course-payment-success {
+            position: fixed;
+            inset: 0;
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.72);
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        .course-payment-success.is-open {
+            opacity: 1;
+        }
+
+        .course-payment-success__card {
+            width: min(360px, calc(100vw - 36px));
+            padding: 34px 26px 28px;
+            border-radius: 20px;
+            background: #FFFFFF;
+            color: #1f2937;
+            text-align: center;
+            box-shadow: 0 20px 55px rgba(0, 0, 0, 0.22);
+            transform: translateY(14px) scale(0.98);
+            transition: transform 1.5s ease;
+        }
+
+        .course-payment-success.is-open .course-payment-success__card {
+            transform: translateY(0) scale(1);
+        }
+
+        .course-payment-success__icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 22px;
+            display: block;
+            object-fit: contain;
+        }
+
+        .course-payment-success__title {
+            margin: 0;
+            color: #202020;
+            font-size: 25px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .course-payment-success__text {
+            margin: 12px auto 0;
+            max-width: 290px;
+            color: #697386;
+            font-size: 14px;
+            line-height: 1.55;
         }
 
         .khqr-modal.is-open .khqr-modal__dialog {
@@ -525,6 +543,15 @@
             word-break: break-word;
         }
 
+        .checkout-khqr-notice {
+            width: min(320px, calc(100vw - 40px));
+            margin: 10px auto 0;
+            color: #FFFFFF;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
         @media (max-width: 980px) {
             .checkout-layout {
                 grid-template-columns: 1fr;
@@ -594,12 +621,6 @@
         <h1 class="checkout-page-title">{{ $course->title }}</h1>
 
         {{-- Show a clear warning popup before any test payment action starts. --}}
-        <div class="checkout-test-alert-backdrop" data-checkout-test-alert-backdrop></div>
-        <div class="checkout-test-alert" data-checkout-test-alert>
-            <p class="checkout-test-alert__title">{{ __('Test Website Notice') }}</p>
-            <p class="checkout-test-alert__copy">{{ __('This website is for testing only. If you make a payment here, we may not accept issues or complaints related to test transactions.') }}</p>
-        </div>
-
         <div class="checkout-layout">
             <article class="checkout-course-card">
                 <div class="checkout-course-media">
@@ -705,6 +726,10 @@
                 'emptyMessage' => __('Please check your Bakong account config and generate the KHQR again.'),
             ])
 
+            <p class="checkout-khqr-notice">
+                {{ __('Note: This website is for testing only. If you make a payment, I will not be responsible for any loss.') }}
+            </p>
+
             {{--
                 Hide the payment deeplink button in the course checkout KHQR modal for now.
             @if (!empty($khqrDeepLink))
@@ -720,23 +745,51 @@
         </div>
     </div>
 
+    <div class="course-payment-success" data-course-payment-success hidden>
+        <div class="course-payment-success__card" role="dialog" aria-modal="true" aria-labelledby="course-payment-success-title">
+            <img src="{{ asset('logo/pray (1).gif') }}" alt="" class="course-payment-success__icon" aria-hidden="true">
+            <h2 class="course-payment-success__title" id="course-payment-success-title">{{ __('Payment succeeded!') }}</h2>
+            <p class="course-payment-success__text">{{ __('Your transaction was completed successfully. Your course is now unlocked.') }}</p>
+        </div>
+    </div>
+
     <script>
         (() => {
-            const testAlert = document.querySelector('[data-checkout-test-alert]');
-            const testAlertBackdrop = document.querySelector('[data-checkout-test-alert-backdrop]');
             const modal = document.querySelector('[data-khqr-modal]');
+            const successModal = document.querySelector('[data-course-payment-success]');
             const openButton = document.querySelector('[data-khqr-open]');
             const closeButtons = document.querySelectorAll('[data-khqr-close]');
             const jsKhqrEmpty = document.querySelector('[data-js-khqr-empty]');
             const khqrCardId = @json($khqrCardId);
             const paymentId = @json($payment->id);
             const paymentStatusUrl = @json(route('payments.bakong.status', $payment));
-            const successRedirectUrl = @json($course->lessons->first()
-                ? route('learning.show', [$course->slug ?: $course->id, $course->lessons->first()->slug ?: $course->lessons->first()->id])
-                : route('courses.show', $course->slug ?: $course->id));
+            const successRedirectUrl = @json($successRedirectUrl);
             const statusText = document.querySelector('[data-payment-status-text]');
             let pollTimer = null;
             let statusLocked = false;
+            let successTimer = null;
+
+            const showCourseSuccess = () => {
+                if (!successModal) {
+                    window.location.href = successRedirectUrl;
+                    return;
+                }
+
+                window.clearTimeout(successTimer);
+                successModal.hidden = false;
+                document.body.style.overflow = 'hidden';
+                requestAnimationFrame(() => successModal.classList.add('is-open'));
+
+                // Keep the success message visible before opening the unlocked course.
+                successTimer = window.setTimeout(() => {
+                    successModal.classList.remove('is-open');
+                    window.setTimeout(() => {
+                        successModal.hidden = true;
+                        document.body.style.overflow = '';
+                        window.location.href = successRedirectUrl;
+                    }, 1500);
+                }, 6000);
+            };
 
             // Track when a learner reaches the course checkout flow.
             window.trackEvent('begin_checkout', {
@@ -750,21 +803,6 @@
                     quantity: 1,
                 }],
             });
-
-            // Auto-hide the checkout test popup after 3 seconds.
-            if (testAlert) {
-                window.setTimeout(() => {
-                    testAlert.classList.add('is-hidden');
-                    testAlertBackdrop?.classList.add('is-hidden');
-
-                    window.setTimeout(() => {
-                        testAlert.hidden = true;
-                        if (testAlertBackdrop) {
-                            testAlertBackdrop.hidden = true;
-                        }
-                    }, 300);
-                }, 3000);
-            }
 
             if (!modal || !openButton) {
                 return;
@@ -781,8 +819,14 @@
                 startStatusPolling();
             };
 
-            const closeModal = () => {
+            const closeModal = (immediate = false) => {
                 modal.classList.remove('is-open');
+
+                if (immediate) {
+                    modal.hidden = true;
+                    document.body.style.overflow = '';
+                    return;
+                }
 
                 window.setTimeout(() => {
                     modal.hidden = true;
@@ -851,9 +895,8 @@
                         statusLocked = true;
                         stopStatusPolling();
                         window.TechCourseKhqrCards?.setStatus(khqrCardId, 'success', 'Payment confirmed successfully.');
-                        closeModal();
-                        window.alert(@json(__('Payment completed successfully. Your course is now unlocked.')));
-                        window.location.href = successRedirectUrl;
+                        closeModal(true);
+                        showCourseSuccess();
                         return;
                     }
 

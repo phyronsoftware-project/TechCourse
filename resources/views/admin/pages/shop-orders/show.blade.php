@@ -8,12 +8,22 @@
             <h3 class="admin-page-title">Shop Order Details</h3>
             <p class="admin-page-copy">Customer, item and Bakong payment information for this shop order.</p>
         </div>
-        <a href="{{ route('admin.shop-orders.index') }}" class="admin-btn admin-btn-secondary">Back</a>
+        <div class="flex items-center gap-3">
+            @if ($order->status === 'paid' && $order->delivery_status !== 'delivered')
+                <form action="{{ route('admin.shop-orders.delivered', $order) }}" method="POST" onsubmit="return confirm('Mark this order as delivered?');">
+                    @csrf
+                    <button type="submit" class="admin-btn admin-btn-primary">Mark as Delivered</button>
+                </form>
+            @else
+                <button type="button" class="admin-btn admin-btn-secondary" disabled title="Only paid orders can be delivered">Mark as Delivered</button>
+            @endif
+            <a href="{{ route('admin.shop-orders.index') }}" class="admin-btn admin-btn-secondary">Back</a>
+        </div>
     </div>
 
-    <div class="admin-detail-grid">
-        <section class="admin-form-card p-6">
-            <table class="admin-meta-table">
+    <section class="admin-form-card p-6">
+        <h4 class="admin-section-title">Order Information</h4>
+        <table class="admin-meta-table">
                 <tr><th>Order ID</th><td>{{ $order->id }}</td></tr>
                 <tr><th>Order No</th><td>{{ $order->order_no }}</td></tr>
                 <tr><th>Customer</th><td>{{ $order->user?->name ?: '-' }}</td></tr>
@@ -24,17 +34,19 @@
                 <tr><th>Province</th><td>{{ $order->user?->province ?: '-' }}</td></tr>
                 <tr><th>Postal Code</th><td>{{ $order->user?->postal_code ?: '-' }}</td></tr>
                 <tr><th>Order Status</th><td><span class="admin-status-badge admin-status-badge-{{ \Illuminate\Support\Str::slug($order->status) }}">{{ $order->status }}</span></td></tr>
+                <tr><th>Delivery Status</th><td><span class="admin-status-badge admin-status-badge-{{ \Illuminate\Support\Str::slug($order->delivery_status ?: 'pending') }}">{{ $order->delivery_status ?: 'pending' }}</span></td></tr>
                 <tr><th>Total</th><td>${{ number_format((float) $order->total_amount, 2) }} {{ $order->currency }}</td></tr>
                 <tr><th>Payment Method</th><td>{{ $order->payment_method ?: '-' }}</td></tr>
                 <tr><th>Created At</th><td>{{ optional($order->created_at)->format('Y-m-d H:i:s') ?: '-' }}</td></tr>
                 <tr><th>Paid At</th><td>{{ optional($order->paid_at)->format('Y-m-d H:i:s') ?: '-' }}</td></tr>
-            </table>
-        </section>
+                <tr><th>Delivered At</th><td>{{ optional($order->delivered_at)->format('Y-m-d H:i:s') ?: '-' }}</td></tr>
+        </table>
+    </section>
 
-        <section class="admin-form-card p-6">
-            <h4 class="admin-section-title">Order Items</h4>
-            <div class="admin-table-wrap">
-                <table class="admin-table">
+    <section class="admin-form-card p-6 mt-5">
+        <h4 class="admin-section-title">Order Items</h4>
+        <div class="admin-table-wrap">
+            <table class="admin-table">
                     <thead>
                         <tr><th>Image</th><th>Product</th><th>Quantity</th><th>Unit Price</th><th>Line Total</th></tr>
                     </thead>
@@ -57,10 +69,9 @@
                             <tr><td colspan="5" class="admin-empty">No order items found.</td></tr>
                         @endforelse
                     </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
+            </table>
+        </div>
+    </section>
 
     <section class="admin-index-panel admin-index-panel-table mt-5">
         <div class="admin-page-header">

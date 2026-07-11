@@ -1130,7 +1130,7 @@
             width: 48px;
             height: 48px;
             padding: 0;
-            background: #2762ea;
+            background: #173f87;
             color: #1c2e64;
             display: inline-flex;
             align-items: center;
@@ -1148,7 +1148,7 @@
         .shop-card__warranty::before {
             content: "";
             position: absolute;
-            inset: 6px;
+            inset: 7px;
             border-radius: 50%;
             background: #ffdf07;
             z-index: 1;

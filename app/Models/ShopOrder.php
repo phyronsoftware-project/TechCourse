@@ -14,15 +14,19 @@ class ShopOrder extends Model
         'total_amount',
         'currency',
         'status',
+        'delivery_status',
         'payment_method',
         'paid_at',
+        'delivered_at',
     ];
 
     protected function casts(): array
     {
         return [
             'total_amount' => 'decimal:2',
+            'delivery_status' => 'string',
             'paid_at' => 'datetime',
+            'delivered_at' => 'datetime',
         ];
     }
 
