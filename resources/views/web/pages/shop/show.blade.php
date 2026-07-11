@@ -2485,7 +2485,8 @@
                 }
 
                 checkShopPaymentStatus();
-                shopPollTimer = window.setInterval(checkShopPaymentStatus, 3000);
+                // Slow down retries while Bakong is unavailable to avoid repeated API timeouts.
+                shopPollTimer = window.setInterval(checkShopPaymentStatus, 10000);
             };
 
             const stopShopStatusPolling = () => {

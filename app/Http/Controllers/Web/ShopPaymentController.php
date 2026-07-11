@@ -47,6 +47,16 @@ class ShopPaymentController extends Controller
                 ],
             ]);
         } catch (Throwable $exception) {
+            // Keep the checkout pending when Bakong is temporarily unreachable.
+            if (str_contains($exception->getMessage(), 'cURL error 28')
+                || str_contains($exception->getMessage(), 'Connection timed out')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Bakong verification is temporarily unavailable. Payment remains pending.',
+                    'data' => ['status' => 'pending'],
+                ]);
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => $exception->getMessage(),
