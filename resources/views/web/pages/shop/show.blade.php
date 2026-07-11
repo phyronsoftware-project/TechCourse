@@ -2484,16 +2484,25 @@
                     return;
                 }
 
-                checkShopPaymentStatus();
-                // Slow down retries while Bakong is unavailable to avoid repeated API timeouts.
-                shopPollTimer = window.setInterval(checkShopPaymentStatus, 10000);
+                scheduleShopPaymentStatusCheck(0);
             };
 
             const stopShopStatusPolling = () => {
                 if (shopPollTimer) {
-                    window.clearInterval(shopPollTimer);
+                    window.clearTimeout(shopPollTimer);
                     shopPollTimer = null;
                 }
+            };
+
+            const scheduleShopPaymentStatusCheck = (delay = 3000) => {
+                if (!shopPaymentStatusUrl || shopStatusLocked || shopPollTimer) {
+                    return;
+                }
+
+                shopPollTimer = window.setTimeout(async () => {
+                    shopPollTimer = null;
+                    await checkShopPaymentStatus();
+                }, delay);
             };
 
             async function checkShopPaymentStatus() {
@@ -2543,9 +2552,14 @@
                             status === 'expired' ? 'QR expired. Please refresh for a new payment.' : 'Payment verification failed.',
                             'error',
                         );
+                        return;
                     }
+
+                    scheduleShopPaymentStatusCheck(Math.max(3, Number(result?.data?.retry_after || 3)) * 1000);
                 } catch (error) {
                     console.error('Shop Bakong payment status check failed.', error);
+                    // Retry more slowly after a Bakong API timeout.
+                    scheduleShopPaymentStatusCheck(10000);
                 }
             }
 

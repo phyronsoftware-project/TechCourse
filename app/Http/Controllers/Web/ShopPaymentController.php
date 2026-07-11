@@ -53,7 +53,7 @@ class ShopPaymentController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Bakong verification is temporarily unavailable. Payment remains pending.',
-                    'data' => ['status' => 'pending'],
+                    'data' => ['status' => 'pending', 'retry_after' => 10],
                 ]);
             }
 
