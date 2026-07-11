@@ -1,14 +1,13 @@
 <?php
 
-use App\Http\Controllers\Api\BannerController;
-use App\Http\Controllers\Api\BakongPaymentController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BakongPaymentController;
+use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\SocialMediaController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('app')->group(function () {
@@ -63,13 +62,16 @@ Route::prefix('app')->group(function () {
     });
 });
 
-Route::middleware('throttle:api-public')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:api-public'])->group(function () {
     Route::prefix('bakong/payments')->group(function () {
         Route::post('/create', [BakongPaymentController::class, 'create'])->name('api.bakong.payments.create');
         Route::get('/{payment}', [BakongPaymentController::class, 'show'])->name('api.bakong.payments.show');
         Route::get('/{payment}/status', [BakongPaymentController::class, 'status'])->name('api.bakong.payments.status');
     });
 
+});
+
+Route::middleware('throttle:api-public')->group(function () {
     Route::get('/web/banners', [BannerController::class, 'index'])->name('api.web.banners.index');
     Route::get('/social-media', [SocialMediaController::class, 'index'])->name('api.social-media.index');
     Route::post('/v1/payments/aba/return', [PaymentController::class, 'abaReturn'])->name('api.payments.aba.return');

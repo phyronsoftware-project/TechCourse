@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\ShopCategory;
 use App\Models\ShopProduct;
-use App\Services\BakongKhqrService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -67,7 +66,7 @@ class ShopController extends Controller
         ]);
     }
 
-    public function show(string $product, BakongKhqrService $bakongKhqrService): View
+    public function show(Request $request, string $product): View
     {
         abort_unless(Schema::hasTable('shop_products'), 404);
         $checkoutQrProvider = $this->resolveCheckoutQrProvider();
@@ -104,23 +103,7 @@ class ShopController extends Controller
         $shopKhqrError = null;
         $shopKhqrModalTitle = 'Bakong KHQR';
         $shopKhqrCaption = __('Scan our official Bakong KHQR with any banking app that supports KHQR.');
-
-        try {
-            // Generate the live Bakong KHQR in USD so the QR matches the dollar pricing shown in the shop UI.
-            $bakongKhqr = $bakongKhqrService->generateCheckoutKhqr([
-                'amount' => round((float) ($shopProduct->sale_price ?: 0), 2),
-                'currency' => 'USD',
-                'order_no' => 'SHOP-' . $shopProduct->id,
-                'bill_number' => 'SHOP-' . $shopProduct->id . '-' . now()->format('YmdHis'),
-                'course_title' => $shopProduct->name,
-            ]);
-
-            $shopKhqrPreviewUrl = data_get($bakongKhqr, 'image_data_uri');
-            $shopKhqrString = data_get($bakongKhqr, 'qr_string');
-            $shopKhqrDeepLink = data_get($bakongKhqr, 'deep_link');
-        } catch (Throwable $exception) {
-            $shopKhqrError = $exception->getMessage();
-        }
+        $shopPayment = null;
 
         return view('web.pages.shop.show', [
             'product' => $shopProduct,
@@ -133,6 +116,8 @@ class ShopController extends Controller
             'shopKhqrString' => $shopKhqrString,
             'shopKhqrDeepLink' => $shopKhqrDeepLink,
             'shopKhqrError' => $shopKhqrError,
+            'shopPayment' => $shopPayment,
+            'shopCheckoutRequested' => false,
             'shopReady' => Schema::hasTable('shop_categories') && Schema::hasTable('shop_products') && Schema::hasTable('shop_product_images'),
         ]);
     }

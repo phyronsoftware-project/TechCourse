@@ -9,8 +9,10 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Services\BakongKhqrService;
-use App\Services\PaymentHistoryService;
 use App\Services\BakongOpenApiService;
+use App\Services\BakongPaymentService;
+use App\Services\PaymentHistoryService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,26 +20,24 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Throwable;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Throwable;
 
 class CourseCheckoutController extends Controller
 {
     public function __construct(
         protected PaymentHistoryService $paymentHistoryService
-    ) {
-    }
+    ) {}
 
     public function show(
         string $course,
         BakongOpenApiService $bakongOpenApiService,
         BakongKhqrService $bakongKhqrService
-    ): View|RedirectResponse
-    {
+    ): View|RedirectResponse {
         $courseModel = $this->resolveCourse($course);
 
         if (! $courseModel) {
-            throw new NotFoundHttpException();
+            throw new NotFoundHttpException;
         }
 
         if ($this->courseIsFree($courseModel)) {
@@ -99,7 +99,7 @@ class CourseCheckoutController extends Controller
         $courseModel = $this->resolveCourse($course);
 
         if (! $courseModel) {
-            throw new NotFoundHttpException();
+            throw new NotFoundHttpException;
         }
 
         [$order, $payment] = $this->ensurePendingCheckout($courseModel);
@@ -136,7 +136,7 @@ class CourseCheckoutController extends Controller
                     'currency' => $payment->currency,
                     'value' => (float) $payment->amount,
                     'items' => [[
-                        'item_id' => 'course_' . $courseModel->id,
+                        'item_id' => 'course_'.$courseModel->id,
                         'item_name' => $courseModel->title,
                         'item_category' => 'course',
                         'price' => (float) $payment->amount,
@@ -176,6 +176,34 @@ class CourseCheckoutController extends Controller
         return redirect()
             ->route('courses.checkout', $courseModel->slug ?: $courseModel->id)
             ->with('error', __('Bakong verification shows this transaction is not successful yet.'));
+    }
+
+    // Poll only the authenticated customer's payment and confirm it through Bakong server-side.
+    public function status(Payment $payment, BakongPaymentService $bakongPaymentService): JsonResponse
+    {
+        abort_unless((int) $payment->user_id === (int) Auth::id(), 404);
+
+        try {
+            $payment = $bakongPaymentService->checkPaymentStatus($payment);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment status checked',
+                'data' => [
+                    'payment_id' => $payment->id,
+                    'status' => $payment->status,
+                    'transaction_hash' => $payment->transaction_hash,
+                    'paid_at' => optional($payment->paid_at)?->toIso8601String(),
+                    'expired_at' => optional($payment->expired_at)?->toIso8601String(),
+                ],
+            ]);
+        } catch (Throwable $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+                'data' => ['status' => $payment->fresh()->status],
+            ], 503);
+        }
     }
 
     protected function ensurePendingCheckout(Course $course, string $checkoutQrProvider = 'bakong'): array
@@ -253,11 +281,11 @@ class CourseCheckoutController extends Controller
                                     'status',
                                 ])
                                 ->all(),
-                                [
-                                    'course_id' => $course->id,
-                                    'course_title' => $course->title,
-                                    'note' => 'Pending Bakong KHQR checkout prepared from frontend course lock flow.',
-                                ],
+                            [
+                                'course_id' => $course->id,
+                                'course_title' => $course->title,
+                                'note' => 'Pending Bakong KHQR checkout prepared from frontend course lock flow.',
+                            ],
                         ),
                     ])->save();
 
@@ -484,13 +512,13 @@ class CourseCheckoutController extends Controller
 
     protected function generateOrderNumber(): string
     {
-        return 'TC-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(4));
+        return 'TC-'.now()->format('YmdHis').'-'.Str::upper(Str::random(4));
     }
 
     // Keep Bakong payments on their own reference number format for easier support tracking.
     protected function generatePaymentNumber(): string
     {
-        return 'PAY-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+        return 'PAY-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
     }
 
     protected function resolvePaymentProviderValue(string $checkoutQrProvider = 'bakong'): string

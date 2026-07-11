@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\Payment;
 use App\Services\BakongPaymentService;
 use Illuminate\Http\JsonResponse;
@@ -14,17 +15,25 @@ class BakongPaymentController extends Controller
 {
     public function __construct(
         protected BakongPaymentService $bakongPaymentService
-    ) {
-    }
+    ) {}
 
     // Create a Bakong KHQR payment and return the QR payload for frontend display.
     public function create(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'amount' => ['required', 'numeric', 'min:100'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
             'order_id' => ['nullable', 'integer'],
-            'user_id' => ['nullable', 'integer'],
         ]);
+        $validated['user_id'] = $request->user()->id;
+
+        if (! empty($validated['order_id'])) {
+            $ownsOrder = Order::query()
+                ->whereKey($validated['order_id'])
+                ->where('user_id', $request->user()->id)
+                ->exists();
+
+            abort_unless($ownsOrder, 404);
+        }
 
         try {
             $payment = $this->bakongPaymentService->createPaymentQr($validated);
@@ -46,8 +55,10 @@ class BakongPaymentController extends Controller
     }
 
     // Check the current payment status using the backend Bakong verification flow.
-    public function status(Payment $payment): JsonResponse
+    public function status(Request $request, Payment $payment): JsonResponse
     {
+        abort_unless((int) $payment->user_id === (int) $request->user()->id, 404);
+
         try {
             $payment = $this->bakongPaymentService->checkPaymentStatus($payment);
 
@@ -68,8 +79,10 @@ class BakongPaymentController extends Controller
     }
 
     // Return the stored payment detail without calling Bakong again.
-    public function show(Payment $payment): JsonResponse
+    public function show(Request $request, Payment $payment): JsonResponse
     {
+        abort_unless((int) $payment->user_id === (int) $request->user()->id, 404);
+
         return response()->json([
             'success' => true,
             'message' => 'Payment detail fetched successfully',

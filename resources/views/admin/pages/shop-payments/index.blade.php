@@ -34,6 +34,7 @@
                                 <option value="pending" @selected(request('status') === 'pending')>Pending</option>
                                 <option value="success" @selected(request('status') === 'success')>Success</option>
                                 <option value="failed" @selected(request('status') === 'failed')>Failed</option>
+                                <option value="expired" @selected(request('status') === 'expired')>Expired</option>
                             </select>
                             <span class="admin-input-addon">ST</span>
                         </div>
@@ -60,6 +61,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Payment No</th>
                             <th>Transaction ID</th>
                             <th>Order No</th>
                             <th>Customer</th>
@@ -73,6 +75,7 @@
                         @forelse ($payments as $payment)
                             <tr>
                                 <td>{{ $payment->id }}</td>
+                                <td>{{ $payment->payment_no ?: '-' }}</td>
                                 <td>{{ $payment->transaction_id ?: '-' }}</td>
                                 <td>{{ $payment->order_no ?: '-' }}</td>
                                 <td>{{ $payment->user_name ?: '-' }}</td>
@@ -83,7 +86,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="admin-empty">No shop payment rows loaded yet.</td>
+                                <td colspan="9" class="admin-empty">No shop payment rows loaded yet.</td>
                             </tr>
                         @endforelse
                     </tbody>

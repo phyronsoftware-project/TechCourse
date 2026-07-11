@@ -1,15 +1,16 @@
 <?php
 
-use App\Http\Controllers\Web\HomeController;
-use App\Http\Controllers\Web\CourseController;
 use App\Http\Controllers\Web\CourseCheckoutController;
+use App\Http\Controllers\Web\CourseController;
 use App\Http\Controllers\Web\EngagementController;
+use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\LearningController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\PublicMediaController;
 use App\Http\Controllers\Web\ShopController;
 use App\Http\Controllers\Web\ShopInteractionController;
+use App\Http\Controllers\Web\ShopPaymentController;
 use App\Http\Controllers\Web\UserAuthController;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,7 @@ Route::get('/learning/{course}/{lesson}', [LearningController::class, 'show'])->
 Route::middleware('auth')->group(function () {
     Route::get('/courses/{course}/checkout', [CourseCheckoutController::class, 'show'])->name('courses.checkout');
     Route::post('/courses/{course}/checkout/verify-bakong', [CourseCheckoutController::class, 'verify'])->name('courses.checkout.verify-bakong');
+    Route::get('/payments/{payment}/bakong-status', [CourseCheckoutController::class, 'status'])->name('payments.bakong.status');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
@@ -52,6 +54,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/shop-data/cart/toggle', [ShopInteractionController::class, 'toggleCart'])->middleware('throttle:shop-actions')->name('shop.cart.toggle');
     Route::post('/shop-data/cart/qty', [ShopInteractionController::class, 'updateCartQty'])->middleware('throttle:shop-actions')->name('shop.cart.qty');
     Route::post('/shop-data/favorite/toggle', [ShopInteractionController::class, 'toggleFavorite'])->middleware('throttle:shop-actions')->name('shop.favorite.toggle');
+    Route::post('/shop/{product}/payments/bakong', [ShopPaymentController::class, 'create'])->name('shop-payments.bakong.create');
+    Route::get('/shop-payments/{shopPayment}/bakong-status', [ShopPaymentController::class, 'status'])->name('shop-payments.bakong.status');
 });
 
 Route::middleware('guest')->group(function () {

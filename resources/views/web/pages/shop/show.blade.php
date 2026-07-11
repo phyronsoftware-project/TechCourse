@@ -743,7 +743,7 @@
             justify-content: center;
             padding: 20px;
             opacity: 0;
-            transition: opacity 0.28s ease;
+            transition: opacity 1.5s ease;
         }
 
         .shop-khqr-modal.is-open {
@@ -768,7 +768,7 @@
             overflow: visible;
             transform: translateY(20px);
             opacity: 0;
-            transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.32s ease;
+            transition: transform 1.5s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 1.5s ease;
         }
 
         .shop-khqr-modal.is-open .shop-khqr-modal__dialog {
@@ -882,6 +882,67 @@
             text-decoration: none;
             font-size: 16px;
             font-weight: 500;
+        }
+
+        .shop-payment-success-modal[hidden] {
+            display: none;
+        }
+
+        .shop-payment-success-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.36);
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        .shop-payment-success-modal.is-open {
+            opacity: 1;
+        }
+
+        .shop-payment-success-card {
+            width: min(360px, calc(100vw - 36px));
+            padding: 34px 26px 28px;
+            border-radius: 20px;
+            background: #FFFFFF;
+            color: #1f2937;
+            text-align: center;
+            box-shadow: 0 20px 55px rgba(0, 0, 0, 0.22);
+            transform: translateY(14px) scale(0.98);
+            transition: transform 1.5s ease;
+        }
+
+        .shop-payment-success-modal.is-open .shop-payment-success-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .shop-payment-success-pray {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 22px;
+            display: block;
+            object-fit: contain;
+        }
+
+        .shop-payment-success-title {
+            margin: 0;
+            color: #202020;
+            font-size: 25px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .shop-payment-success-text {
+            margin: 12px auto 24px;
+            max-width: 290px;
+            color: #697386;
+            font-size: 14px;
+            line-height: 1.55;
         }
 
         .shop-related {
@@ -1970,8 +2031,9 @@
                 'currency' => $shopKhqrCurrencyCode,
                 'khqrString' => $shopKhqrString ?? null,
                 'qrImageUrl' => $shopKhqrPreviewUrl,
-                'status' => 'pending',
-                'showStatusMeta' => false,
+                'expiredAt' => $shopPayment?->expired_at,
+                'status' => $shopPayment?->status ?: 'pending',
+                'showStatusMeta' => true,
                 'showCenterBadge' => true,
                 'emptyMessage' => $shopKhqrError ?: __('Please check your Bakong account config and generate the KHQR again.'),
             ])
@@ -1986,6 +2048,18 @@
                 </div>
             @endif
             --}}
+        </div>
+    </div>
+
+    <div class="shop-payment-success-modal" data-shop-payment-success hidden>
+        <div class="shop-payment-success-card" role="dialog" aria-modal="true" aria-labelledby="shop-payment-success-title">
+            <img src="{{ asset('logo/pray (1).gif') }}" alt="" class="shop-payment-success-pray" aria-hidden="true">
+            <h2 class="shop-payment-success-title" id="shop-payment-success-title">
+                {{ __('Payment succeeded!') }}
+            </h2>
+            <p class="shop-payment-success-text">
+                {{ __('Your transaction was completed successfully. Thank you for your purchase!') }}
+            </p>
         </div>
     </div>
 
@@ -2059,9 +2133,20 @@
             }
 
             const modal = document.querySelector('[data-shop-khqr-modal]');
+            const successModal = document.querySelector('[data-shop-payment-success]');
             const openButton = document.querySelector('[data-shop-khqr-open]');
             const closeButtons = document.querySelectorAll('[data-shop-khqr-close]');
             const jsKhqrEmpty = document.querySelector('[data-shop-js-khqr-empty]');
+            const shopKhqrCardId = @json($shopKhqrCardId);
+            const shopPaymentCreateUrl = @json(Auth::check()
+                ? route('shop-payments.bakong.create', $product->slug ?: $product->id)
+                : null);
+            const shopPaymentStatusBaseUrl = @json(url('/shop-payments'));
+            const csrfToken = @json(csrf_token());
+            let shopPaymentStatusUrl = null;
+            let shopPollTimer = null;
+            let shopStatusLocked = false;
+            let successHideTimer = null;
 
             if (!modal || !openButton) {
                 return;
@@ -2087,18 +2172,82 @@
                 requestAnimationFrame(() => {
                     modal.classList.add('is-open');
                 });
+
             };
 
-            const closeModal = () => {
+            const closeModal = (immediate = false) => {
                 modal.classList.remove('is-open');
+
+                if (immediate) {
+                    modal.hidden = true;
+                    document.body.style.overflow = '';
+                    return;
+                }
 
                 window.setTimeout(() => {
                     modal.hidden = true;
                     document.body.style.overflow = '';
-                }, 280);
+                }, 1500);
             };
 
-            openButton.addEventListener('click', openModal);
+            const showPaymentSuccess = () => {
+                if (!successModal) {
+                    return;
+                }
+
+                window.clearTimeout(successHideTimer);
+                successModal.hidden = false;
+                requestAnimationFrame(() => successModal.classList.add('is-open'));
+
+                // Keep the success message visible for six seconds, then hide it smoothly.
+                successHideTimer = window.setTimeout(() => {
+                    successModal.classList.remove('is-open');
+                    window.setTimeout(() => {
+                        successModal.hidden = true;
+                        document.body.style.overflow = '';
+                    }, 1500);
+                }, 6000);
+            };
+
+            openButton.addEventListener('click', async () => {
+                if (!shopPaymentCreateUrl) {
+                    window.location.href = @json(route('web.login'));
+                    return;
+                }
+
+                openModal();
+                openButton.disabled = true;
+
+                try {
+                    const response = await window.fetch(shopPaymentCreateUrl, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({}),
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok || !result?.data?.payment_id) {
+                        throw new Error(result?.message || 'Unable to create shop payment.');
+                    }
+
+                    shopPaymentStatusUrl = `${shopPaymentStatusBaseUrl}/${result.data.payment_id}/bakong-status`;
+                    window.TechCourseKhqrCards?.setQr(
+                        shopKhqrCardId,
+                        result.data.khqr_string,
+                        result.data.expired_at,
+                    );
+                    startShopStatusPolling();
+                } catch (error) {
+                    window.TechCourseKhqrCards?.showToast(error.message || 'Unable to create shop payment.', 'error');
+                } finally {
+                    openButton.disabled = false;
+                }
+            });
             closeButtons.forEach((button) => button.addEventListener('click', closeModal));
 
             document.addEventListener('keydown', (event) => {
@@ -2106,6 +2255,80 @@
                     closeModal();
                 }
             });
+
+            document.addEventListener('khqr:expired', (event) => {
+                if (event.detail?.cardId === shopKhqrCardId && !shopStatusLocked) {
+                    checkShopPaymentStatus();
+                }
+            });
+
+            // Confirm cross-bank KHQR payments only from the backend Bakong API response.
+            const startShopStatusPolling = () => {
+                if (!shopPaymentStatusUrl || shopPollTimer || shopStatusLocked) {
+                    return;
+                }
+
+                checkShopPaymentStatus();
+                shopPollTimer = window.setInterval(checkShopPaymentStatus, 3000);
+            };
+
+            const stopShopStatusPolling = () => {
+                if (shopPollTimer) {
+                    window.clearInterval(shopPollTimer);
+                    shopPollTimer = null;
+                }
+            };
+
+            async function checkShopPaymentStatus() {
+                if (!shopPaymentStatusUrl || shopStatusLocked) {
+                    return;
+                }
+
+                try {
+                    const response = await window.fetch(shopPaymentStatusUrl, {
+                        headers: { Accept: 'application/json' },
+                        credentials: 'same-origin',
+                    });
+                    const result = await response.json();
+                    const status = result?.data?.status;
+
+                    if (status) {
+                        window.TechCourseKhqrCards?.setStatus(shopKhqrCardId, status, result.message || '');
+                    }
+
+                    if (status === 'success') {
+                        shopStatusLocked = true;
+                        stopShopStatusPolling();
+                        // Hide the KHQR before showing the custom success modal.
+                        closeModal(true);
+                        window.trackEvent('purchase', {
+                            transaction_id: result?.data?.transaction_hash,
+                            currency: 'USD',
+                            value: {{ (float) $salePrice }},
+                            items: [{
+                                item_id: @json('product_' . $product->id),
+                                item_name: @json($product->name),
+                                price: {{ (float) $salePrice }},
+                                quantity: 1,
+                            }],
+                        });
+                        showPaymentSuccess();
+                        return;
+                    }
+
+                    if (status === 'expired' || status === 'failed') {
+                        shopStatusLocked = true;
+                        stopShopStatusPolling();
+                        window.TechCourseKhqrCards?.showToast(
+                            status === 'expired' ? 'QR expired. Please refresh for a new payment.' : 'Payment verification failed.',
+                            'error',
+                        );
+                    }
+                } catch (error) {
+                    console.error('Shop Bakong payment status check failed.', error);
+                }
+            }
+
         });
     </script>
 @endpush

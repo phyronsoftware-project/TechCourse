@@ -21,7 +21,9 @@ class ShopPaymentController extends Controller
                 ->leftJoin('shop_orders', 'shop_payments.shop_order_id', '=', 'shop_orders.id')
                 ->select([
                     'shop_payments.id',
+                    'shop_payments.payment_no',
                     'shop_payments.transaction_id',
+                    'shop_payments.transaction_hash',
                     'shop_payments.amount',
                     'shop_payments.currency',
                     'shop_payments.status',
@@ -37,6 +39,7 @@ class ShopPaymentController extends Controller
                 $query->where(function ($builder) use ($search) {
                     $builder
                         ->where('shop_payments.transaction_id', 'like', "%{$search}%")
+                        ->orWhere('shop_payments.payment_no', 'like', "%{$search}%")
                         ->orWhere('shop_orders.order_no', 'like', "%{$search}%")
                         ->orWhere('users.name', 'like', "%{$search}%");
                 });

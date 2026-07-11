@@ -22,8 +22,10 @@ class DashboardController extends Controller
 
             return [
                 'label' => $month->format('M Y'),
-                'orders' => $this->countBetween('orders', 'created_at', $start, $end),
-                'revenue' => $this->sumBetween('payments', 'amount', 'paid_at', $start, $end, ['status' => 'success']),
+                'orders' => $this->countBetween('orders', 'created_at', $start, $end)
+                    + $this->countBetween('shop_orders', 'created_at', $start, $end),
+                'revenue' => $this->sumBetween('payments', 'amount', 'paid_at', $start, $end, ['status' => 'success'])
+                    + $this->sumBetween('shop_payments', 'amount', 'paid_at', $start, $end, ['status' => 'success']),
             ];
         });
 
@@ -57,6 +59,7 @@ class DashboardController extends Controller
                     'payments.status',
                     'payments.payment_provider',
                     'payments.paid_at',
+                    'payments.created_at',
                     'orders.order_no',
                     'users.name as user_name',
                 ])
@@ -64,6 +67,35 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get();
         }, 'payments');
+
+        if (Schema::hasTable('shop_payments') && Schema::hasTable('shop_orders')) {
+            $shopPayments = $this->safeCollection(function () {
+                return DB::table('shop_payments')
+                    ->leftJoin('users', 'shop_payments.user_id', '=', 'users.id')
+                    ->leftJoin('shop_orders', 'shop_payments.shop_order_id', '=', 'shop_orders.id')
+                    ->select([
+                        'shop_payments.id',
+                        'shop_payments.transaction_id',
+                        'shop_payments.amount',
+                        'shop_payments.currency',
+                        'shop_payments.status',
+                        'shop_payments.payment_provider',
+                        'shop_payments.paid_at',
+                        'shop_payments.created_at',
+                        'shop_orders.order_no',
+                        'users.name as user_name',
+                    ])
+                    ->latest('shop_payments.created_at')
+                    ->limit(5)
+                    ->get();
+            }, 'shop_payments');
+
+            $recentPayments = $recentPayments
+                ->merge($shopPayments)
+                ->sortByDesc('created_at')
+                ->take(5)
+                ->values();
+        }
 
         $popularCourses = $this->safeCollection(function () {
             return DB::table('courses')
@@ -91,7 +123,7 @@ class DashboardController extends Controller
                 [
                     'label' => 'Total Users',
                     'value' => $this->count('users'),
-                    'meta_primary' => $this->countVerifiedUsers() . ' verified',
+                    'meta_primary' => $this->countVerifiedUsers().' verified',
                     'meta_secondary' => 'registered users',
                     'icon_bg' => 'bg-blue',
                     'icon' => 'users',
@@ -100,7 +132,7 @@ class DashboardController extends Controller
                 [
                     'label' => 'Active Enrollments',
                     'value' => $this->countWhere('course_enrollments', 'status', 'active'),
-                    'meta_primary' => $this->count('course_enrollments') . ' total',
+                    'meta_primary' => $this->count('course_enrollments').' total',
                     'meta_secondary' => 'learning records',
                     'icon_bg' => 'bg-teal',
                     'icon' => 'check',
@@ -108,8 +140,15 @@ class DashboardController extends Controller
                 ],
                 [
                     'label' => 'Revenue Generated',
-                    'value' => '$' . number_format($this->sum('payments', 'amount', ['status' => 'success']), 2),
-                    'meta_primary' => $this->countWhere('payments', 'status', 'success') . ' success',
+                    'value' => '$'.number_format(
+                        $this->sum('payments', 'amount', ['status' => 'success'])
+                        + $this->sum('shop_payments', 'amount', ['status' => 'success']),
+                        2,
+                    ),
+                    'meta_primary' => (
+                        $this->countWhere('payments', 'status', 'success')
+                        + $this->countWhere('shop_payments', 'status', 'success')
+                    ).' success',
                     'meta_secondary' => 'paid transactions',
                     'icon_bg' => 'bg-orange',
                     'icon' => 'coins',
@@ -117,8 +156,11 @@ class DashboardController extends Controller
                 ],
                 [
                     'label' => 'Total Orders',
-                    'value' => $this->count('orders'),
-                    'meta_primary' => $this->countWhere('payments', 'status', 'pending') . ' pending',
+                    'value' => $this->count('orders') + $this->count('shop_orders'),
+                    'meta_primary' => (
+                        $this->countWhere('payments', 'status', 'pending')
+                        + $this->countWhere('shop_payments', 'status', 'pending')
+                    ).' pending',
                     'meta_secondary' => 'order records',
                     'icon_bg' => 'bg-red',
                     'icon' => 'ticket',
@@ -127,7 +169,7 @@ class DashboardController extends Controller
                 [
                     'label' => 'Notifications',
                     'value' => $this->count('system_notifications'),
-                    'meta_primary' => $this->countWhere('system_notifications', 'is_active', 1) . ' active',
+                    'meta_primary' => $this->countWhere('system_notifications', 'is_active', 1).' active',
                     'meta_secondary' => 'broadcast and user alerts',
                     'icon_bg' => 'bg-blue',
                     'icon' => 'bell',
@@ -179,12 +221,13 @@ class DashboardController extends Controller
                     ->get();
             }, 'courses')->map(function ($item) {
                 $item->title = $item->title ?? 'Course';
+
                 return $item;
             }));
         }
 
         return $items
-            ->filter(fn ($item) => !empty($item->activity_date))
+            ->filter(fn ($item) => ! empty($item->activity_date))
             ->sortByDesc('activity_date')
             ->take(6)
             ->values();
@@ -192,7 +235,7 @@ class DashboardController extends Controller
 
     protected function countVerifiedUsers(): int
     {
-        if (!Schema::hasTable('users')) {
+        if (! Schema::hasTable('users')) {
             return 0;
         }
 
@@ -201,7 +244,7 @@ class DashboardController extends Controller
 
     protected function count(string $table): int
     {
-        if (!Schema::hasTable($table)) {
+        if (! Schema::hasTable($table)) {
             return 0;
         }
 
@@ -210,7 +253,7 @@ class DashboardController extends Controller
 
     protected function countWhere(string $table, string $column, mixed $value): int
     {
-        if (!Schema::hasTable($table)) {
+        if (! Schema::hasTable($table)) {
             return 0;
         }
 
@@ -219,7 +262,7 @@ class DashboardController extends Controller
 
     protected function countBetween(string $table, string $column, Carbon $start, Carbon $end): int
     {
-        if (!Schema::hasTable($table)) {
+        if (! Schema::hasTable($table)) {
             return 0;
         }
 
@@ -231,7 +274,7 @@ class DashboardController extends Controller
 
     protected function sum(string $table, string $column, array $conditions = []): float
     {
-        if (!Schema::hasTable($table)) {
+        if (! Schema::hasTable($table)) {
             return 0;
         }
 
@@ -248,7 +291,7 @@ class DashboardController extends Controller
 
     protected function sumBetween(string $table, string $column, string $dateColumn, Carbon $start, Carbon $end, array $conditions = []): float
     {
-        if (!Schema::hasTable($table)) {
+        if (! Schema::hasTable($table)) {
             return 0;
         }
 
@@ -265,7 +308,7 @@ class DashboardController extends Controller
 
     protected function safeCollection(callable $callback, ?string $requiredTable = null): Collection
     {
-        if ($requiredTable && !Schema::hasTable($requiredTable)) {
+        if ($requiredTable && ! Schema::hasTable($requiredTable)) {
             return collect();
         }
 

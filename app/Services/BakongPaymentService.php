@@ -18,8 +18,7 @@ class BakongPaymentService
     public function __construct(
         protected BakongKhqrService $bakongKhqrService,
         protected PaymentHistoryService $paymentHistoryService
-    ) {
-    }
+    ) {}
 
     // Create a pending Bakong KHQR payment that the frontend can display as QR.
     public function createPaymentQr(array $data): Payment
@@ -78,14 +77,7 @@ class BakongPaymentService
     public function checkPaymentStatus(Payment $payment): Payment
     {
         if ($payment->isSuccess()) {
-            return $payment;
-        }
-
-        if ($payment->isExpired()) {
-            $payment->forceFill(['status' => 'expired'])->save();
-            $this->paymentHistoryService->log($payment->fresh(), 'payment_expired', 'Bakong payment expired before confirmation.');
-
-            return $payment->fresh();
+            return $this->finalizeConfirmedPayment($payment)->fresh();
         }
 
         $this->assertStatusConfig();
@@ -93,9 +85,16 @@ class BakongPaymentService
         try {
             $result = $this->callCheckTransactionByMd5((string) $payment->khqr_md5);
             $payment = $this->storeBakongResponse($payment, $result);
-            $this->paymentHistoryService->log($payment, 'status_checked', 'Bakong payment status checked from Open API.', [
-                'bakong_response' => $result,
-            ]);
+            $recentStatusCheckExists = $payment->histories()
+                ->where('event', 'status_checked')
+                ->where('created_at', '>=', now()->subMinute())
+                ->exists();
+
+            if (! $recentStatusCheckExists) {
+                $this->paymentHistoryService->log($payment, 'status_checked', 'Bakong payment status checked from Open API.', [
+                    'bakong_response' => $result,
+                ]);
+            }
         } catch (RuntimeException $exception) {
             if ($exception->getCode() >= 500 || $exception->getCode() === 0) {
                 Log::warning('Bakong payment status check failed.', [
@@ -118,6 +117,12 @@ class BakongPaymentService
         }
 
         if (! $this->isBakongPaid($result)) {
+            // Check Bakong once before expiring so a payment made near the deadline is not missed.
+            if ($payment->isExpired()) {
+                $payment->forceFill(['status' => 'expired'])->save();
+                $this->paymentHistoryService->log($payment->fresh(), 'payment_expired', 'Bakong payment expired without a confirmed transaction.');
+            }
+
             return $payment;
         }
 
@@ -149,10 +154,33 @@ class BakongPaymentService
             throw new RuntimeException('Bakong currency mismatch detected.', 409);
         }
 
+        if (! $this->accountMatches($result)) {
+            $payment->forceFill(['status' => 'failed'])->save();
+            $this->paymentHistoryService->log($payment->fresh(), 'payment_failed', 'Bakong receiving account mismatch detected.', [
+                'bakong_response' => $result,
+            ]);
+
+            throw new RuntimeException('Bakong receiving account mismatch detected.', 409);
+        }
+
+        $transactionHash = $this->extractTransactionHash($result);
+        $hashAlreadyUsed = filled($transactionHash) && Payment::query()
+            ->where('transaction_hash', $transactionHash)
+            ->where('id', '!=', $payment->id)
+            ->exists();
+
+        if ($hashAlreadyUsed) {
+            $payment->forceFill(['status' => 'failed'])->save();
+            $this->paymentHistoryService->log($payment->fresh(), 'payment_failed', 'Duplicate Bakong transaction hash rejected.');
+
+            throw new RuntimeException('This Bakong transaction was already used.', 409);
+        }
+
         if (! $payment->isSuccess()) {
             $payment->forceFill([
                 'status' => 'success',
-                'transaction_hash' => $this->extractTransactionHash($result),
+                'transaction_id' => $transactionHash,
+                'transaction_hash' => $transactionHash,
                 'paid_at' => $this->extractPaidAt($result) ?? now(),
             ])->save();
 
@@ -191,7 +219,7 @@ class BakongPaymentService
     protected function generatePaymentNo(): string
     {
         do {
-            $paymentNo = 'PAY-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+            $paymentNo = 'PAY-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
         } while (Payment::query()->where('payment_no', $paymentNo)->exists());
 
         return $paymentNo;
@@ -217,7 +245,7 @@ class BakongPaymentService
                 $response = Http::acceptJson()
                     ->timeout(15)
                     ->withToken((string) config('bakong.open_api_token'))
-                    ->post($baseUrl . $path, $payload);
+                    ->post($baseUrl.$path, $payload);
 
                 if ($response->status() === 404) {
                     continue;
@@ -239,8 +267,10 @@ class BakongPaymentService
                 $responseCode = data_get($data, 'responseCode');
                 if ($responseCode !== null && (int) $responseCode !== 0) {
                     $message = (string) data_get($data, 'responseMessage', '');
+                    $errorCode = (int) data_get($data, 'errorCode', 0);
 
-                    if (str_contains(strtolower($message), 'not found')) {
+                    // Official errorCode=1 means no payment yet and must remain pending.
+                    if ($errorCode === 1 || str_contains(strtolower($message), 'not found') || str_contains(strtolower($message), 'could not be found')) {
                         return $data;
                     }
 
@@ -303,7 +333,7 @@ class BakongPaymentService
             return true;
         }
 
-        return (float) $remoteAmount === (float) $payment->amount;
+        return abs((float) $remoteAmount - (float) $payment->amount) < 0.00001;
     }
 
     protected function currencyMatches(Payment $payment, array $response): bool
@@ -315,6 +345,14 @@ class BakongPaymentService
         }
 
         return $remoteCurrency === strtoupper((string) $payment->currency);
+    }
+
+    protected function accountMatches(array $response): bool
+    {
+        $remoteAccount = strtolower((string) data_get($response, 'data.toAccountId', ''));
+        $merchantAccount = strtolower((string) config('bakong.khqr_account_id', ''));
+
+        return $merchantAccount === '' || $remoteAccount === '' || $remoteAccount === $merchantAccount;
     }
 
     protected function extractTransactionHash(array $response): ?string
@@ -355,6 +393,8 @@ class BakongPaymentService
             return $payment;
         }
 
+        $orderWasPaid = $order->status === 'paid';
+
         // Finalize the related order and unlock the purchased course only after backend Bakong confirmation.
         DB::transaction(function () use ($payment, $order) {
             $paidAt = $payment->paid_at ?? now();
@@ -388,8 +428,10 @@ class BakongPaymentService
             );
         });
 
-        // Keep the related order state change visible in backend history.
-        $this->paymentHistoryService->log($payment->fresh('order'), 'order_paid', 'Order marked as paid after Bakong confirmation.');
+        if (! $orderWasPaid) {
+            // Keep the related order state change visible in backend history.
+            $this->paymentHistoryService->log($payment->fresh('order'), 'order_paid', 'Order marked as paid after Bakong confirmation.');
+        }
 
         return $payment->fresh();
     }

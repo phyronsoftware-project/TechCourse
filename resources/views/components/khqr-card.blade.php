@@ -218,6 +218,11 @@
             line-height: 1.6;
         }
 
+        .khqr-card__empty[hidden],
+        .khqr-qr-wrapper[hidden] {
+            display: none !important;
+        }
+
         .khqr-toast-stack {
             position: fixed;
             right: 18px;
@@ -255,7 +260,7 @@
             }
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="{{ asset('vendor/qrcode.min.js') }}"></script>
     <script>
         (() => {
             const toastStackId = 'khqr-toast-stack';
@@ -411,6 +416,26 @@
             window.TechCourseKhqrCards = {
                 initCards,
                 showToast,
+                setQr(cardId, qrString, expiredAt = '', fallbackSrc = '') {
+                    const card = document.querySelector(`[data-khqr-card][data-card-id="${cardId}"]`);
+                    if (!card) {
+                        return;
+                    }
+
+                    card.dataset.khqrString = qrString || '';
+                    card.dataset.fallbackSrc = fallbackSrc || '';
+                    card.dataset.expiredAt = expiredAt || '';
+                    const wrapper = card.querySelector('[data-khqr-wrapper]');
+                    const empty = card.querySelector('[data-khqr-empty]');
+                    if (wrapper) {
+                        wrapper.hidden = false;
+                    }
+                    if (empty) {
+                        empty.hidden = true;
+                    }
+                    renderQr(card);
+                    startCountdown(card);
+                },
                 setStatus(cardId, status, message = '') {
                     const card = document.querySelector(`[data-khqr-card][data-card-id="${cardId}"]`);
                     setCardStatus(card, status, message);
@@ -452,17 +477,17 @@
 
         <div class="khqr-dashed-line"></div>
 
-        @if (filled($khqrString ?? null) || filled($qrImageUrl ?? null))
-            <div class="khqr-qr-wrapper">
-                <div class="khqr-qr-surface" data-khqr-qr></div>
-                @if ($showCenterBadge)
-                    <div class="khqr-qr-center-icon" aria-hidden="true">
-                        {{ $qrCenterLabel }}
-                    </div>
-                @endif
-            </div>
-        @else
-            <div class="khqr-card__empty">
+        <div class="khqr-qr-wrapper" data-khqr-wrapper @if (!filled($khqrString ?? null) && !filled($qrImageUrl ?? null)) hidden @endif>
+            <div class="khqr-qr-surface" data-khqr-qr></div>
+            @if ($showCenterBadge)
+                <div class="khqr-qr-center-icon" aria-hidden="true">
+                    {{ $qrCenterLabel }}
+                </div>
+            @endif
+        </div>
+
+        @if (!filled($khqrString ?? null) && !filled($qrImageUrl ?? null))
+            <div class="khqr-card__empty" data-khqr-empty>
                 {{ $emptyMessage ?? __('KHQR preview is not ready yet. Please generate a new payment QR.') }}
             </div>
         @endif
@@ -473,9 +498,7 @@
         <div class="khqr-card__meta">
             <div class="khqr-card__meta-top">
                 <span class="khqr-card__status-pill" data-khqr-status>{{ ucfirst($resolvedStatus) }}</span>
-                @if ($resolvedExpiredAt !== '')
-                    <span class="khqr-card__timer" data-khqr-timer></span>
-                @endif
+                <span class="khqr-card__timer" data-khqr-timer></span>
             </div>
             <p class="khqr-card__message" data-khqr-message>{{ $statusMessage ?? '' }}</p>
         </div>

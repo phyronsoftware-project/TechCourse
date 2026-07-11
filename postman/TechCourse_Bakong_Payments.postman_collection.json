@@ -1,0 +1,86 @@
+{
+  "info": {
+    "name": "TechCourse Bakong Payments",
+    "description": "Authenticated Bakong KHQR API routes for creating and checking real payment records.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000" },
+    { "key": "access_token", "value": "" },
+    { "key": "payment_id", "value": "" },
+    { "key": "order_id", "value": "null" }
+  ],
+  "item": [
+    {
+      "name": "1. Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@techcourse.test\",\n  \"password\": \"password\",\n  \"device_name\": \"postman\"\n}"
+        },
+        "url": "{{base_url}}/api/app/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json?.data?.access_token) pm.collectionVariables.set('access_token', json.data.access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Create Bakong Payment",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 20.00,\n  \"order_id\": {{order_id}}\n}"
+        },
+        "url": "{{base_url}}/api/bakong/payments/create"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json?.data?.payment_id) pm.collectionVariables.set('payment_id', json.data.payment_id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Show Payment",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": "{{base_url}}/api/bakong/payments/{{payment_id}}"
+      }
+    },
+    {
+      "name": "4. Confirm Status With Bakong",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }] },
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": "{{base_url}}/api/bakong/payments/{{payment_id}}/status"
+      }
+    }
+  ]
+}

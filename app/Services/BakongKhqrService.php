@@ -4,12 +4,12 @@ namespace App\Services;
 
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\ErrorCorrectionLevel;
+use Illuminate\Support\Carbon;
 use KHQR\BakongKHQR;
 use KHQR\Helpers\KHQRData;
 use KHQR\Helpers\Utils;
 use KHQR\Models\IndividualInfo;
 use KHQR\Models\SourceInfo;
-use Illuminate\Support\Carbon;
 use RuntimeException;
 
 class BakongKhqrService
@@ -86,7 +86,7 @@ class BakongKhqrService
         // Rewrite the SDK timestamp tag into official creation+expiration subtags so dynamic KHQR stays valid in banking apps.
         $qrString = $this->applyDynamicTimestampPayload($qrString, now(), $this->dynamicExpiryAt());
 
-        $imageResult = (new Builder())->build(
+        $imageResult = (new Builder)->build(
             data: $qrString,
             size: 430,
             margin: 12,
@@ -113,7 +113,8 @@ class BakongKhqrService
 
         return [
             'qr_string' => $qrString,
-            'md5' => (string) ($responseData['md5'] ?? md5($qrString)),
+            // The timestamp rewrite changes the payload, so MD5 must match the final QR string.
+            'md5' => md5($qrString),
             'image_data_uri' => $imageResult->getDataUri(),
             'deep_link' => $deepLink,
             'amount' => $amount,
@@ -139,7 +140,7 @@ class BakongKhqrService
             return null;
         }
 
-        $imageResult = (new Builder())->build(
+        $imageResult = (new Builder)->build(
             data: $staticQrString,
             size: 430,
             margin: 12,
@@ -190,9 +191,9 @@ class BakongKhqrService
         $createdAtMs = (string) $createdAt->utc()->valueOf();
         $expiresAtMs = (string) $expiresAt->utc()->valueOf();
         $timestampValue =
-            '00' . str_pad((string) strlen($createdAtMs), 2, '0', STR_PAD_LEFT) . $createdAtMs .
-            '01' . str_pad((string) strlen($expiresAtMs), 2, '0', STR_PAD_LEFT) . $expiresAtMs;
-        $timestampField = '99' . str_pad((string) strlen($timestampValue), 2, '0', STR_PAD_LEFT) . $timestampValue;
+            '00'.str_pad((string) strlen($createdAtMs), 2, '0', STR_PAD_LEFT).$createdAtMs.
+            '01'.str_pad((string) strlen($expiresAtMs), 2, '0', STR_PAD_LEFT).$expiresAtMs;
+        $timestampField = '99'.str_pad((string) strlen($timestampValue), 2, '0', STR_PAD_LEFT).$timestampValue;
 
         $qrWithoutCrc = preg_replace('/63\d{2}[A-Fa-f0-9]{4}$/', '', $qrString);
         if (! is_string($qrWithoutCrc) || $qrWithoutCrc === '') {
@@ -204,8 +205,8 @@ class BakongKhqrService
             throw new RuntimeException('Bakong KHQR timestamp payload is invalid.');
         }
 
-        $payload = $qrWithoutTimestamp . $timestampField . '6304';
+        $payload = $qrWithoutTimestamp.$timestampField.'6304';
 
-        return $payload . Utils::crc16($payload);
+        return $payload.Utils::crc16($payload);
     }
 }

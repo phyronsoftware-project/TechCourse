@@ -730,7 +730,7 @@
             const jsKhqrEmpty = document.querySelector('[data-js-khqr-empty]');
             const khqrCardId = @json($khqrCardId);
             const paymentId = @json($payment->id);
-            const paymentStatusUrl = @json(url('/api/bakong/payments/' . $payment->id . '/status'));
+            const paymentStatusUrl = @json(route('payments.bakong.status', $payment));
             const successRedirectUrl = @json($course->lessons->first()
                 ? route('learning.show', [$course->slug ?: $course->id, $course->lessons->first()->slug ?: $course->lessons->first()->id])
                 : route('courses.show', $course->slug ?: $course->id));
@@ -804,13 +804,8 @@
                     return;
                 }
 
-                statusLocked = true;
-                stopStatusPolling();
-                if (statusText) {
-                    statusText.textContent = 'expired';
-                }
-                window.TechCourseKhqrCards?.setStatus(khqrCardId, 'expired', 'QR expired. Please create new payment.');
-                window.TechCourseKhqrCards?.showToast('QR expired. Please create new payment.', 'error');
+                // Let the backend perform one final Bakong check before confirming expiry.
+                checkPaymentStatus();
             });
 
             // Poll backend-confirmed Bakong payment status so success is shown only after real API verification.
@@ -855,9 +850,9 @@
                     if (status === 'success') {
                         statusLocked = true;
                         stopStatusPolling();
-                        window.TechCourseKhqrCards?.setStatus(khqrCardId, 'success', 'Payment success. Redirecting...');
+                        window.TechCourseKhqrCards?.setStatus(khqrCardId, 'success', 'Payment confirmed successfully.');
                         closeModal();
-                        window.TechCourseKhqrCards?.showToast('Payment success', 'success');
+                        window.alert(@json(__('Payment completed successfully. Your course is now unlocked.')));
                         window.location.href = successRedirectUrl;
                         return;
                     }
