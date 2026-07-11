@@ -68,8 +68,19 @@ class ShopBakongPaymentService
             ->latest('id')
             ->first();
 
-        if ($expiredPending && $this->checkStatus($expiredPending)->status === 'success') {
-            return $expiredPending->fresh();
+        // Do not let a slow Bakong status check block a fresh checkout after QR expiry.
+        if ($expiredPending) {
+            try {
+                if ($this->checkStatus($expiredPending)->status === 'success') {
+                    return $expiredPending->fresh();
+                }
+            } catch (\Throwable) {
+                // Continue with a new QR when Bakong is temporarily unreachable.
+            }
+
+            if ($expiredPending->fresh()?->status === 'pending') {
+                $this->closeUnpaidCheckout($expiredPending, 'expired');
+            }
         }
 
         $amount = round((float) $product->sale_price * $quantity, 2);
