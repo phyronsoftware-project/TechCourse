@@ -95,7 +95,8 @@
             border: 0;
             border-radius: 14px;
             background: linear-gradient(135deg, #1d8cff, #1570ef);
-            color: #ffffff;
+            color: #1c2e64;
+            position: relative;
             font-size: 0.9rem;
             font-weight: 700;
             cursor: pointer;
@@ -208,39 +209,42 @@
             transition: none;
         }
 
-        .shop-card__ribbon {
-            position: absolute;
-            top: 8px;
-            left: 0;
-            min-width: 72px;
-            height: 26px;
-            padding: 0 14px 0 9px;
-            clip-path: polygon(0 0, 100% 0, 88% 50%, 100% 100%, 0 100%);
-            background: linear-gradient(135deg, #fe1707 0%, #df190c 100%);
-            color: #ffffff;
-            display: inline-flex;
-            align-items: center;
-            font-size: 0.56rem;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            z-index: 2;
-        }
-
         .shop-card__warranty {
             position: absolute;
             top: 8px;
             right: 8px;
-            width: 52px;
-            height: 52px;
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            background: #2762ea;
+            color: #1c2e64;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.52rem;
+            font-weight: 800;
+            line-height: 1;
+            text-transform: uppercase;
+            text-align: center;
+            white-space: nowrap;
+            clip-path: polygon(50% 0%, 60% 12%, 71% 3%, 78% 16%, 91% 9%, 88% 25%, 100% 25%, 92% 38%, 100% 50%, 92% 62%, 100% 75%, 88% 75%, 91% 91%, 78% 84%, 71% 97%, 60% 88%, 50% 100%, 40% 88%, 29% 97%, 22% 84%, 9% 91%, 12% 75%, 0% 75%, 8% 62%, 0% 50%, 8% 38%, 0% 25%, 12% 25%, 9% 9%, 22% 16%, 29% 3%, 40% 12%);
             z-index: 2;
         }
 
-        .shop-card__warranty img {
-            width: 100%;
-            height: 100%;
-            display: block;
+        .shop-card__warranty::before {
+            content: "";
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            background: #ffdf07;
+            z-index: 1;
         }
+
+        .shop-card__warranty > span {
+            position: relative;
+            z-index: 2;
+        }
+
 
         .shop-card__body {
             position: absolute;

@@ -155,21 +155,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .khqr-card__status-pill {
-            min-height: 28px;
-            padding: 0 12px;
-            border-radius: 999px;
-            background: #f1f5f9;
-            color: #0f172a;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 700;
+            min-height: 18px;
         }
 
         .khqr-card__timer {
@@ -178,32 +164,16 @@
             line-height: 1.5;
         }
 
-        .khqr-card__message {
-            margin: 0;
-            min-height: 18px;
-            color: #64748b;
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .khqr-card-shell[data-state="success"] .khqr-card__status-pill {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .khqr-card-shell[data-state="expired"] .khqr-card__status-pill,
-        .khqr-card-shell[data-state="failed"] .khqr-card__status-pill {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .khqr-card-shell[data-state="expired"] .khqr-card__message,
-        .khqr-card-shell[data-state="failed"] .khqr-card__message {
-            color: #b91c1c;
-        }
-
-        .khqr-card-shell[data-state="success"] .khqr-card__message {
-            color: #166534;
+        .khqr-card__download {
+            min-height: 38px;
+            padding: 8px 18px;
+            border: 0;
+            border-radius: 6px;
+            background: #E1232E;
+            color: #FFFFFF;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
         }
 
         .khqr-card__empty {
@@ -304,17 +274,7 @@
 
                 const normalizedStatus = String(status || 'pending').toLowerCase();
                 card.dataset.state = normalizedStatus;
-                const statusPill = card.querySelector('[data-khqr-status]');
-                const messageNode = card.querySelector('[data-khqr-message]');
                 const timerNode = card.querySelector('[data-khqr-timer]');
-
-                if (statusPill) {
-                    statusPill.textContent = normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
-                }
-
-                if (messageNode) {
-                    messageNode.textContent = message;
-                }
 
                 if ((normalizedStatus === 'success' || normalizedStatus === 'expired' || normalizedStatus === 'failed') && timerNode) {
                     timerNode.textContent = normalizedStatus === 'success'
@@ -404,6 +364,27 @@
                 document.querySelectorAll('[data-khqr-card]').forEach((card) => {
                     renderQr(card);
                     startCountdown(card);
+
+                    const downloadButton = card.querySelector('[data-khqr-download]');
+                    if (downloadButton && !downloadButton.dataset.bound) {
+                        downloadButton.dataset.bound = 'true';
+                        downloadButton.addEventListener('click', () => {
+                            const qrSurface = card.querySelector('[data-khqr-qr]');
+                            const qrCanvas = qrSurface?.querySelector('canvas');
+                            const qrImage = qrSurface?.querySelector('img');
+                            const downloadUrl = qrCanvas?.toDataURL('image/png') || qrImage?.src;
+
+                            if (!downloadUrl) {
+                                showToast('KHQR is not ready yet.', 'error');
+                                return;
+                            }
+
+                            const link = document.createElement('a');
+                            link.href = downloadUrl;
+                            link.download = 'khqr-payment.png';
+                            link.click();
+                        });
+                    }
                 });
             }
 
@@ -436,6 +417,29 @@
                     renderQr(card);
                     startCountdown(card);
                 },
+                // Keep the visible amount synchronized with the generated payment QR.
+                setAmount(cardId, amount, currency = 'KHR') {
+                    const card = document.querySelector(`[data-khqr-card][data-card-id="${cardId}"]`);
+                    if (!card || amount === null || amount === undefined) {
+                        return;
+                    }
+
+                    const normalizedCurrency = String(currency || 'KHR').toUpperCase();
+                    const amountNode = card.querySelector('[data-khqr-amount]');
+                    const currencyNode = card.querySelector('[data-khqr-currency]');
+                    const decimals = normalizedCurrency === 'USD' ? 2 : 0;
+
+                    if (amountNode) {
+                        amountNode.textContent = Number(amount).toLocaleString('en-US', {
+                            minimumFractionDigits: decimals,
+                            maximumFractionDigits: decimals,
+                        });
+                    }
+
+                    if (currencyNode) {
+                        currencyNode.textContent = normalizedCurrency;
+                    }
+                },
                 setStatus(cardId, status, message = '') {
                     const card = document.querySelector(`[data-khqr-card][data-card-id="${cardId}"]`);
                     setCardStatus(card, status, message);
@@ -465,12 +469,12 @@
 
             @if ($formattedAmount !== null)
                 <div class="khqr-amount-row">
-                    <span class="khqr-amount">{{ $formattedAmount }}</span>
-                    <span class="khqr-currency">{{ $currencyCode }}</span>
+                    <span class="khqr-amount" data-khqr-amount>{{ $formattedAmount }}</span>
+                    <span class="khqr-currency" data-khqr-currency>{{ $currencyCode }}</span>
                 </div>
             @else
                 <div class="khqr-amount-row">
-                    <span class="khqr-currency">{{ $currencyCode }}</span>
+                    <span class="khqr-currency" data-khqr-currency>{{ $currencyCode }}</span>
                 </div>
             @endif
         </div>
@@ -497,10 +501,11 @@
     @if ($showMeta)
         <div class="khqr-card__meta">
             <div class="khqr-card__meta-top">
-                <span class="khqr-card__status-pill" data-khqr-status>{{ ucfirst($resolvedStatus) }}</span>
                 <span class="khqr-card__timer" data-khqr-timer></span>
             </div>
-            <p class="khqr-card__message" data-khqr-message>{{ $statusMessage ?? '' }}</p>
+            <button type="button" class="khqr-card__download" data-khqr-download>
+                {{ __('Download KHQR') }}
+            </button>
         </div>
     @endif
 </div>

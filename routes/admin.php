@@ -59,6 +59,7 @@ Route::middleware(['auth', 'admin'])
             ->parameters(['shop-products' => 'shopProduct'])
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::get('shop-orders', [ShopOrderController::class, 'index'])->name('shop-orders.index');
+        Route::get('shop-orders/{shopOrder}', [ShopOrderController::class, 'show'])->name('shop-orders.show');
         Route::get('shop-payments', [ShopPaymentController::class, 'index'])->name('shop-payments.index');
         Route::resource('courses', CourseController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
         Route::resource('banners', BannerController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);

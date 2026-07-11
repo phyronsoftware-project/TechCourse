@@ -278,10 +278,7 @@
                                 return `
                                     <article class="shop-card" data-favorite-product-card data-product-url="${productUrl}">
                                         <div class="shop-card__media">
-                                            <span class="shop-card__ribbon">{{ __('New') }}</span>
-                                            <div class="shop-card__warranty">
-                                                <img src="{{ asset('Logo-Socail/warranty.png') }}" alt="{{ __('1 Year Warranty') }}">
-                                            </div>
+                                            <span class="shop-card__warranty"><span>{{ __('New') }}</span></span>
                                             <a href="${productUrl}" class="shop-card__media-link" data-favorite-product-link aria-label="${item.name}">
                                                 ${item.image ? `<img src="${item.image}" alt="${item.name}">` : ''}
                                             </a>
@@ -499,7 +496,7 @@
                     const maxStock = Math.max(0, Number(button.getAttribute('data-max-stock') || 0));
 
                     if (direction === 'plus') {
-                        if (maxStock > 0 && next >= maxStock) {
+                        if (maxStock <= 0 || next >= maxStock) {
                             showToast('warning', `{{ __('Stock Limit Reached') }}`, `{{ __('You cannot add quantity over current stock.') }}`);
                             return;
                         }

@@ -25,13 +25,30 @@ class ShopBakongPaymentService
     }
 
     // Reuse one active checkout so refreshing a product page does not create duplicate orders.
-    public function prepareCheckout(ShopProduct $product, User $user): ShopPayment
+    public function prepareCheckout(ShopProduct $product, User $user, int $quantity = 1): ShopPayment
     {
         if (! $this->isReady()) {
             throw new RuntimeException('Shop payment tables are not configured yet.');
         }
 
+        $quantity = max(1, $quantity);
+
         $existing = ShopPayment::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('expired_at', '>', now())
+            ->whereHas('order.items', fn ($query) => $query
+                ->where('product_id', $product->id)
+                ->where('qty', $quantity))
+            ->latest('id')
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        // Replace an active checkout when the customer changes the requested quantity.
+        $differentQuantityPayment = ShopPayment::query()
             ->where('user_id', $user->id)
             ->where('status', 'pending')
             ->where('expired_at', '>', now())
@@ -39,8 +56,8 @@ class ShopBakongPaymentService
             ->latest('id')
             ->first();
 
-        if ($existing) {
-            return $existing;
+        if ($differentQuantityPayment) {
+            $this->closeUnpaidCheckout($differentQuantityPayment, 'cancelled');
         }
 
         $expiredPending = ShopPayment::query()
@@ -55,7 +72,7 @@ class ShopBakongPaymentService
             return $expiredPending->fresh();
         }
 
-        $amount = round((float) $product->sale_price, 2);
+        $amount = round((float) $product->sale_price * $quantity, 2);
         if ($amount <= 0) {
             throw new RuntimeException('This product does not have a valid payment amount.');
         }
@@ -75,14 +92,16 @@ class ShopBakongPaymentService
             throw new RuntimeException('Unable to generate the shop KHQR payload.');
         }
 
-        return DB::transaction(function () use ($product, $user, $amount, $orderNo, $paymentNo, $khqr, $khqrString) {
+        return DB::transaction(function () use ($product, $user, $quantity, $amount, $orderNo, $paymentNo, $khqr, $khqrString) {
             $lockedProduct = ShopProduct::query()->lockForUpdate()->findOrFail($product->id);
 
             $activePayment = ShopPayment::query()
                 ->where('user_id', $user->id)
                 ->where('status', 'pending')
                 ->where('expired_at', '>', now())
-                ->whereHas('order.items', fn ($query) => $query->where('product_id', $lockedProduct->id))
+                ->whereHas('order.items', fn ($query) => $query
+                    ->where('product_id', $lockedProduct->id)
+                    ->where('qty', $quantity))
                 ->latest('id')
                 ->first();
 
@@ -90,7 +109,7 @@ class ShopBakongPaymentService
                 return $activePayment;
             }
 
-            if ((int) $lockedProduct->stock_qty < 1) {
+            if ((int) $lockedProduct->stock_qty < $quantity) {
                 throw new RuntimeException('This product is out of stock.');
             }
 
@@ -107,13 +126,13 @@ class ShopBakongPaymentService
                 'shop_order_id' => $order->id,
                 'product_id' => $lockedProduct->id,
                 'product_name' => $lockedProduct->name,
-                'qty' => 1,
-                'unit_price' => $amount,
+                'qty' => $quantity,
+                'unit_price' => round($amount / $quantity, 2),
                 'line_total' => $amount,
             ]);
 
             // Reserve stock until this payment succeeds, fails, or expires.
-            $lockedProduct->decrement('stock_qty');
+            $lockedProduct->decrement('stock_qty', $quantity);
 
             return ShopPayment::query()->create([
                 'shop_order_id' => $order->id,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ShopOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -10,6 +11,20 @@ use Illuminate\View\View;
 
 class ShopOrderController extends Controller
 {
+    public function show(ShopOrder $shopOrder): View
+    {
+        $shopOrder->load([
+            'user',
+            'items.product',
+            'payments' => fn ($query) => $query->latest('id'),
+        ]);
+
+        return view('admin.pages.shop-orders.show', [
+            'pageTitle' => 'Shop Order Details',
+            'order' => $shopOrder,
+        ]);
+    }
+
     public function index(Request $request): View
     {
         $orders = collect();

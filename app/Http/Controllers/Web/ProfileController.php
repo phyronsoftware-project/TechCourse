@@ -233,9 +233,12 @@ class ProfileController extends Controller
 
         $user->update($payload);
 
-        return redirect()
-            ->route('profile.show')
-            ->with('success', 'Your profile has been updated successfully.');
+        $returnTo = (string) $request->input('return_to', '');
+        $redirect = str_starts_with($returnTo, url('/'))
+            ? redirect()->to($returnTo)
+            : redirect()->route('profile.show');
+
+        return $redirect->with('success', 'Your profile has been updated successfully.');
     }
 
     public function updatePassword(Request $request): RedirectResponse

@@ -9,10 +9,7 @@
 
 <article class="shop-card">
     <div class="shop-card__media">
-        <span class="shop-card__ribbon">{{ __('New') }}</span>
-        <div class="shop-card__warranty">
-            <img src="{{ asset('Logo-Socail/warranty.png') }}" alt="{{ __('1 Year Warranty') }}">
-        </div>
+        <span class="shop-card__warranty"><span>{{ __('New') }}</span></span>
         <a href="{{ $productUrl }}" class="shop-card__media-link" aria-label="{{ $product->name }}">
             @if ($product->image_url)
                 <img src="{{ $product->image_url }}" alt="{{ $product->name }}">

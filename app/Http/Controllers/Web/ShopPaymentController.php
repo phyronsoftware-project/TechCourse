@@ -7,12 +7,13 @@ use App\Models\ShopPayment;
 use App\Models\ShopProduct;
 use App\Services\ShopBakongPaymentService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class ShopPaymentController extends Controller
 {
-    public function create(string $product, ShopBakongPaymentService $paymentService): JsonResponse
+    public function create(Request $request, string $product, ShopBakongPaymentService $paymentService): JsonResponse
     {
         $shopProduct = ShopProduct::query()
             ->where('status', 'active')
@@ -26,13 +27,20 @@ class ShopPaymentController extends Controller
             ->firstOrFail();
 
         try {
-            $payment = $paymentService->prepareCheckout($shopProduct, Auth::user());
+            $validated = $request->validate([
+                'quantity' => ['required', 'integer', 'min:1'],
+            ]);
+            $payment = $paymentService->prepareCheckout($shopProduct, Auth::user(), (int) $validated['quantity']);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Shop payment QR created successfully.',
                 'data' => [
                     'payment_id' => $payment->id,
+                    'quantity' => (int) $payment->order?->items?->first()?->qty,
+                    'amount' => (float) $payment->amount,
+                    'currency' => $payment->currency,
+                    'stock_qty' => (int) $shopProduct->fresh()->stock_qty,
                     'khqr_string' => $payment->khqr_string,
                     'status' => $payment->status,
                     'expired_at' => optional($payment->expired_at)?->toIso8601String(),
@@ -52,6 +60,8 @@ class ShopPaymentController extends Controller
 
         try {
             $shopPayment = $paymentService->checkStatus($shopPayment);
+            $shopPayment->load('order.items.product');
+            $product = $shopPayment->order?->items?->first()?->product;
 
             return response()->json([
                 'success' => true,
@@ -61,6 +71,7 @@ class ShopPaymentController extends Controller
                     'status' => $shopPayment->status,
                     'transaction_hash' => $shopPayment->transaction_hash,
                     'paid_at' => optional($shopPayment->paid_at)?->toIso8601String(),
+                    'stock_qty' => $product ? (int) $product->stock_qty : null,
                 ],
             ]);
         } catch (Throwable $exception) {

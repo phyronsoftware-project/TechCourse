@@ -33,6 +33,8 @@
                                 <option value="">All</option>
                                 <option value="pending" @selected(request('status') === 'pending')>Pending</option>
                                 <option value="paid" @selected(request('status') === 'paid')>Paid</option>
+                                <option value="expired" @selected(request('status') === 'expired')>Expired</option>
+                                <option value="failed" @selected(request('status') === 'failed')>Failed</option>
                                 <option value="cancelled" @selected(request('status') === 'cancelled')>Cancelled</option>
                                 <option value="completed" @selected(request('status') === 'completed')>Completed</option>
                             </select>
@@ -67,22 +69,24 @@
                             <th>Payment Method</th>
                             <th>Status</th>
                             <th>Created</th>
+                            <th>Details</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($orders as $order)
                             <tr>
                                 <td>{{ $order->id }}</td>
-                                <td>{{ $order->order_no }}</td>
+                                <td><a href="{{ route('admin.shop-orders.show', $order->id) }}" class="text-blue-600 hover:underline">{{ $order->order_no }}</a></td>
                                 <td>{{ $order->user_name ?: '-' }}</td>
                                 <td>${{ number_format((float) $order->total_amount, 2) }} {{ $order->currency }}</td>
                                 <td>{{ $order->payment_method ?: '-' }}</td>
                                 <td><span class="admin-status-badge admin-status-badge-{{ \Illuminate\Support\Str::slug($order->status) }}">{{ $order->status }}</span></td>
                                 <td>{{ \Illuminate\Support\Carbon::parse($order->created_at)->format('d M Y H:i') }}</td>
+                                <td><a href="{{ route('admin.shop-orders.show', $order->id) }}" class="admin-btn admin-btn-secondary">View</a></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="admin-empty">No shop order rows loaded yet.</td>
+                                <td colspan="8" class="admin-empty">No shop order rows loaded yet.</td>
                             </tr>
                         @endforelse
                     </tbody>

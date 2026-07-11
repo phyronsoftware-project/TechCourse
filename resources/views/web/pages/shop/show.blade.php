@@ -28,7 +28,7 @@
     ];
     // Keep Bakong as the active shop QR while ABA work is paused for later.
     $paymentMethods = [
-        ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/logo.png')],
+        ['name' => 'Bakong KHQR', 'copy' => __('Scan to pay with Bakong or any banking app supporting KHQR'), 'image' => asset('logo/bakong_logo.png')],
         [
             'name' => __('Card'),
             'copy' => __('Credit/Debit Card'),
@@ -389,13 +389,26 @@
             font-weight: 700;
         }
 
+        .shop-detail-qty--out {
+            justify-content: center;
+            color: #b42318;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .shop-detail-add.is-disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
         .shop-detail-add {
             width: 230px;
             min-width: 230px;
             min-height: 47px;
             border: 1px solid #173f88;
             background: #173f88;
-            color: #ffffff;
+            color: #1c2e64;
+            position: relative;
             font-size: 0.88rem;
             font-weight: 800;
             display: inline-flex;
@@ -730,6 +743,85 @@
             border-top: 1px solid #eef3f8;
         }
 
+        .shop-detail-client-edit {
+            border-top: 1px solid #eef3f8;
+            padding-top: 8px;
+        }
+
+        .shop-detail-client-edit summary {
+            color: #1d4c91;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 800;
+            list-style: none;
+        }
+
+        .shop-detail-client-edit summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .shop-detail-client-edit summary::after {
+            content: '+';
+            float: right;
+            font-size: 1rem;
+            line-height: 0.8;
+        }
+
+        .shop-detail-client-edit[open] summary::after {
+            content: '-';
+        }
+
+        .shop-detail-client-form {
+            display: grid;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .shop-detail-client-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .shop-detail-client-form label {
+            display: block;
+            margin-bottom: 4px;
+            color: #5d6f88;
+            font-size: 0.64rem;
+            font-weight: 700;
+        }
+
+        .shop-detail-client-form input {
+            width: 100%;
+            min-height: 34px;
+            padding: 7px 9px;
+            border: 1px solid #dce6f0;
+            border-radius: 7px;
+            color: #10203c;
+            font-size: 0.7rem;
+            outline: none;
+        }
+
+        .shop-detail-client-form input:focus {
+            border-color: #4a91e2;
+            box-shadow: 0 0 0 3px rgba(74, 145, 226, 0.12);
+        }
+
+        .shop-detail-client-form button {
+            min-height: 36px;
+            border: 0;
+            border-radius: 7px;
+            background: #1d4c91;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+
+        .shop-khqr-modal .khqr-card__timer {
+            color: #FFFFFF;
+        }
+
         .shop-khqr-modal[hidden] {
             display: none;
         }
@@ -753,8 +845,7 @@
         .shop-khqr-modal__backdrop {
             position: absolute;
             inset: 0;
-            background: rgba(9, 17, 32, 0.52);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.72);
         }
 
         .shop-khqr-modal__dialog {
@@ -867,6 +958,15 @@
             color: #8a94a6;
             font-size: 11px;
             line-height: 1.65;
+        }
+
+        .shop-khqr-modal__notice {
+            width: min(320px, calc(100vw - 40px));
+            margin: 10px auto 0;
+            color: #FFFFFF;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.5;
         }
 
         .shop-khqr-modal__download {
@@ -1023,39 +1123,42 @@
             object-fit: contain;
         }
 
-        .shop-card__ribbon {
-            position: absolute;
-            top: 8px;
-            left: 0;
-            min-width: 72px;
-            height: 26px;
-            padding: 0 14px 0 9px;
-            clip-path: polygon(0 0, 100% 0, 88% 50%, 100% 100%, 0 100%);
-            background: linear-gradient(135deg, #fe1707 0%, #df190c 100%);
-            color: #ffffff;
-            display: inline-flex;
-            align-items: center;
-            font-size: 0.56rem;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            z-index: 2;
-        }
-
         .shop-card__warranty {
             position: absolute;
             top: 8px;
             right: 8px;
-            width: 52px;
-            height: 52px;
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            background: #2762ea;
+            color: #1c2e64;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.52rem;
+            font-weight: 800;
+            line-height: 1;
+            text-transform: uppercase;
+            text-align: center;
+            white-space: nowrap;
+            clip-path: polygon(50% 0%, 60% 12%, 71% 3%, 78% 16%, 91% 9%, 88% 25%, 100% 25%, 92% 38%, 100% 50%, 92% 62%, 100% 75%, 88% 75%, 91% 91%, 78% 84%, 71% 97%, 60% 88%, 50% 100%, 40% 88%, 29% 97%, 22% 84%, 9% 91%, 12% 75%, 0% 75%, 8% 62%, 0% 50%, 8% 38%, 0% 25%, 12% 25%, 9% 9%, 22% 16%, 29% 3%, 40% 12%);
             z-index: 2;
         }
 
-        .shop-card__warranty img {
-            width: 100%;
-            height: 100%;
-            display: block;
+        .shop-card__warranty::before {
+            content: "";
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            background: #ffdf07;
+            z-index: 1;
         }
+
+        .shop-card__warranty > span {
+            position: relative;
+            z-index: 2;
+        }
+
 
         .shop-card__body {
             position: absolute;
@@ -1817,7 +1920,7 @@
                     </div>
 
                     <div class="shop-detail-status-row">
-                        <span class="shop-detail-badge {{ $product->stock_qty > 0 ? 'is-stock' : 'is-out' }}">
+                        <span class="shop-detail-badge {{ $product->stock_qty > 0 ? 'is-stock' : 'is-out' }}" data-shop-stock-badge>
                             {{ $product->stock_qty > 0 ? __('In Stock') : __('Out of Stock') }}
                         </span>
                     </div>
@@ -1843,7 +1946,7 @@
                         @if (filled($product->barcode))
                             <div><strong>{{ __('Barcode') }}:</strong> {{ $product->barcode }}</div>
                         @endif
-                        <div><strong>{{ __('Qty') }}:</strong> {{ $product->stock_qty }}</div>
+                        <div><strong>{{ __('Qty') }}:</strong> <span data-shop-stock-value>{{ $product->stock_qty }}</span></div>
                     </div>
 
                     <div class="shop-detail-controls">
@@ -1853,12 +1956,16 @@
                             <option>{{ __('Developer Setup') }}</option>
                         </select>
 
-                        <div class="shop-detail-qty">
-                            <button type="button" data-detail-qty="minus" data-target="detail-qty" data-max-stock="{{ (int) $product->stock_qty }}">-</button>
-                            <span data-qty-label="detail-qty">1</span>
-                            <button type="button" data-detail-qty="plus" data-target="detail-qty" data-max-stock="{{ (int) $product->stock_qty }}">+</button>
-                            <input type="hidden" id="detail-qty" value="1">
-                        </div>
+                        @if ((int) $product->stock_qty > 0)
+                            <div class="shop-detail-qty">
+                                <button type="button" data-detail-qty="minus" data-target="detail-qty" data-max-stock="{{ (int) $product->stock_qty }}">-</button>
+                                <span data-qty-label="detail-qty">1</span>
+                                <button type="button" data-detail-qty="plus" data-target="detail-qty" data-max-stock="{{ (int) $product->stock_qty }}">+</button>
+                                <input type="hidden" id="detail-qty" value="1">
+                            </div>
+                        @else
+                            <div class="shop-detail-qty shop-detail-qty--out">{{ __('Out of Stock') }}</div>
+                        @endif
                     </div>
 
                     <div class="shop-detail-actions">
@@ -1874,7 +1981,7 @@
 
                         <button
                             type="button"
-                            class="shop-detail-add"
+                            class="shop-detail-add {{ $product->stock_qty > 0 ? '' : 'is-disabled' }}"
                             data-cart-add
                             data-id="{{ $product->id }}"
                             data-name="{{ e($product->name) }}"
@@ -1887,6 +1994,7 @@
                             data-cost="${{ number_format((float) $product->cost_price, 2) }}"
                             data-image="{{ $product->image_url ?: '' }}"
                             data-qty-source="detail-qty"
+                            @disabled((int) $product->stock_qty < 1)
                         >
                             <i class="fa-solid fa-cart-shopping"></i>
                             <span>{{ __('Add to Cart') }}</span>
@@ -1918,7 +2026,13 @@
                 <div class="shop-detail-payments">
                     @foreach ($paymentMethods as $method)
                         @if ($loop->first)
-                            <button type="button" class="shop-detail-pay-card shop-detail-pay-card--button" data-shop-khqr-open>
+                            <button
+                                type="button"
+                                class="shop-detail-pay-card shop-detail-pay-card--button"
+                                data-shop-khqr-open
+                                data-out-of-stock="{{ (int) $product->stock_qty < 1 ? 'true' : 'false' }}"
+                                aria-disabled="{{ (int) $product->stock_qty < 1 ? 'true' : 'false' }}"
+                            >
                                 <div class="shop-detail-pay-icon">
                                     <img src="{{ $method['image'] }}" alt="{{ $method['name'] }}">
                                 </div>
@@ -1946,7 +2060,7 @@
                                     <i class="fa-solid fa-angle-right"></i>
                                 </span>
                             </button>
-                        @else
+                        @elseif (! $loop->first)
                             <div class="shop-detail-pay-card">
                                 <div class="shop-detail-pay-icon">
                                     <img src="{{ $method['image'] }}" alt="{{ $method['name'] }}">
@@ -1993,6 +2107,49 @@
                         <div class="shop-detail-client-note">
                             {{ __('Please confirm your information is correct before continuing with payment or delivery.') }}
                         </div>
+
+                        @auth
+                            <details class="shop-detail-client-edit">
+                                <summary>{{ __('Edit information before payment') }}</summary>
+                                <form action="{{ route('profile.update') }}" method="POST" class="shop-detail-client-form">
+                                    @csrf
+                                    <input type="hidden" name="return_to" value="{{ request()->fullUrl() }}">
+                                    <div class="shop-detail-client-form-grid">
+                                        <div>
+                                            <label for="shop_client_name">{{ __('Name') }}</label>
+                                            <input id="shop_client_name" type="text" name="name" value="{{ $authUser->name }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="shop_client_phone">{{ __('Telephone') }}</label>
+                                            <input id="shop_client_phone" type="text" name="phone" value="{{ $authUser->phone }}">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="shop_client_email">{{ __('Gmail') }}</label>
+                                        <input id="shop_client_email" type="email" name="email" value="{{ $authUser->email }}" required>
+                                    </div>
+                                    <div>
+                                        <label for="shop_client_address">{{ __('Address') }}</label>
+                                        <input id="shop_client_address" type="text" name="address" value="{{ $authUser->address }}">
+                                    </div>
+                                    <div class="shop-detail-client-form-grid">
+                                        <div>
+                                            <label for="shop_client_city">{{ __('City') }}</label>
+                                            <input id="shop_client_city" type="text" name="city" value="{{ $authUser->city }}">
+                                        </div>
+                                        <div>
+                                            <label for="shop_client_province">{{ __('Province') }}</label>
+                                            <input id="shop_client_province" type="text" name="province" value="{{ $authUser->province }}">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="shop_client_postal_code">{{ __('Postal Code') }}</label>
+                                        <input id="shop_client_postal_code" type="text" name="postal_code" value="{{ $authUser->postal_code }}">
+                                    </div>
+                                    <button type="submit">{{ __('Update information') }}</button>
+                                </form>
+                            </details>
+                        @endauth
                     </div>
                 </div>
             </div>
@@ -2037,6 +2194,10 @@
                 'showCenterBadge' => true,
                 'emptyMessage' => $shopKhqrError ?: __('Please check your Bakong account config and generate the KHQR again.'),
             ])
+
+            <p class="shop-khqr-modal__notice">
+                {{ __('Note: This website is for testing only. If you make a payment, I will not be responsible for any loss.') }}
+            </p>
 
             {{--
                 Hide the payment deeplink button in the shop KHQR modal for now.
@@ -2143,26 +2304,66 @@
                 : null);
             const shopPaymentStatusBaseUrl = @json(url('/shop-payments'));
             const csrfToken = @json(csrf_token());
+            const detailQuantityInput = document.getElementById('detail-qty');
             let shopPaymentStatusUrl = null;
             let shopPollTimer = null;
             let shopStatusLocked = false;
             let successHideTimer = null;
+
+            const getDetailQuantity = () => Math.max(1, Number.parseInt(detailQuantityInput?.value || '1', 10) || 1);
+
+            const updateDisplayedStock = (stockQty) => {
+                if (stockQty === null || stockQty === undefined) {
+                    return;
+                }
+
+                const normalizedStock = Math.max(0, Number.parseInt(stockQty, 10) || 0);
+                const stockValue = document.querySelector('[data-shop-stock-value]');
+                const stockBadge = document.querySelector('[data-shop-stock-badge]');
+                const cartButton = document.querySelector('[data-cart-add]');
+                const paymentButton = document.querySelector('[data-shop-khqr-open]');
+
+                if (stockValue) {
+                    stockValue.textContent = normalizedStock;
+                }
+
+                if (stockBadge) {
+                    stockBadge.textContent = normalizedStock > 0 ? @json(__('In Stock')) : @json(__('Out of Stock'));
+                    stockBadge.classList.toggle('is-stock', normalizedStock > 0);
+                    stockBadge.classList.toggle('is-out', normalizedStock <= 0);
+                }
+
+                document.querySelectorAll('[data-detail-qty]').forEach((button) => {
+                    button.dataset.maxStock = String(normalizedStock);
+                });
+
+                if (cartButton) {
+                    cartButton.dataset.stock = String(normalizedStock);
+                }
+
+                if (paymentButton) {
+                    paymentButton.dataset.outOfStock = normalizedStock <= 0 ? 'true' : 'false';
+                    paymentButton.setAttribute('aria-disabled', normalizedStock <= 0 ? 'true' : 'false');
+                }
+            };
 
             if (!modal || !openButton) {
                 return;
             }
 
             const openModal = () => {
+                const quantity = getDetailQuantity();
+
                 // Track product checkout intent when the payment modal is opened.
                 window.trackEvent('begin_checkout', {
                     currency: 'USD',
-                    value: {{ (float) $salePrice }},
+                    value: {{ (float) $salePrice }} * quantity,
                     items: [{
                         item_id: @json('product_' . $product->id),
                         item_name: @json($product->name),
                         item_category: @json($product->category?->name ?: 'product'),
                         price: {{ (float) $salePrice }},
-                        quantity: 1,
+                        quantity,
                     }],
                 });
 
@@ -2210,6 +2411,14 @@
             };
 
             openButton.addEventListener('click', async () => {
+                if (openButton.dataset.outOfStock === 'true') {
+                    window.TechCourseKhqrCards?.showToast(
+                        'This product is out of stock. Payment is unavailable.',
+                        'error',
+                    );
+                    return;
+                }
+
                 if (!shopPaymentCreateUrl) {
                     window.location.href = @json(route('web.login'));
                     return;
@@ -2217,6 +2426,7 @@
 
                 openModal();
                 openButton.disabled = true;
+                const quantity = getDetailQuantity();
 
                 try {
                     const response = await window.fetch(shopPaymentCreateUrl, {
@@ -2227,7 +2437,7 @@
                             'X-CSRF-TOKEN': csrfToken,
                         },
                         credentials: 'same-origin',
-                        body: JSON.stringify({}),
+                        body: JSON.stringify({ quantity }),
                     });
                     const result = await response.json();
 
@@ -2241,6 +2451,12 @@
                         result.data.khqr_string,
                         result.data.expired_at,
                     );
+                    window.TechCourseKhqrCards?.setAmount(
+                        shopKhqrCardId,
+                        result.data.amount,
+                        result.data.currency,
+                    );
+                    updateDisplayedStock(result.data.stock_qty);
                     startShopStatusPolling();
                 } catch (error) {
                     window.TechCourseKhqrCards?.showToast(error.message || 'Unable to create shop payment.', 'error');
@@ -2296,7 +2512,10 @@
                         window.TechCourseKhqrCards?.setStatus(shopKhqrCardId, status, result.message || '');
                     }
 
+                    updateDisplayedStock(result?.data?.stock_qty);
+
                     if (status === 'success') {
+                        const quantity = getDetailQuantity();
                         shopStatusLocked = true;
                         stopShopStatusPolling();
                         // Hide the KHQR before showing the custom success modal.
@@ -2304,12 +2523,12 @@
                         window.trackEvent('purchase', {
                             transaction_id: result?.data?.transaction_hash,
                             currency: 'USD',
-                            value: {{ (float) $salePrice }},
+                            value: {{ (float) $salePrice }} * quantity,
                             items: [{
                                 item_id: @json('product_' . $product->id),
                                 item_name: @json($product->name),
                                 price: {{ (float) $salePrice }},
-                                quantity: 1,
+                                quantity,
                             }],
                         });
                         showPaymentSuccess();
