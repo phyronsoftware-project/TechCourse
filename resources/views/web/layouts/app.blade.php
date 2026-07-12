@@ -85,6 +85,18 @@
                 height: 0;
             }
 
+            html.scroll-locked,
+            body.scroll-locked {
+                overflow: hidden !important;
+                overscroll-behavior: none;
+            }
+
+            body.scroll-locked {
+                position: fixed;
+                inset: 0;
+                width: 100%;
+            }
+
             body.web-shell {
                 min-height: 100vh;
                 background:
@@ -2871,6 +2883,7 @@
                 }
 
                 const body = document.body;
+                const root = document.documentElement;
                 const header = document.querySelector('header');
                 const menuToggle = document.querySelector('[data-web-menu-toggle]');
                 const menuClose = document.querySelector('[data-web-menu-close-button]');
@@ -2888,6 +2901,45 @@
                 let notificationReadRequestSent = false;
                 let lastScrollY = window.scrollY;
                 const headerHideOffset = 160;
+
+                // Keep the page fully frozen while payment and success popups are open.
+                window.TechCourseScrollLock = window.TechCourseScrollLock || (() => {
+                    let lockCount = 0;
+                    let lockedScrollY = 0;
+
+                    return {
+                        lock() {
+                            lockCount += 1;
+
+                            if (lockCount > 1) {
+                                return;
+                            }
+
+                            lockedScrollY = window.scrollY || window.pageYOffset || 0;
+                            root.classList.add('scroll-locked');
+                            body.classList.add('scroll-locked');
+                            body.style.top = `-${lockedScrollY}px`;
+                        },
+                        unlock(force = false) {
+                            if (lockCount === 0 && !force) {
+                                return;
+                            }
+
+                            lockCount = force ? 0 : Math.max(0, lockCount - 1);
+
+                            if (lockCount > 0) {
+                                return;
+                            }
+
+                            const restoreScrollY = Math.abs(parseInt(body.style.top || '0', 10)) || lockedScrollY;
+                            root.classList.remove('scroll-locked');
+                            body.classList.remove('scroll-locked');
+                            body.style.top = '';
+                            lockedScrollY = 0;
+                            window.scrollTo(0, restoreScrollY);
+                        },
+                    };
+                })();
 
                 const closeMenu = () => {
                     body.classList.remove('menu-open');

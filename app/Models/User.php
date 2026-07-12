@@ -14,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'email', 'phone', 'address', 'city', 'province', 'postal_code', 'avatar', 'telegram_id', 'telegram_username', 'telegram_photo_url', 'role', 'status', 'password', 'email_verified_at', 'notification_muted', 'app_language', 'app_sound_enabled', 'app_vibrate_enabled'])]
+#[Fillable(['name', 'email', 'phone', 'address', 'city', 'province', 'province_id', 'postal_code', 'avatar', 'telegram_id', 'telegram_username', 'telegram_photo_url', 'role', 'status', 'password', 'email_verified_at', 'notification_muted', 'app_language', 'app_sound_enabled', 'app_vibrate_enabled'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -80,6 +80,11 @@ class User extends Authenticatable
     public function shopCartItems(): HasMany
     {
         return $this->hasMany(ShopCartItem::class);
+    }
+
+    public function deliveryProvince(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Province::class, 'province_id');
     }
 
     public function lessonComments(): HasMany

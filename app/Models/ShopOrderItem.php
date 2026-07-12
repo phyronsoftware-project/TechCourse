@@ -7,10 +7,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ShopOrderItem extends Model
 {
+    protected $appends = [
+        'image_url',
+    ];
+
     protected $fillable = [
         'shop_order_id',
         'product_id',
         'product_name',
+        'image_path',
         'qty',
         'unit_price',
         'line_total',
@@ -33,5 +38,22 @@ class ShopOrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(ShopProduct::class, 'product_id');
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (! $this->image_path) {
+            return null;
+        }
+
+        if (str_starts_with($this->image_path, 'http://') || str_starts_with($this->image_path, 'https://')) {
+            return $this->image_path;
+        }
+
+        $path = str_starts_with($this->image_path, 'storage/')
+            ? ltrim(substr($this->image_path, strlen('storage/')), '/')
+            : ltrim($this->image_path, '/');
+
+        return route('media.public', ['path' => $path]);
     }
 }

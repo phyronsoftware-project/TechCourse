@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/payments/{payment}/bakong-status', [CourseCheckoutController::class, 'status'])->name('payments.bakong.status');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/delivery-province', [ProfileController::class, 'updateDeliveryProvince'])->name('profile.delivery-province.update');
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::post('/courses/{course}/like', [EngagementController::class, 'toggleLike'])->name('courses.like');
     Route::post('/courses/{course}/save', [EngagementController::class, 'toggleSave'])->name('courses.save');

@@ -7,6 +7,7 @@ use App\Models\CourseFavorite;
 use App\Models\CourseSave;
 use App\Models\LessonComment;
 use App\Models\Order;
+use App\Models\Province;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,6 +38,7 @@ class ProfileController extends Controller
         $supportsAddress = Schema::hasColumn('users', 'address');
         $supportsCity = Schema::hasColumn('users', 'city');
         $supportsProvince = Schema::hasColumn('users', 'province');
+        $supportsProvinceId = Schema::hasColumn('users', 'province_id');
         $supportsPostalCode = Schema::hasColumn('users', 'postal_code');
 
         $likedCourses = Schema::hasTable('course_favorites')
@@ -146,6 +148,10 @@ class ProfileController extends Controller
             'supportsAddress' => $supportsAddress,
             'supportsCity' => $supportsCity,
             'supportsProvince' => $supportsProvince,
+            'supportsProvinceId' => $supportsProvinceId,
+            'provinces' => Schema::hasTable('provinces')
+                ? Province::query()->where('is_active', true)->orderBy('name_en')->get()
+                : collect(),
             'supportsPostalCode' => $supportsPostalCode,
             'likedCourses' => $likedCourses,
             'savedCourses' => $savedCourses,
@@ -160,6 +166,7 @@ class ProfileController extends Controller
         $supportsAddress = Schema::hasColumn('users', 'address');
         $supportsCity = Schema::hasColumn('users', 'city');
         $supportsProvince = Schema::hasColumn('users', 'province');
+        $supportsProvinceId = Schema::hasColumn('users', 'province_id');
         $supportsPostalCode = Schema::hasColumn('users', 'postal_code');
 
         $rules = [
@@ -186,6 +193,10 @@ class ProfileController extends Controller
 
         if ($supportsProvince) {
             $rules['province'] = ['nullable', 'string', 'max:120'];
+        }
+
+        if ($supportsProvinceId) {
+            $rules['province_id'] = ['nullable', 'integer', 'exists:provinces,id'];
         }
 
         if ($supportsPostalCode) {
@@ -219,6 +230,21 @@ class ProfileController extends Controller
             $payload['province'] = $data['province'] ?? null;
         }
 
+        if ($supportsProvinceId) {
+            $selectedProvince = filled($data['province_id'] ?? null)
+                ? Province::query()->where('is_active', true)->find($data['province_id'])
+                : null;
+
+            if (filled($data['province_id'] ?? null) && ! $selectedProvince) {
+                return back()->withErrors(['province_id' => 'Please select a valid active province.'], 'profile')->withInput();
+            }
+
+            $payload['province_id'] = $selectedProvince?->id;
+            if ($supportsProvince) {
+                $payload['province'] = $selectedProvince?->name_en;
+            }
+        }
+
         if ($supportsPostalCode) {
             $payload['postal_code'] = $data['postal_code'] ?? null;
         }
@@ -239,6 +265,39 @@ class ProfileController extends Controller
             : redirect()->route('profile.show');
 
         return $redirect->with('success', 'Your profile has been updated successfully.');
+    }
+
+    public function updateDeliveryProvince(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate([
+            'province_id' => ['required', 'integer', 'exists:provinces,id'],
+        ]);
+
+        $province = Province::query()
+            ->where('is_active', true)
+            ->find($data['province_id']);
+
+        if (! $province) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please select a valid active province.',
+            ], 422);
+        }
+
+        $request->user()->forceFill([
+            'province_id' => $province->id,
+            'province' => $province->name_en,
+        ])->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Delivery province saved successfully.',
+            'data' => [
+                'province_id' => $province->id,
+                'province_name' => app()->getLocale() === 'km' ? $province->name_km : $province->name_en,
+                'delivery_fee' => (float) $province->delivery_fee,
+            ],
+        ]);
     }
 
     public function updatePassword(Request $request): RedirectResponse

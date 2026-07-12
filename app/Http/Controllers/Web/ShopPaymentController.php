@@ -16,6 +16,7 @@ class ShopPaymentController extends Controller
     public function create(Request $request, string $product, ShopBakongPaymentService $paymentService): JsonResponse
     {
         $shopProduct = ShopProduct::query()
+            ->with('images')
             ->where('status', 'active')
             ->where(function ($query) use ($product) {
                 $query->where('slug', $product);
@@ -29,8 +30,14 @@ class ShopPaymentController extends Controller
         try {
             $validated = $request->validate([
                 'quantity' => ['required', 'integer', 'min:1'],
+                'image_path' => ['nullable', 'string', 'max:1000'],
             ]);
-            $payment = $paymentService->prepareCheckout($shopProduct, Auth::user(), (int) $validated['quantity']);
+            $payment = $paymentService->prepareCheckout(
+                $shopProduct,
+                Auth::user(),
+                (int) $validated['quantity'],
+                $validated['image_path'] ?? null,
+            );
 
             return response()->json([
                 'success' => true,
@@ -39,6 +46,9 @@ class ShopPaymentController extends Controller
                     'payment_id' => $payment->id,
                     'quantity' => (int) $payment->order?->items?->first()?->qty,
                     'amount' => (float) $payment->amount,
+                    'subtotal' => (float) $payment->order?->subtotal_amount,
+                    'delivery_fee' => (float) $payment->order?->delivery_fee,
+                    'province' => $payment->order?->province_name,
                     'currency' => $payment->currency,
                     'stock_qty' => (int) $shopProduct->fresh()->stock_qty,
                     'khqr_string' => $payment->khqr_string,

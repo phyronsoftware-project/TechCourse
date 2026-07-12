@@ -252,7 +252,8 @@
             font-weight: 700;
         }
 
-        .profile-field input {
+        .profile-field input,
+        .profile-field select {
             width: 100%;
             min-height: 44px;
             padding: 0 14px;
@@ -265,7 +266,8 @@
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .profile-field input:focus {
+        .profile-field input:focus,
+        .profile-field select:focus {
             border-color: #8ab7eb;
             box-shadow: 0 0 0 3px rgba(29, 140, 255, 0.08);
         }
@@ -679,7 +681,19 @@
                                     </div>
                                 @endif
 
-                                @if ($supportsProvince)
+                                @if ($supportsProvinceId)
+                                    <div class="profile-field">
+                                        <label for="profile_province">{{ __('Province') }}</label>
+                                        <select id="profile_province" name="province_id">
+                                            <option value="">{{ __('Select province') }}</option>
+                                            @foreach ($provinces as $province)
+                                                <option value="{{ $province->id }}" @selected((string) old('province_id', $user->province_id) === (string) $province->id)>
+                                                    {{ app()->getLocale() === 'km' ? $province->name_km : $province->name_en }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @elseif ($supportsProvince)
                                     <div class="profile-field">
                                         <label for="profile_province">{{ __('Province') }}</label>
                                         <input id="profile_province" type="text" name="province" value="{{ old('province', $user->province) }}">

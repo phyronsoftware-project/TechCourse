@@ -43,7 +43,9 @@ class ShopOrderController extends Controller
 
         $shopOrder->forceFill($payload)->save();
 
-        return back()->with('success', 'Shop order marked as delivered.');
+        return back()
+            ->with('success', 'Shop order marked as delivered.')
+            ->with('print_receipt', true);
     }
 
     public function index(Request $request): View

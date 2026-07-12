@@ -768,6 +768,9 @@
             let pollTimer = null;
             let statusLocked = false;
             let successTimer = null;
+            // Reuse the shared layout helper so course checkout popup fully freezes page scroll.
+            const lockPageScroll = () => window.TechCourseScrollLock?.lock?.() ?? (document.body.style.overflow = 'hidden');
+            const unlockPageScroll = () => window.TechCourseScrollLock?.unlock?.() ?? (document.body.style.overflow = '');
 
             const showCourseSuccess = () => {
                 if (!successModal) {
@@ -777,7 +780,7 @@
 
                 window.clearTimeout(successTimer);
                 successModal.hidden = false;
-                document.body.style.overflow = 'hidden';
+                lockPageScroll();
                 requestAnimationFrame(() => successModal.classList.add('is-open'));
 
                 // Keep the success message visible before opening the unlocked course.
@@ -785,7 +788,7 @@
                     successModal.classList.remove('is-open');
                     window.setTimeout(() => {
                         successModal.hidden = true;
-                        document.body.style.overflow = '';
+                        unlockPageScroll();
                         window.location.href = successRedirectUrl;
                     }, 1500);
                 }, 6000);
@@ -810,7 +813,7 @@
 
             const openModal = () => {
                 modal.hidden = false;
-                document.body.style.overflow = 'hidden';
+                lockPageScroll();
 
                 requestAnimationFrame(() => {
                     modal.classList.add('is-open');
@@ -824,13 +827,13 @@
 
                 if (immediate) {
                     modal.hidden = true;
-                    document.body.style.overflow = '';
+                    unlockPageScroll();
                     return;
                 }
 
                 window.setTimeout(() => {
                     modal.hidden = true;
-                    document.body.style.overflow = '';
+                    unlockPageScroll();
                 }, 280);
             };
 

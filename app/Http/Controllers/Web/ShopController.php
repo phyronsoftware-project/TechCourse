@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\ShopCategory;
 use App\Models\ShopProduct;
+use App\Models\Province;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -109,6 +110,13 @@ class ShopController extends Controller
             'product' => $shopProduct,
             'gallery' => $gallery,
             'relatedProducts' => $relatedProducts,
+            'galleryImagePaths' => collect([$shopProduct->image])
+                ->merge($shopProduct->images->pluck('image_path'))
+                ->filter()
+                ->values(),
+            'provinces' => Schema::hasTable('provinces')
+                ? Province::query()->where('is_active', true)->orderBy('name_en')->get()
+                : collect(),
             'checkoutQrProvider' => $checkoutQrProvider,
             'shopKhqrModalTitle' => $shopKhqrModalTitle,
             'shopKhqrCaption' => $shopKhqrCaption,

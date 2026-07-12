@@ -13,6 +13,7 @@
     $shopKhqrCurrencyCode = 'USD';
     $shopKhqrMerchantName = config('bakong.merchant_name') ?: 'TechCourse';
     $shopKhqrCardId = 'shop-khqr-card-' . $product->id;
+    $selectedProvince = $provinces->firstWhere('id', $authUser?->province_id);
     $saveAmount = max($costPrice - $salePrice, 0);
     $monthlyPrice = $salePrice > 0 ? ceil(($salePrice / 12) * 100) / 100 : 0;
     $galleryItems = $gallery->values();
@@ -25,6 +26,7 @@
         ['label' => __('Telephone'), 'value' => $authUser?->phone],
         ['label' => __('Gmail'), 'value' => $authUser?->email],
         ['label' => __('Address'), 'value' => $clientAddress],
+        ['label' => __('Province'), 'value' => $selectedProvince ? (app()->getLocale() === 'km' ? $selectedProvince->name_km : $selectedProvince->name_en) : null],
     ];
     // Keep Bakong as the active shop QR while ABA work is paused for later.
     $paymentMethods = [
@@ -802,6 +804,17 @@
             outline: none;
         }
 
+        .shop-detail-client-form select {
+            width: 100%;
+            min-height: 34px;
+            padding: 7px 9px;
+            border: 1px solid #dce6f0;
+            border-radius: 7px;
+            color: #10203c;
+            font-size: 0.7rem;
+            outline: none;
+        }
+
         .shop-detail-client-form input:focus {
             border-color: #4a91e2;
             box-shadow: 0 0 0 3px rgba(74, 145, 226, 0.12);
@@ -967,6 +980,31 @@
             text-align: center;
             font-size: 11px;
             line-height: 1.5;
+        }
+
+        .shop-khqr-summary {
+            display: grid;
+            gap: 7px;
+            margin-top: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #26364b;
+            font-size: 12px;
+        }
+
+        .shop-khqr-summary__row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .shop-khqr-summary__row--total {
+            padding-top: 7px;
+            border-top: 1px dashed #cbd5e1;
+            color: #173f87;
+            font-size: 14px;
+            font-weight: 800;
         }
 
         .shop-khqr-modal__download {
@@ -2031,6 +2069,7 @@
                                 class="shop-detail-pay-card shop-detail-pay-card--button"
                                 data-shop-khqr-open
                                 data-out-of-stock="{{ (int) $product->stock_qty < 1 ? 'true' : 'false' }}"
+                                data-delivery-ready="{{ $selectedProvince ? 'true' : 'false' }}"
                                 aria-disabled="{{ (int) $product->stock_qty < 1 ? 'true' : 'false' }}"
                             >
                                 <div class="shop-detail-pay-icon">
@@ -2139,7 +2178,14 @@
                                         </div>
                                         <div>
                                             <label for="shop_client_province">{{ __('Province') }}</label>
-                                            <input id="shop_client_province" type="text" name="province" value="{{ $authUser->province }}">
+                                            <select id="shop_client_province" name="province_id" required>
+                                                <option value="">{{ __('Select province') }}</option>
+                                                @foreach ($provinces as $province)
+                                                    <option value="{{ $province->id }}" @selected((string) $authUser->province_id === (string) $province->id)>
+                                                        {{ app()->getLocale() === 'km' ? $province->name_km : $province->name_en }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                     </div>
                                     <div>
@@ -2149,6 +2195,9 @@
                                     <button type="submit">{{ __('Update information') }}</button>
                                 </form>
                             </details>
+                            <div class="shop-detail-client-note">
+                                {{ $selectedProvince ? __('Delivery fee') . ': $' . number_format((float) $selectedProvince->delivery_fee, 2) : __('Please select your province in your profile before payment.') }}
+                            </div>
                         @endauth
                     </div>
                 </div>
@@ -2194,6 +2243,25 @@
                 'showCenterBadge' => true,
                 'emptyMessage' => $shopKhqrError ?: __('Please check your Bakong account config and generate the KHQR again.'),
             ])
+
+            <div class="shop-khqr-summary" data-shop-payment-summary>
+                <div class="shop-khqr-summary__row">
+                    <span>{{ __('Quantity') }}</span>
+                    <strong data-shop-payment-quantity>1</strong>
+                </div>
+                <div class="shop-khqr-summary__row">
+                    <span>{{ __('Subtotal') }}</span>
+                    <strong data-shop-payment-subtotal>${{ number_format($salePrice, 2) }}</strong>
+                </div>
+                <div class="shop-khqr-summary__row">
+                    <span>{{ __('Delivery Fee') }}</span>
+                    <strong data-shop-payment-delivery>${{ number_format((float) ($selectedProvince?->delivery_fee ?? 0), 2) }}</strong>
+                </div>
+                <div class="shop-khqr-summary__row shop-khqr-summary__row--total">
+                    <span>{{ __('Total') }}</span>
+                    <strong data-shop-payment-total>${{ number_format($salePrice + (float) ($selectedProvince?->delivery_fee ?? 0), 2) }} USD</strong>
+                </div>
+            </div>
 
             <p class="shop-khqr-modal__notice">
                 {{ __('Note: This website is for testing only. If you make a payment, I will not be responsible for any loss.') }}
@@ -2255,13 +2323,16 @@
             });
 
             const images = @json($galleryItems->values());
+            const imagePaths = @json($galleryImagePaths->values());
             const mainImage = document.querySelector('[data-detail-main-image]');
             const downloadButton = document.querySelector('[data-detail-download]');
+            let selectedImageIndex = 0;
             if (mainImage && images.length) {
                 let currentIndex = 0;
 
                 const syncGallery = () => {
                     mainImage.src = images[currentIndex];
+                    selectedImageIndex = currentIndex;
 
                     if (downloadButton) {
                         downloadButton.href = images[currentIndex];
@@ -2303,14 +2374,75 @@
                 ? route('shop-payments.bakong.create', $product->slug ?: $product->id)
                 : null);
             const shopPaymentStatusBaseUrl = @json(url('/shop-payments'));
+            const deliveryProvinceSaveUrl = @json(route('profile.delivery-province.update'));
             const csrfToken = @json(csrf_token());
             const detailQuantityInput = document.getElementById('detail-qty');
+            const deliveryProvinceSelect = document.getElementById('shop_client_province');
+            const paymentSummary = document.querySelector('[data-shop-payment-summary]');
             let shopPaymentStatusUrl = null;
             let shopPollTimer = null;
             let shopStatusLocked = false;
             let successHideTimer = null;
+            let deliveryProvinceSaving = false;
+            // Reuse the shared layout helper so shop payment popups fully freeze page scroll.
+            const lockPageScroll = () => window.TechCourseScrollLock?.lock?.() ?? (document.body.style.overflow = 'hidden');
+            const unlockPageScroll = () => window.TechCourseScrollLock?.unlock?.() ?? (document.body.style.overflow = '');
 
             const getDetailQuantity = () => Math.max(1, Number.parseInt(detailQuantityInput?.value || '1', 10) || 1);
+
+            const updatePaymentSummary = (data = {}) => {
+                if (!paymentSummary) {
+                    return;
+                }
+
+                const quantity = Number(data.quantity ?? getDetailQuantity());
+                const subtotal = Number(data.subtotal ?? ({{ (float) $salePrice }} * quantity));
+                const deliveryFee = Number(data.delivery_fee ?? {{ (float) ($selectedProvince?->delivery_fee ?? 0) }});
+                const total = Number(data.amount ?? (subtotal + deliveryFee));
+                const currency = data.currency || 'USD';
+
+                paymentSummary.querySelector('[data-shop-payment-quantity]').textContent = String(quantity);
+                paymentSummary.querySelector('[data-shop-payment-subtotal]').textContent = `$${subtotal.toFixed(2)}`;
+                paymentSummary.querySelector('[data-shop-payment-delivery]').textContent = `$${deliveryFee.toFixed(2)}`;
+                paymentSummary.querySelector('[data-shop-payment-total]').textContent = `$${total.toFixed(2)} ${currency}`;
+            };
+
+            // Save the checkout province immediately so payment uses the selected delivery fee.
+            const saveDeliveryProvince = async () => {
+                if (!deliveryProvinceSelect?.value) {
+                    openButton.dataset.deliveryReady = 'false';
+                    return;
+                }
+
+                deliveryProvinceSaving = true;
+                openButton.dataset.deliveryReady = 'false';
+
+                try {
+                    const response = await window.fetch(deliveryProvinceSaveUrl, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ province_id: deliveryProvinceSelect.value }),
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Unable to save delivery province.');
+                    }
+
+                    openButton.dataset.deliveryReady = 'true';
+                    window.TechCourseKhqrCards?.showToast('Delivery province saved.', 'success');
+                } catch (error) {
+                    deliveryProvinceSelect.value = '';
+                    window.TechCourseKhqrCards?.showToast(error.message || 'Unable to save delivery province.', 'error');
+                } finally {
+                    deliveryProvinceSaving = false;
+                }
+            };
 
             const updateDisplayedStock = (stockQty) => {
                 if (stockQty === null || stockQty === undefined) {
@@ -2357,7 +2489,7 @@
                 // Track product checkout intent when the payment modal is opened.
                 window.trackEvent('begin_checkout', {
                     currency: 'USD',
-                    value: {{ (float) $salePrice }} * quantity,
+                    value: ({{ (float) $salePrice }} * quantity) + {{ (float) ($selectedProvince?->delivery_fee ?? 0) }},
                     items: [{
                         item_id: @json('product_' . $product->id),
                         item_name: @json($product->name),
@@ -2368,7 +2500,7 @@
                 });
 
                 modal.hidden = false;
-                document.body.style.overflow = 'hidden';
+                lockPageScroll();
 
                 requestAnimationFrame(() => {
                     modal.classList.add('is-open');
@@ -2381,13 +2513,13 @@
 
                 if (immediate) {
                     modal.hidden = true;
-                    document.body.style.overflow = '';
+                    unlockPageScroll();
                     return;
                 }
 
                 window.setTimeout(() => {
                     modal.hidden = true;
-                    document.body.style.overflow = '';
+                    unlockPageScroll();
                 }, 1500);
             };
 
@@ -2398,6 +2530,7 @@
 
                 window.clearTimeout(successHideTimer);
                 successModal.hidden = false;
+                lockPageScroll();
                 requestAnimationFrame(() => successModal.classList.add('is-open'));
 
                 // Keep the success message visible for six seconds, then hide it smoothly.
@@ -2405,7 +2538,7 @@
                     successModal.classList.remove('is-open');
                     window.setTimeout(() => {
                         successModal.hidden = true;
-                        document.body.style.overflow = '';
+                        unlockPageScroll();
                     }, 1500);
                 }, 6000);
             };
@@ -2424,7 +2557,26 @@
                     return;
                 }
 
+                if (deliveryProvinceSaving) {
+                    window.TechCourseKhqrCards?.showToast('Please wait while province is being saved.', 'error');
+                    return;
+                }
+
+                if (openButton.dataset.deliveryReady !== 'true') {
+                    window.TechCourseKhqrCards?.showToast(
+                        'Please select your delivery province before payment.',
+                        'error',
+                    );
+                    const clientEdit = document.querySelector('.shop-detail-client-edit');
+                    if (clientEdit) {
+                        clientEdit.open = true;
+                        clientEdit.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return;
+                }
+
                 openModal();
+                updatePaymentSummary({ quantity: getDetailQuantity() });
                 openButton.disabled = true;
                 const quantity = getDetailQuantity();
 
@@ -2437,7 +2589,10 @@
                             'X-CSRF-TOKEN': csrfToken,
                         },
                         credentials: 'same-origin',
-                        body: JSON.stringify({ quantity }),
+                        body: JSON.stringify({
+                            quantity,
+                            image_path: imagePaths[selectedImageIndex] || null,
+                        }),
                     });
                     const result = await response.json();
 
@@ -2456,6 +2611,7 @@
                         result.data.amount,
                         result.data.currency,
                     );
+                    updatePaymentSummary(result.data);
                     updateDisplayedStock(result.data.stock_qty);
                     startShopStatusPolling();
                 } catch (error) {
@@ -2464,6 +2620,7 @@
                     openButton.disabled = false;
                 }
             });
+            deliveryProvinceSelect?.addEventListener('change', saveDeliveryProvince);
             closeButtons.forEach((button) => button.addEventListener('click', closeModal));
 
             document.addEventListener('keydown', (event) => {

@@ -32,15 +32,6 @@ class SoundToolController extends Controller
             'pageTitle' => 'Sound Tool',
             'elevenLabsSummary' => $this->elevenLabsVoiceService->summary(),
             'googleTtsSummary' => $this->googleCloudTextToSpeechService->summary(),
-            'audioExtractionSummary' => [
-                'is_ready' => $this->mediaAudioExtractionService->isReady(),
-                'ffmpeg_path' => $this->mediaAudioExtractionService->ffmpegPath() ?: '-',
-            ],
-            'savedAudioFiles' => $this->mediaAudioExtractionService->savedAudioFiles(),
-            'soundToolVoices' => SoundToolVoice::query()
-                ->active()
-                ->orderByDesc('id')
-                ->get(),
         ]);
     }
 

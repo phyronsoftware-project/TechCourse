@@ -21,17 +21,24 @@ class ShopBakongPaymentService
     {
         return Schema::hasTable('shop_orders')
             && Schema::hasTable('shop_order_items')
-            && Schema::hasTable('shop_payments');
+            && Schema::hasTable('shop_payments')
+            && Schema::hasTable('provinces');
     }
 
     // Reuse one active checkout so refreshing a product page does not create duplicate orders.
-    public function prepareCheckout(ShopProduct $product, User $user, int $quantity = 1): ShopPayment
+    public function prepareCheckout(ShopProduct $product, User $user, int $quantity = 1, ?string $imagePath = null): ShopPayment
     {
         if (! $this->isReady()) {
             throw new RuntimeException('Shop payment tables are not configured yet.');
         }
 
         $quantity = max(1, $quantity);
+        $selectedImagePath = $this->resolveSelectedImagePath($product, $imagePath);
+        $deliveryProvince = $user->deliveryProvince()->where('is_active', true)->first();
+
+        if (! $deliveryProvince) {
+            throw new RuntimeException('Please select your delivery province before payment.');
+        }
 
         $existing = ShopPayment::query()
             ->where('user_id', $user->id)
@@ -39,7 +46,9 @@ class ShopBakongPaymentService
             ->where('expired_at', '>', now())
             ->whereHas('order.items', fn ($query) => $query
                 ->where('product_id', $product->id)
-                ->where('qty', $quantity))
+                ->where('qty', $quantity)
+                ->where('image_path', $selectedImagePath))
+            ->whereHas('order', fn ($query) => $query->where('province_id', $deliveryProvince->id))
             ->latest('id')
             ->first();
 
@@ -65,6 +74,7 @@ class ShopBakongPaymentService
             ->where('status', 'pending')
             ->where('expired_at', '<=', now())
             ->whereHas('order.items', fn ($query) => $query->where('product_id', $product->id))
+            ->whereHas('order', fn ($query) => $query->where('province_id', $deliveryProvince->id))
             ->latest('id')
             ->first();
 
@@ -83,8 +93,10 @@ class ShopBakongPaymentService
             }
         }
 
-        $amount = round((float) $product->sale_price * $quantity, 2);
-        if ($amount <= 0) {
+        $subtotal = round((float) $product->sale_price * $quantity, 2);
+        $deliveryFee = round((float) $deliveryProvince->delivery_fee, 2);
+        $amount = round($subtotal + $deliveryFee, 2);
+        if ($subtotal <= 0 || $amount <= 0) {
             throw new RuntimeException('This product does not have a valid payment amount.');
         }
 
@@ -103,7 +115,7 @@ class ShopBakongPaymentService
             throw new RuntimeException('Unable to generate the shop KHQR payload.');
         }
 
-        return DB::transaction(function () use ($product, $user, $quantity, $amount, $orderNo, $paymentNo, $khqr, $khqrString) {
+        return DB::transaction(function () use ($product, $user, $quantity, $selectedImagePath, $subtotal, $deliveryFee, $amount, $deliveryProvince, $orderNo, $paymentNo, $khqr, $khqrString) {
             $lockedProduct = ShopProduct::query()->lockForUpdate()->findOrFail($product->id);
 
             $activePayment = ShopPayment::query()
@@ -112,7 +124,9 @@ class ShopBakongPaymentService
                 ->where('expired_at', '>', now())
                 ->whereHas('order.items', fn ($query) => $query
                     ->where('product_id', $lockedProduct->id)
-                    ->where('qty', $quantity))
+                    ->where('qty', $quantity)
+                    ->where('image_path', $selectedImagePath))
+                ->whereHas('order', fn ($query) => $query->where('province_id', $deliveryProvince->id))
                 ->latest('id')
                 ->first();
 
@@ -126,8 +140,12 @@ class ShopBakongPaymentService
 
             $order = ShopOrder::query()->create([
                 'user_id' => $user->id,
+                'province_id' => $deliveryProvince->id,
+                'province_name' => $deliveryProvince->name_en,
                 'order_no' => $orderNo,
                 'total_amount' => $amount,
+                'subtotal_amount' => $subtotal,
+                'delivery_fee' => $deliveryFee,
                 'currency' => 'USD',
                 'status' => 'pending',
                 'payment_method' => 'bakong_khqr',
@@ -137,9 +155,10 @@ class ShopBakongPaymentService
                 'shop_order_id' => $order->id,
                 'product_id' => $lockedProduct->id,
                 'product_name' => $lockedProduct->name,
+                'image_path' => $selectedImagePath,
                 'qty' => $quantity,
-                'unit_price' => round($amount / $quantity, 2),
-                'line_total' => $amount,
+                'unit_price' => round($subtotal / $quantity, 2),
+                'line_total' => $subtotal,
             ]);
 
             // Reserve stock until this payment succeeds, fails, or expires.
@@ -164,6 +183,16 @@ class ShopBakongPaymentService
                 'expired_at' => now()->addMinutes(max(1, (int) config('bakong.dynamic_expire_minutes', 10))),
             ]);
         });
+    }
+
+    protected function resolveSelectedImagePath(ShopProduct $product, ?string $imagePath): ?string
+    {
+        $allowedPaths = collect([$product->image])
+            ->merge($product->images->pluck('image_path'))
+            ->filter()
+            ->values();
+
+        return $allowedPaths->contains($imagePath) ? $imagePath : $allowedPaths->first();
     }
 
     public function checkStatus(ShopPayment $payment): ShopPayment

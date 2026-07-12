@@ -121,9 +121,14 @@
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;">
                         @foreach ($product->images as $subImage)
                             @php
-                                $subImageUrl = str_starts_with($subImage->image_path, 'http://') || str_starts_with($subImage->image_path, 'https://')
-                                    ? $subImage->image_path
-                                    : asset('storage/' . ltrim($subImage->image_path, '/'));
+                                // Use the protected media route so gallery previews work without relying on a storage symlink.
+                                $subImagePath = ltrim($subImage->image_path, '/');
+                                $subImagePath = str_starts_with($subImagePath, 'storage/')
+                                    ? ltrim(substr($subImagePath, strlen('storage/')), '/')
+                                    : $subImagePath;
+                                $subImageUrl = str_starts_with($subImagePath, 'http://') || str_starts_with($subImagePath, 'https://')
+                                    ? $subImagePath
+                                    : route('media.public', ['path' => $subImagePath]);
                             @endphp
                             <label style="display:grid;gap:8px;padding:10px;border:1px solid #d9e5f2;border-radius:14px;background:#fff;">
                                 <img src="{{ $subImageUrl }}" alt="Sub image {{ $loop->iteration }}" style="width:100%;height:96px;object-fit:cover;border-radius:10px;border:1px solid #edf2f8;">
