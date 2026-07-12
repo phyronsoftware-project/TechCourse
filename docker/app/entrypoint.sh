@@ -34,9 +34,8 @@ php artisan package:discover --ansi || true
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
-php artisan migrate --force || true
-# Run the shop payment migration even when an imported database has no migration history.
-php artisan migrate --path=database/migrations/2026_07_11_000022_create_shop_payment_tables.php --force || true
+# Apply every committed database migration during each Render deployment.
+php artisan migrate --force
 
 php-fpm -D
 exec nginx -g "daemon off;"
