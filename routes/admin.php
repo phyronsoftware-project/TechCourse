@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DeliveryFeeController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\EnrollmentController;
 use App\Http\Controllers\Admin\LessonController;
@@ -78,6 +79,8 @@ Route::middleware(['auth', 'admin'])
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+        Route::get('system/delivery-fees', [DeliveryFeeController::class, 'index'])->name('delivery-fees.index');
+        Route::put('system/delivery-fees', [DeliveryFeeController::class, 'update'])->name('delivery-fees.update');
         Route::get('tools/sound', [SoundToolController::class, 'index'])->name('tools.sound');
         Route::get('tools/sound/audio', [SoundToolController::class, 'audio'])->name('tools.sound.audio');
         Route::get('tools/sound/voices', [SoundToolController::class, 'voices'])->name('tools.sound.voices');

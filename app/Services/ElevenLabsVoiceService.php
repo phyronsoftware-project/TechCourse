@@ -20,12 +20,16 @@ class ElevenLabsVoiceService
 
     public function listPersonalVoices(): array
     {
+        return $this->listVoices();
+    }
+
+    public function listVoices(): array
+    {
         $response = Http::timeout(30)
             ->withHeaders($this->headers())
             ->acceptJson()
             ->get('https://api.elevenlabs.io/v2/voices', [
                 'page_size' => 100,
-                'voice_type' => 'personal',
                 'include_total_count' => false,
             ]);
 

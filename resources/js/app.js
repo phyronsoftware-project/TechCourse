@@ -3,6 +3,7 @@ const setupAdminUi = () => {
     const backdrop = document.querySelector('[data-sidebar-backdrop]');
     const openButton = document.querySelector('[data-sidebar-toggle]');
     const closeButton = document.querySelector('[data-sidebar-close]');
+    const collapseButton = document.querySelector('[data-sidebar-collapse]');
     const submenuButtons = document.querySelectorAll('[data-submenu-toggle]');
 
     const setSidebarState = (open) => {
@@ -19,6 +20,19 @@ const setupAdminUi = () => {
     openButton?.addEventListener('click', () => setSidebarState(true));
     closeButton?.addEventListener('click', () => setSidebarState(false));
     backdrop?.addEventListener('click', () => setSidebarState(false));
+
+    // Keep desktop navigation width consistent between admin pages.
+    const setSidebarCollapsed = (collapsed) => {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        collapseButton?.setAttribute('aria-expanded', String(!collapsed));
+        collapseButton?.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
+        window.localStorage.setItem('admin-sidebar-collapsed', collapsed ? '1' : '0');
+    };
+
+    setSidebarCollapsed(window.localStorage.getItem('admin-sidebar-collapsed') === '1');
+    collapseButton?.addEventListener('click', () => {
+        setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed'));
+    });
 
     submenuButtons.forEach((button) => {
         const submenu = button.parentElement?.querySelector('[data-submenu]');

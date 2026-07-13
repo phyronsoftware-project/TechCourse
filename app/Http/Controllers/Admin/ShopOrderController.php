@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ShopOrder;
+use App\Services\ShopBakongPaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,12 +49,14 @@ class ShopOrderController extends Controller
             ->with('print_receipt', true);
     }
 
-    public function index(Request $request): View
+    public function index(Request $request, ShopBakongPaymentService $paymentService): View
     {
         $orders = collect();
         $shopReady = Schema::hasTable('shop_orders');
 
         if ($shopReady) {
+            $paymentService->syncExpiredPendingPayments();
+
             $query = DB::table('shop_orders')
                 ->leftJoin('users', 'shop_orders.user_id', '=', 'users.id')
                 ->select([

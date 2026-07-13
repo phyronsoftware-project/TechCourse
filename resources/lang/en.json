@@ -401,5 +401,6 @@
     "Firebase document missing": "Firebase document missing",
     "Firebase load failed": "Firebase load failed",
     "You cannot add quantity over current stock.": "You cannot add quantity over current stock.",
-    "for 12 mo.": "for 12 mo."
+    "for 12 mo.": "for 12 mo.",
+    "Checkout all selected products together with one payment.": "Checkout all selected products together with one payment."
 }

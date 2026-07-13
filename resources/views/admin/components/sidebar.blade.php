@@ -158,6 +158,12 @@
                             'active' => request()->routeIs('admin.settings.*'),
                         ],
                         [
+                            'label' => 'Delivery Fees',
+                            'icon' => 'bag',
+                            'route' => route('admin.delivery-fees.index'),
+                            'active' => request()->routeIs('admin.delivery-fees.*'),
+                        ],
+                        [
                             'label' => 'Notifications',
                             'icon' => 'bell',
                             'route' => route('admin.notifications.index'),
@@ -186,10 +192,10 @@
     data-sidebar-backdrop></div>
 
 <aside
-    class="dashboard-sidebar fixed inset-y-0 left-0 z-40 flex w-[234px] -translate-x-full flex-col border-r border-[#d9e2ef] bg-white text-[#183b78] transition-transform duration-300 lg:translate-x-0"
+    class="dashboard-sidebar fixed inset-y-0 left-0 z-40 flex w-[234px] -translate-x-full flex-col border-r border-[#d9e2ef] bg-white text-[#183b78] lg:translate-x-0"
     data-sidebar>
     <div class="flex items-center justify-between border-b border-[#e5edf6] px-5 py-5">
-        <a href="{{ route('admin.dashboard') }}" class="block">
+        <a href="{{ route('admin.dashboard') }}" class="block overflow-hidden" data-sidebar-brand>
             <h1 class="text-[1.35rem] font-bold leading-none text-[#163f86]">Business System</h1>
             <p class="mt-1 text-[0.74rem] tracking-[0.08em] text-[#6b7c98]">ADMIN DASHBOARD</p>
         </a>
@@ -252,7 +258,7 @@
                                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.17 4 9v11h5v-6h6v6h5V9l-8-5.83Z"/></svg>
                                         @endswitch
                                     </span>
-                                    <span>{{ $link['label'] }}</span>
+                                    <span data-sidebar-label>{{ $link['label'] }}</span>
                                 </span>
                                 <svg class="submenu-arrow h-4 w-4 text-[#8ca0c0] transition-transform duration-200"
                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -313,7 +319,7 @@
                                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z"/></svg>
                                                 @endswitch
                                             </span>
-                                            <span>{{ $child['label'] }}</span>
+                                            <span data-sidebar-label>{{ $child['label'] }}</span>
                                         </a>
                                     @endforeach
                                 </div>
@@ -325,7 +331,7 @@
                             <span class="inline-flex h-6 w-6 items-center justify-center text-[#173f87]">
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.17 4 9v11h5v-6h6v6h5V9l-8-5.83Z"/></svg>
                             </span>
-                            <span class="flex-1">{{ $link['label'] }}</span>
+                            <span class="flex-1" data-sidebar-label>{{ $link['label'] }}</span>
                         </a>
                     @endif
                 @endforeach
@@ -334,6 +340,6 @@
     </nav>
 
     <div class="border-t border-[#e5edf6] px-4 py-4">
-        <p class="text-center text-[0.72rem] text-[#8ea1be]">© 2026 TechCourse</p>
+        <p class="text-center text-[0.72rem] text-[#8ea1be]" data-sidebar-footer>© 2026 TechCourse</p>
     </div>
 </aside>

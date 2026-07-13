@@ -993,6 +993,31 @@
             font-size: 12px;
         }
 
+        .shop-khqr-items {
+            display: grid;
+            gap: 6px;
+            max-height: 132px;
+            margin-bottom: 3px;
+            padding: 0 0 10px;
+            overflow-y: auto;
+            border-bottom: 1px solid #e2e8f0;
+            color: #52657f;
+            font-size: 11px;
+        }
+
+        .shop-khqr-items__row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .shop-khqr-items__name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .shop-khqr-summary__row {
             display: flex;
             justify-content: space-between;
@@ -2245,6 +2270,7 @@
             ])
 
             <div class="shop-khqr-summary" data-shop-payment-summary>
+                <div class="shop-khqr-items" data-shop-payment-items></div>
                 <div class="shop-khqr-summary__row">
                     <span>{{ __('Quantity') }}</span>
                     <strong data-shop-payment-quantity>1</strong>
@@ -2373,17 +2399,20 @@
             const shopPaymentCreateUrl = @json(Auth::check()
                 ? route('shop-payments.bakong.create', $product->slug ?: $product->id)
                 : null);
+            const shopCartPaymentCreateUrl = @json(Auth::check() ? route('shop-payments.cart.bakong.create') : null);
             const shopPaymentStatusBaseUrl = @json(url('/shop-payments'));
             const deliveryProvinceSaveUrl = @json(route('profile.delivery-province.update'));
             const csrfToken = @json(csrf_token());
             const detailQuantityInput = document.getElementById('detail-qty');
             const deliveryProvinceSelect = document.getElementById('shop_client_province');
             const paymentSummary = document.querySelector('[data-shop-payment-summary]');
+            const paymentItems = document.querySelector('[data-shop-payment-items]');
             let shopPaymentStatusUrl = null;
             let shopPollTimer = null;
             let shopStatusLocked = false;
             let successHideTimer = null;
             let deliveryProvinceSaving = false;
+            let shopCartCheckoutRequest = null;
             // Reuse the shared layout helper so shop payment popups fully freeze page scroll.
             const lockPageScroll = () => window.TechCourseScrollLock?.lock?.() ?? (document.body.style.overflow = 'hidden');
             const unlockPageScroll = () => window.TechCourseScrollLock?.unlock?.() ?? (document.body.style.overflow = '');
@@ -2405,6 +2434,25 @@
                 paymentSummary.querySelector('[data-shop-payment-subtotal]').textContent = `$${subtotal.toFixed(2)}`;
                 paymentSummary.querySelector('[data-shop-payment-delivery]').textContent = `$${deliveryFee.toFixed(2)}`;
                 paymentSummary.querySelector('[data-shop-payment-total]').textContent = `$${total.toFixed(2)} ${currency}`;
+            };
+
+            const renderPaymentItems = () => {
+                if (!paymentItems) {
+                    return;
+                }
+
+                const items = shopCartCheckoutRequest?.items || [{
+                    name: @json($product->name),
+                    qty: getDetailQuantity(),
+                    salePrice: {{ (float) $salePrice }},
+                }];
+
+                paymentItems.innerHTML = items.map((item) => `
+                    <div class="shop-khqr-items__row">
+                        <span class="shop-khqr-items__name">${item.name || 'Product'} x ${Number(item.qty || 1)}</span>
+                        <strong>$${(Number(item.salePrice || 0) * Number(item.qty || 1)).toFixed(2)}</strong>
+                    </div>
+                `).join('');
             };
 
             // Save the checkout province immediately so payment uses the selected delivery fee.
@@ -2485,21 +2533,23 @@
 
             const openModal = () => {
                 const quantity = getDetailQuantity();
+                const cartItems = shopCartCheckoutRequest?.items || [{
+                    item_id: @json('product_' . $product->id),
+                    item_name: @json($product->name),
+                    item_category: @json($product->category?->name ?: 'product'),
+                    price: {{ (float) $salePrice }},
+                    quantity,
+                }];
 
-                // Track product checkout intent when the payment modal is opened.
+                // Track checkout intent for either one product or the full cart.
                 window.trackEvent('begin_checkout', {
                     currency: 'USD',
-                    value: ({{ (float) $salePrice }} * quantity) + {{ (float) ($selectedProvince?->delivery_fee ?? 0) }},
-                    items: [{
-                        item_id: @json('product_' . $product->id),
-                        item_name: @json($product->name),
-                        item_category: @json($product->category?->name ?: 'product'),
-                        price: {{ (float) $salePrice }},
-                        quantity,
-                    }],
+                    value: (shopCartCheckoutRequest?.subtotal || ({{ (float) $salePrice }} * quantity)) + {{ (float) ($selectedProvince?->delivery_fee ?? 0) }},
+                    items: cartItems,
                 });
 
                 modal.hidden = false;
+                renderPaymentItems();
                 lockPageScroll();
 
                 requestAnimationFrame(() => {
@@ -2510,6 +2560,8 @@
 
             const closeModal = (immediate = false) => {
                 modal.classList.remove('is-open');
+                // Clear cart mode so the next direct product payment stays single-product.
+                shopCartCheckoutRequest = null;
 
                 if (immediate) {
                     modal.hidden = true;
@@ -2543,8 +2595,13 @@
                 }, 6000);
             };
 
+            window.addEventListener('shop:cart-checkout', (event) => {
+                shopCartCheckoutRequest = event.detail || null;
+                openButton.click();
+            });
+
             openButton.addEventListener('click', async () => {
-                if (openButton.dataset.outOfStock === 'true') {
+                if (!shopCartCheckoutRequest && openButton.dataset.outOfStock === 'true') {
                     window.TechCourseKhqrCards?.showToast(
                         'This product is out of stock. Payment is unavailable.',
                         'error',
@@ -2552,7 +2609,8 @@
                     return;
                 }
 
-                if (!shopPaymentCreateUrl) {
+                const paymentCreateUrl = shopCartCheckoutRequest ? shopCartPaymentCreateUrl : shopPaymentCreateUrl;
+                if (!paymentCreateUrl) {
                     window.location.href = @json(route('web.login'));
                     return;
                 }
@@ -2576,12 +2634,15 @@
                 }
 
                 openModal();
-                updatePaymentSummary({ quantity: getDetailQuantity() });
+                updatePaymentSummary({
+                    quantity: shopCartCheckoutRequest?.items?.reduce((sum, item) => sum + Number(item.qty || 0), 0) || getDetailQuantity(),
+                    subtotal: shopCartCheckoutRequest?.subtotal,
+                });
                 openButton.disabled = true;
                 const quantity = getDetailQuantity();
 
                 try {
-                    const response = await window.fetch(shopPaymentCreateUrl, {
+                    const response = await window.fetch(paymentCreateUrl, {
                         method: 'POST',
                         headers: {
                             Accept: 'application/json',
@@ -2589,7 +2650,7 @@
                             'X-CSRF-TOKEN': csrfToken,
                         },
                         credentials: 'same-origin',
-                        body: JSON.stringify({
+                        body: JSON.stringify(shopCartCheckoutRequest ? {} : {
                             quantity,
                             image_path: imagePaths[selectedImageIndex] || null,
                         }),
@@ -2616,6 +2677,7 @@
                     startShopStatusPolling();
                 } catch (error) {
                     window.TechCourseKhqrCards?.showToast(error.message || 'Unable to create shop payment.', 'error');
+                    shopCartCheckoutRequest = null;
                 } finally {
                     openButton.disabled = false;
                 }
@@ -2690,14 +2752,16 @@
                         window.trackEvent('purchase', {
                             transaction_id: result?.data?.transaction_hash,
                             currency: 'USD',
-                            value: {{ (float) $salePrice }} * quantity,
-                            items: [{
+                            value: Number(result?.data?.amount || 0),
+                            items: shopCartCheckoutRequest?.items || [{
                                 item_id: @json('product_' . $product->id),
                                 item_name: @json($product->name),
                                 price: {{ (float) $salePrice }},
                                 quantity,
                             }],
                         });
+                        window.dispatchEvent(new CustomEvent('shop:payment-success'));
+                        shopCartCheckoutRequest = null;
                         showPaymentSuccess();
                         return;
                     }

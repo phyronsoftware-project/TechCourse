@@ -1,4 +1,4 @@
-<header class="fixed inset-x-0 top-0 z-30 h-14 border-b border-[#e5edf6] bg-white/95 backdrop-blur-sm lg:left-[234px]">
+<header class="dashboard-header fixed inset-x-0 top-0 z-30 h-14 border-b border-[#e5edf6] bg-white/95 backdrop-blur-sm lg:left-[234px]">
     <div class="flex h-14 items-center justify-between px-4 sm:px-6 lg:px-7">
         <div class="flex items-center gap-3">
             <button
@@ -9,6 +9,18 @@
             >
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h10" />
+                </svg>
+            </button>
+
+            <button
+                type="button"
+                class="hidden h-9 w-9 items-center justify-center rounded-xl border border-[#d9e2ef] bg-white text-[#38527f] transition hover:bg-[#f6f9fd] lg:inline-flex"
+                data-sidebar-collapse
+                aria-label="Collapse navigation"
+                aria-expanded="true"
+            >
+                <svg class="sidebar-collapse-icon h-5 w-5 transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m14 7-5 5 5 5" />
                 </svg>
             </button>
 

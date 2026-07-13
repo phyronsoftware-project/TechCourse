@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/shop-data/cart/toggle', [ShopInteractionController::class, 'toggleCart'])->middleware('throttle:shop-actions')->name('shop.cart.toggle');
     Route::post('/shop-data/cart/qty', [ShopInteractionController::class, 'updateCartQty'])->middleware('throttle:shop-actions')->name('shop.cart.qty');
     Route::post('/shop-data/favorite/toggle', [ShopInteractionController::class, 'toggleFavorite'])->middleware('throttle:shop-actions')->name('shop.favorite.toggle');
+    Route::post('/shop/cart/payments/bakong', [ShopPaymentController::class, 'createCart'])->name('shop-payments.cart.bakong.create');
     Route::post('/shop/{product}/payments/bakong', [ShopPaymentController::class, 'create'])->name('shop-payments.bakong.create');
     Route::get('/shop-payments/{shopPayment}/bakong-status', [ShopPaymentController::class, 'status'])->name('shop-payments.bakong.status');
 });

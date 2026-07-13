@@ -398,5 +398,6 @@
     "Firebase document missing": "មិនឃើញ Firebase document",
     "Firebase load failed": "ផ្ទុក Firebase មិនបាន",
     "You cannot add quantity over current stock.": "អ្នកមិនអាចបន្ថែមចំនួនលើសស្តុកបច្ចុប្បន្នបានទេ។",
-    "for 12 mo.": "សម្រាប់ 12 ខែ"
+    "for 12 mo.": "សម្រាប់ 12 ខែ",
+    "Checkout all selected products together with one payment.": "Checkout ផលិតផលដែលបានជ្រើសរើសទាំងអស់ជាមួយការទូទាត់តែមួយ។"
 }

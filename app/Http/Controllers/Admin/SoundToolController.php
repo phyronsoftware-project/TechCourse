@@ -78,10 +78,32 @@ class SoundToolController extends Controller
                 }
             }
 
+            $elevenLabsVoices = [];
+
+            if ($this->elevenLabsVoiceService->summary()['is_ready']) {
+                try {
+                    $elevenLabsVoices = $this->elevenLabsVoiceService->listVoices();
+                } catch (Throwable) {
+                    $elevenLabsVoices = [];
+                }
+            }
+
             return response()->json([
-                'ready' => ! empty($voiceOptions) || ! empty($googleVoices),
+                'ready' => ! empty($voiceOptions) || ! empty($googleVoices) || ! empty($elevenLabsVoices),
                 'voices' => array_merge(
-                    $voiceOptions,
+                    array_merge(
+                        $voiceOptions,
+                        array_map(function (array $voice) use ($data) {
+                            return [
+                                'name' => $voice['name'],
+                                'lang' => $voice['language_code'] ?: ($data['lang'] ?? 'en-US'),
+                                'provider' => 'elevenlabs',
+                                'providerVoiceId' => $voice['provider_voice_id'],
+                                'category' => $voice['category'],
+                                'description' => $voice['description'],
+                            ];
+                        }, $elevenLabsVoices),
+                    ),
                     array_map(function (array $voice) use ($data) {
                         return [
                             ...$voice,

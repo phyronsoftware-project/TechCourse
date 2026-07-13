@@ -13,6 +13,25 @@ use Throwable;
 
 class ShopPaymentController extends Controller
 {
+    // Create one payment for every product currently in the authenticated cart.
+    public function createCart(ShopBakongPaymentService $paymentService): JsonResponse
+    {
+        try {
+            $payment = $paymentService->prepareCartCheckout(Auth::user());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Shop cart payment QR created successfully.',
+                'data' => $this->paymentPayload($payment),
+            ]);
+        } catch (Throwable $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+    }
+
     public function create(Request $request, string $product, ShopBakongPaymentService $paymentService): JsonResponse
     {
         $shopProduct = ShopProduct::query()
@@ -43,17 +62,8 @@ class ShopPaymentController extends Controller
                 'success' => true,
                 'message' => 'Shop payment QR created successfully.',
                 'data' => [
-                    'payment_id' => $payment->id,
-                    'quantity' => (int) $payment->order?->items?->first()?->qty,
-                    'amount' => (float) $payment->amount,
-                    'subtotal' => (float) $payment->order?->subtotal_amount,
-                    'delivery_fee' => (float) $payment->order?->delivery_fee,
-                    'province' => $payment->order?->province_name,
-                    'currency' => $payment->currency,
+                    ...$this->paymentPayload($payment),
                     'stock_qty' => (int) $shopProduct->fresh()->stock_qty,
-                    'khqr_string' => $payment->khqr_string,
-                    'status' => $payment->status,
-                    'expired_at' => optional($payment->expired_at)?->toIso8601String(),
                 ],
             ]);
         } catch (Throwable $exception) {
@@ -72,6 +82,26 @@ class ShopPaymentController extends Controller
                 'message' => $exception->getMessage(),
             ], 422);
         }
+    }
+
+    // Keep single-product and cart checkout responses consistent for the shared KHQR modal.
+    protected function paymentPayload(ShopPayment $payment): array
+    {
+        $payment->loadMissing('order.items');
+        $items = $payment->order?->items ?? collect();
+
+        return [
+            'payment_id' => $payment->id,
+            'quantity' => (int) $items->sum('qty'),
+            'amount' => (float) $payment->amount,
+            'subtotal' => (float) $payment->order?->subtotal_amount,
+            'delivery_fee' => (float) $payment->order?->delivery_fee,
+            'province' => $payment->order?->province_name,
+            'currency' => $payment->currency,
+            'khqr_string' => $payment->khqr_string,
+            'status' => $payment->status,
+            'expired_at' => optional($payment->expired_at)?->toIso8601String(),
+        ];
     }
 
     public function status(ShopPayment $shopPayment, ShopBakongPaymentService $paymentService): JsonResponse

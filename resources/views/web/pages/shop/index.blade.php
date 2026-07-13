@@ -3,10 +3,13 @@
 @section('title', __('Shop'))
 
 @php
+    $authUser = auth()->user();
     $shopProducts = $products instanceof \Illuminate\Contracts\Pagination\Paginator ? $products : collect();
     $activeCategoryLabel = $categories->firstWhere('slug', $activeCategory)?->name
         ?? $categories->firstWhere('name', $activeCategory)?->name
         ?? __('All');
+    $selectedProvince = $provinces->firstWhere('id', $authUser?->province_id);
+    $shopCartKhqrCardId = 'shop-cart-khqr-card';
 @endphp
 
 @section('content')
@@ -1288,6 +1291,149 @@
 
     @include('web.pages.shop.partials.tools')
 
+    <style>
+        .shop-cart-checkout-modal[hidden] {
+            display: none;
+        }
+
+        .shop-cart-checkout-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1450;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.72);
+            opacity: 0;
+            transition: opacity 180ms ease;
+        }
+
+        .shop-cart-checkout-modal.is-open {
+            opacity: 1;
+        }
+
+        .shop-cart-checkout-dialog {
+            display: grid;
+            gap: 10px;
+            width: min(360px, calc(100vw - 28px));
+            max-height: 92vh;
+            overflow-y: auto;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            transform: translateY(12px);
+            transition: transform 180ms ease;
+        }
+
+        .shop-cart-checkout-modal.is-open .shop-cart-checkout-dialog {
+            transform: translateY(0);
+        }
+
+        .shop-cart-checkout-message {
+            width: min(320px, 100%);
+            margin: 2px auto 0;
+            color: #fff;
+            text-align: center;
+            font-size: 0.72rem;
+            line-height: 1.6;
+        }
+
+        .shop-cart-checkout-close {
+            display: none;
+        }
+
+        .shop-cart-checkout-items {
+            display: grid;
+            gap: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 0 0 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .shop-cart-checkout-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: #334155;
+            font-size: 0.82rem;
+        }
+
+        .shop-cart-checkout-item strong:last-child {
+            white-space: nowrap;
+            color: #173f87;
+        }
+
+        .shop-cart-checkout-summary {
+            display: grid;
+            gap: 7px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #fff;
+            border: 1px solid #dbe5f0;
+        }
+
+        .shop-cart-checkout-summary__row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: #52657f;
+            font-size: 0.84rem;
+        }
+
+        .shop-cart-checkout-summary__total {
+            padding-top: 8px;
+            border-top: 1px dashed #cbd5e1;
+            color: #173f87;
+            font-size: 1rem;
+            font-weight: 850;
+        }
+
+        .shop-cart-checkout-status {
+            margin: 0;
+            text-align: center;
+            color: #fff;
+            font-size: 0.8rem;
+        }
+    </style>
+
+    <div class="shop-cart-checkout-modal" data-cart-checkout-modal hidden>
+        <div class="shop-cart-checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="shop-cart-checkout-title">
+            <button type="button" class="shop-cart-checkout-close" data-cart-checkout-close aria-label="{{ __('Close') }}">&times;</button>
+
+            @include('components.khqr-card', [
+                'cardId' => $shopCartKhqrCardId,
+                'merchantName' => config('bakong.merchant_name') ?: 'TechCourse',
+                'amount' => 0,
+                'currency' => 'USD',
+                'khqrString' => null,
+                'qrImageUrl' => null,
+                'expiredAt' => null,
+                'status' => 'pending',
+                'showStatusMeta' => true,
+                'showCenterBadge' => true,
+                'emptyMessage' => __('The cart KHQR will appear here after checkout starts.'),
+            ])
+
+            <p class="shop-cart-checkout-message">
+                {{ __('Note: This website is for testing only. If you make a payment, I will not be responsible for any loss.') }}
+            </p>
+
+            <div class="shop-cart-checkout-summary">
+                <div class="shop-cart-checkout-items" data-cart-checkout-items></div>
+                <div class="shop-cart-checkout-summary__row"><span>{{ __('Items') }}</span><strong data-cart-checkout-qty>0</strong></div>
+                <div class="shop-cart-checkout-summary__row"><span>{{ __('Subtotal') }}</span><strong data-cart-checkout-subtotal>$0.00</strong></div>
+                <div class="shop-cart-checkout-summary__row"><span>{{ __('Delivery Fee') }}</span><strong data-cart-checkout-delivery>${{ number_format((float) ($selectedProvince?->delivery_fee ?? 0), 2) }}</strong></div>
+                <div class="shop-cart-checkout-summary__row shop-cart-checkout-summary__total"><span>{{ __('Total') }}</span><strong data-cart-checkout-total>$0.00 USD</strong></div>
+            </div>
+
+            <p class="shop-cart-checkout-status" data-cart-checkout-status>{{ __('Preparing cart checkout...') }}</p>
+        </div>
+    </div>
+
     <div class="shop-modal" data-shop-modal aria-hidden="true">
         <div class="shop-modal__dialog">
             <button type="button" class="shop-modal__close" data-shop-close aria-label="{{ __('Close') }}">
@@ -1335,6 +1481,176 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkoutModal = document.querySelector('[data-cart-checkout-modal]');
+            const checkoutItems = document.querySelector('[data-cart-checkout-items]');
+            const checkoutStatus = document.querySelector('[data-cart-checkout-status]');
+            const checkoutQty = document.querySelector('[data-cart-checkout-qty]');
+            const checkoutSubtotal = document.querySelector('[data-cart-checkout-subtotal]');
+            const checkoutDelivery = document.querySelector('[data-cart-checkout-delivery]');
+            const checkoutTotal = document.querySelector('[data-cart-checkout-total]');
+            const closeButton = document.querySelector('[data-cart-checkout-close]');
+            const cardId = @json($shopCartKhqrCardId);
+            const createUrl = @json(auth()->check() ? route('shop-payments.cart.bakong.create') : null);
+            const statusBaseUrl = @json(url('/shop-payments'));
+            const csrfToken = @json(csrf_token());
+            const deliveryReady = @json((bool) $selectedProvince);
+            let pollTimer = null;
+            let paymentStatusUrl = null;
+
+            if (!checkoutModal) {
+                return;
+            }
+
+            const formatMoney = (value) => `$${Number(value || 0).toFixed(2)}`;
+            const lockPage = () => window.TechCourseScrollLock?.lock?.() ?? (document.body.style.overflow = 'hidden');
+            const unlockPage = () => window.TechCourseScrollLock?.unlock?.() ?? (document.body.style.overflow = '');
+
+            const closeCheckout = () => {
+                if (pollTimer) {
+                    window.clearTimeout(pollTimer);
+                    pollTimer = null;
+                }
+                checkoutModal.classList.remove('is-open');
+                window.setTimeout(() => {
+                    checkoutModal.hidden = true;
+                    unlockPage();
+                }, 180);
+            };
+
+            const renderCheckout = (items) => {
+                const safeItems = Array.isArray(items) ? items : [];
+                const totalQty = safeItems.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+                const subtotal = safeItems.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.salePrice || 0)), 0);
+                const delivery = {{ (float) ($selectedProvince?->delivery_fee ?? 0) }};
+
+                checkoutItems.innerHTML = safeItems.map((item) => `
+                    <div class="shop-cart-checkout-item">
+                        <span>${item.name || 'Product'} x ${Number(item.qty || 1)}</span>
+                        <strong>${formatMoney(Number(item.qty || 1) * Number(item.salePrice || 0))}</strong>
+                    </div>
+                `).join('');
+                checkoutQty.textContent = String(totalQty);
+                checkoutSubtotal.textContent = formatMoney(subtotal);
+                checkoutDelivery.textContent = formatMoney(delivery);
+                checkoutTotal.textContent = `${formatMoney(subtotal + delivery)} USD`;
+            };
+
+            const updateCheckoutFromServer = (data) => {
+                checkoutQty.textContent = String(data.quantity || 0);
+                checkoutSubtotal.textContent = formatMoney(data.subtotal);
+                checkoutDelivery.textContent = formatMoney(data.delivery_fee);
+                checkoutTotal.textContent = `${formatMoney(data.amount)} ${data.currency || 'USD'}`;
+            };
+
+            const scheduleStatusCheck = (delay = 3000) => {
+                if (!paymentStatusUrl || pollTimer) {
+                    return;
+                }
+
+                pollTimer = window.setTimeout(async () => {
+                    pollTimer = null;
+                    await checkStatus();
+                }, delay);
+            };
+
+            async function checkStatus() {
+                if (!paymentStatusUrl) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(paymentStatusUrl, {
+                        headers: { Accept: 'application/json' },
+                        credentials: 'same-origin',
+                    });
+                    const result = await response.json();
+                    const status = result?.data?.status;
+
+                    if (status === 'success') {
+                        checkoutStatus.textContent = 'Payment succeeded. Cart has been cleared.';
+                        window.dispatchEvent(new Event('shop:payment-success'));
+                        window.setTimeout(closeCheckout, 1800);
+                        return;
+                    }
+
+                    if (['failed', 'cancelled', 'expired'].includes(status)) {
+                        checkoutStatus.textContent = `Payment ${status}. Please checkout again.`;
+                        return;
+                    }
+
+                    checkoutStatus.textContent = 'Waiting for payment confirmation...';
+                    scheduleStatusCheck(3000);
+                } catch (error) {
+                    checkoutStatus.textContent = 'Checking payment status again...';
+                    scheduleStatusCheck(5000);
+                }
+            }
+
+            const startCheckout = async (items) => {
+                if (!deliveryReady) {
+                    window.location.href = @json(route('profile.show'));
+                    return;
+                }
+
+                if (!createUrl || !items?.length) {
+                    return;
+                }
+
+                renderCheckout(items);
+                checkoutModal.hidden = false;
+                lockPage();
+                requestAnimationFrame(() => checkoutModal.classList.add('is-open'));
+                checkoutStatus.textContent = 'Creating one KHQR for all cart products...';
+
+                try {
+                    const response = await fetch(createUrl, {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({}),
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok || !result?.data?.payment_id) {
+                        throw new Error(result?.message || 'Unable to create cart payment.');
+                    }
+
+                    updateCheckoutFromServer(result.data);
+                    window.TechCourseKhqrCards?.setQr(cardId, result.data.khqr_string, result.data.expired_at);
+                    window.TechCourseKhqrCards?.setAmount(cardId, result.data.amount, result.data.currency);
+                    paymentStatusUrl = `${statusBaseUrl}/${result.data.payment_id}/bakong-status`;
+                    checkoutStatus.textContent = 'Scan this one KHQR to pay for all products.';
+                    scheduleStatusCheck(3000);
+                } catch (error) {
+                    checkoutStatus.textContent = error.message || 'Unable to create cart payment.';
+                    window.TechCourseKhqrCards?.showToast(
+                        error.message || 'Unable to create cart payment.',
+                        'error',
+                    );
+                }
+            };
+
+            window.addEventListener('shop:cart-checkout', (event) => startCheckout(event.detail?.items || []));
+            closeButton?.addEventListener('click', closeCheckout);
+            checkoutModal.addEventListener('click', (event) => {
+                if (event.target === checkoutModal) {
+                    closeCheckout();
+                }
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !checkoutModal.hidden) {
+                    closeCheckout();
+                }
+            });
+        });
+    </script>
 @endsection
 
 @include('web.pages.shop.partials.scripts')

@@ -31,7 +31,7 @@
     <div class="header-box">
         <div class="logo">
             <a href="{{ route('home') }}" class="brand-logo" aria-label="TechCourse">
-                <img src="{{ asset('logo/logo.png') }}" alt="TechCourse" class="brand-logo__image">
+                <img src="{{ asset('logo/logo copy.png') }}" alt="TechCourse" class="brand-logo__image">
                 <span class="brand-logo__text">Tech<span>Course</span></span>
             </a>
         </div>

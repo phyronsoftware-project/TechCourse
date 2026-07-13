@@ -19,6 +19,7 @@
             const shopStateUrl = @json(route('shop.state'));
             const shopCartToggleUrl = @json(route('shop.cart.toggle'));
             const shopCartQtyUrl = @json(route('shop.cart.qty'));
+            const shopCartPaymentCreateUrl = @json(auth()->check() ? route('shop-payments.cart.bakong.create') : null);
             const shopFavoriteToggleUrl = @json(route('shop.favorite.toggle'));
             let currentCart = [];
             let currentFavorites = [];
@@ -480,9 +481,22 @@
                         return;
                     }
 
-                    alert(`{{ __('Checkout summary') }}\n${items.map((item) => `${item.name} x ${item.qty} = ${formatMoney(item.salePrice * item.qty)}`).join('\n')}\n\n{{ __('Total') }}: ${formatMoney(items.reduce((sum, item) => sum + (item.qty * item.salePrice), 0))}`);
+                    if (!shopCartPaymentCreateUrl) {
+                        window.location.href = loginUrl;
+                        return;
+                    }
+
+                    // Let the existing KHQR modal handle the full-cart payment flow.
+                    window.dispatchEvent(new CustomEvent('shop:cart-checkout', {
+                        detail: {
+                            items,
+                            subtotal: items.reduce((sum, item) => sum + (item.qty * item.salePrice), 0),
+                        },
+                    }));
                 });
             });
+
+            window.addEventListener('shop:payment-success', () => refreshShopState());
 
             document.querySelectorAll('[data-detail-qty]').forEach((button) => {
                 button.addEventListener('click', () => {

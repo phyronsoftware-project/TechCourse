@@ -1063,6 +1063,42 @@
                     .dashboard-sidebar {
                         height: 100vh;
                     }
+
+                    .sidebar-collapsed .dashboard-sidebar { width: 72px; }
+                    .sidebar-collapsed .dashboard-header { left: 72px; }
+                    .sidebar-collapsed .dashboard-content { padding-left: 72px; }
+
+                    .sidebar-collapsed [data-sidebar-brand],
+                    .sidebar-collapsed [data-sidebar-label],
+                    .sidebar-collapsed [data-sidebar-footer],
+                    .sidebar-collapsed .submenu-arrow {
+                        width: 0;
+                        opacity: 0;
+                        overflow: hidden;
+                    }
+
+                    .sidebar-collapsed .sidebar-trigger,
+                    .sidebar-collapsed .dashboard-sidebar nav a {
+                        justify-content: center;
+                        padding-left: 0;
+                        padding-right: 0;
+                    }
+
+                    .sidebar-collapsed .submenu {
+                        max-height: 0 !important;
+                        opacity: 0;
+                    }
+
+                    .sidebar-collapsed .sidebar-collapse-icon { transform: rotate(180deg); }
+                }
+
+                .dashboard-sidebar,
+                .dashboard-header,
+                .dashboard-content,
+                [data-sidebar-brand],
+                [data-sidebar-label],
+                [data-sidebar-footer] {
+                    transition: width 0.2s ease, left 0.2s ease, padding 0.2s ease, opacity 0.2s ease;
                 }
             </style>
         @endif
@@ -1072,7 +1108,7 @@
             <div class="relative flex min-h-screen">
                 @include('admin.components.sidebar')
 
-                <div class="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-[234px]">
+                <div class="dashboard-content flex min-h-screen min-w-0 flex-1 flex-col lg:pl-[234px]">
                     @include('admin.components.header')
 
                     <main class="flex-1 space-y-4 px-4 pb-8 pt-[4rem] sm:px-6 lg:px-8">
@@ -1182,6 +1218,7 @@
                     const backdrop = document.querySelector('[data-sidebar-backdrop]');
                     const openButton = document.querySelector('[data-sidebar-toggle]');
                     const closeButton = document.querySelector('[data-sidebar-close]');
+                    const collapseButton = document.querySelector('[data-sidebar-collapse]');
                     const submenuButtons = document.querySelectorAll('[data-submenu-toggle]');
 
                     const setSidebarState = (open) => {
@@ -1198,6 +1235,19 @@
                     openButton?.addEventListener('click', () => setSidebarState(true));
                     closeButton?.addEventListener('click', () => setSidebarState(false));
                     backdrop?.addEventListener('click', () => setSidebarState(false));
+
+                    // Keep desktop navigation width consistent between admin pages.
+                    const setSidebarCollapsed = (collapsed) => {
+                        document.body.classList.toggle('sidebar-collapsed', collapsed);
+                        collapseButton?.setAttribute('aria-expanded', String(!collapsed));
+                        collapseButton?.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
+                        window.localStorage.setItem('admin-sidebar-collapsed', collapsed ? '1' : '0');
+                    };
+
+                    setSidebarCollapsed(window.localStorage.getItem('admin-sidebar-collapsed') === '1');
+                    collapseButton?.addEventListener('click', () => {
+                        setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed'));
+                    });
 
                     submenuButtons.forEach((button) => {
                         const submenu = button.parentElement?.querySelector('[data-submenu]');

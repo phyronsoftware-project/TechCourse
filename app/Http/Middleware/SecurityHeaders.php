@@ -33,7 +33,9 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-XSS-Protection', '1; mode=block');
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+        // Allow microphone only on the same-origin voice tool; keep other device APIs blocked.
+        $microphonePolicy = $request->routeIs('admin.tools.sound') ? 'microphone=(self)' : 'microphone=()';
+        $response->headers->set('Permissions-Policy', "camera=(), {$microphonePolicy}, geolocation=()");
         $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
 
         if ($request->isSecure() || app()->environment('production')) {

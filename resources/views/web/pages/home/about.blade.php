@@ -21,7 +21,7 @@
         ];
 
     // Keep the intro focused on the platform course and product offering.
-    $aboutRole = $isKhmer ? 'Platform វគ្គសិក្សា និងផលិតផល' : 'Course And Product Platform';
+    $aboutRole = 'Web / App Developer';
     $aboutExperience = $isKhmer ? 'Courses និង Products' : 'Courses And Products';
     $aboutKicker = $isKhmer ? 'អំពីយើង' : 'About Us';
     $aboutObjectiveTitle = $isKhmer ? 'គោលបំណង Platform' : 'Platform Objective';

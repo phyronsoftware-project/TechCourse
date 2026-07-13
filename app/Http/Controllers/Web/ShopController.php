@@ -63,6 +63,9 @@ class ShopController extends Controller
             'categories' => $categories,
             'activeCategory' => $activeCategory,
             'search' => $search,
+            'provinces' => Schema::hasTable('provinces')
+                ? Province::query()->where('is_active', true)->orderBy('name_en')->get()
+                : collect(),
             'shopReady' => Schema::hasTable('shop_categories') && Schema::hasTable('shop_products') && Schema::hasTable('shop_product_images'),
         ]);
     }

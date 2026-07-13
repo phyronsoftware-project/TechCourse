@@ -82,7 +82,13 @@
                                 <td>${{ number_format((float) $order->total_amount, 2) }} {{ $order->currency }}</td>
                                 <td>{{ $order->payment_method ?: '-' }}</td>
                                 <td><span class="admin-status-badge admin-status-badge-{{ \Illuminate\Support\Str::slug($order->status) }}">{{ $order->status }}</span></td>
-                                <td><span class="admin-status-badge admin-status-badge-{{ \Illuminate\Support\Str::slug($order->delivery_status ?: 'pending') }}">{{ $order->delivery_status ?: 'pending' }}</span></td>
+                                <td>
+                                    @if (in_array($order->status, ['paid', 'completed'], true))
+                                        <span class="admin-status-badge admin-status-badge-{{ \Illuminate\Support\Str::slug($order->delivery_status ?: 'pending') }}">{{ $order->delivery_status ?: 'pending' }}</span>
+                                    @else
+                                        <span class="text-slate-400">-</span>
+                                    @endif
+                                </td>
                                 <td>{{ \Illuminate\Support\Carbon::parse($order->created_at)->format('d M Y H:i') }}</td>
                                 <td><a href="{{ route('admin.shop-orders.show', $order->id) }}" class="admin-btn admin-btn-secondary">View</a></td>
                             </tr>

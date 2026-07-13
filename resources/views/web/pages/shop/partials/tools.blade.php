@@ -38,7 +38,7 @@
             </div>
         </div>
         <button type="button" class="shop-cart-checkout" data-cart-checkout>{{ __('Checkout Now') }}</button>
-        <div class="shop-cart-note">{{ __('Checkout UI is ready here. Later we can connect this to shop order and payment tables.') }}</div>
+        <div class="shop-cart-note">{{ __('Checkout all selected products together with one payment.') }}</div>
     </div>
 </aside>
 

@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
 
         <title>@yield('title', 'TechCourse')</title>
         <meta name="description" content="@yield('meta_description', 'TechCourse is a learning platform for app development, web development, and useful IT skills.')">

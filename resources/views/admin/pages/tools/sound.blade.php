@@ -201,6 +201,7 @@
             const ttsText = document.getElementById('tts-text');
             const sttLanguage = document.getElementById('stt-language');
             const sttText = document.getElementById('stt-text');
+            const recordButton = document.querySelector('[data-sound-record]');
             const audioPlayer = document.querySelector('[data-sound-audio-player]');
             const ttsStatus = document.querySelector('[data-sound-tts-status]');
             const sttStatus = document.querySelector('[data-sound-stt-status]');
@@ -236,6 +237,7 @@
                 provider: 'browser',
                 providerVoiceId: voice.name,
                 optionValue: `browser::${voice.name}`,
+                browserVoice: voice,
             }));
 
             const mergeVoices = (...groups) => {
@@ -290,7 +292,8 @@
                             ...voice,
                             optionValue: `${voice.provider}::${voice.providerVoiceId || voice.name}`,
                         }));
-                        availableVoices = mergeVoices(browserVoices, remoteVoices);
+                        // Prefer server voices so Khmer text does not silently use a missing browser voice.
+                        availableVoices = mergeVoices(remoteVoices, browserVoices);
                     } catch (error) {
                         statusCopy.textContent = 'Cloud voices unavailable. Browser voices are being used.';
                     }
@@ -301,7 +304,10 @@
 
             const chooseBrowserVoice = () => {
                 const lang = ttsLanguage.value;
-                return availableVoices.find((voice) => voice.optionValue === ttsVoice.value)
+                const selectedVoice = availableVoices.find((voice) => voice.provider === 'browser' && voice.optionValue === ttsVoice.value);
+                const matchesLanguage = (voice) => voice?.lang === lang || voice?.lang?.startsWith(lang.split('-')[0]);
+
+                return (matchesLanguage(selectedVoice) ? selectedVoice : null)
                     || availableVoices.find((voice) => voice.provider === 'browser' && voice.lang === lang)
                     || availableVoices.find((voice) => voice.provider === 'browser' && voice.lang?.startsWith(lang.split('-')[0]));
             };
@@ -350,25 +356,54 @@
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = ttsLanguage.value;
-                utterance.voice = chooseBrowserVoice()?.provider === 'browser' ? chooseBrowserVoice() : null;
+                const chosenVoice = chooseBrowserVoice();
+                if (!chosenVoice?.browserVoice) {
+                    updateStatus(ttsStatus, 'Text to speech: no matching voice');
+                    statusCopy.textContent = `No browser voice is installed for ${ttsLanguage.value}. Select a cloud/cloned voice or install a matching system voice.`;
+                    return;
+                }
+
+                utterance.voice = chosenVoice?.provider === 'browser' ? chosenVoice.browserVoice : null;
                 utterance.onstart = () => updateStatus(ttsStatus, 'Text to speech: playing');
                 utterance.onend = () => updateStatus(ttsStatus, 'Text to speech: finished');
                 window.speechSynthesis.speak(utterance);
             };
 
-            const startRecognition = () => {
+            const getMicrophonePermission = async () => {
+                if (!navigator.mediaDevices?.getUserMedia) {
+                    throw new Error('unsupported-microphone');
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach((track) => track.stop());
+            };
+
+            const microphoneErrorMessage = (errorCode) => ({
+                'not-allowed': 'Microphone permission was denied. Click the lock icon near the URL, allow Microphone, then reload this page.',
+                'service-not-allowed': 'Microphone service is blocked. Allow microphone access in browser and macOS System Settings.',
+                'audio-capture': 'No microphone was found. Connect a microphone and check your macOS input device.',
+                'no-speech': 'No speech was detected. Please speak closer to the microphone and try again.',
+                'network': 'Speech recognition network service is unavailable. Check your internet connection.',
+                'unsupported-microphone': 'This browser cannot request microphone access. Use Chrome or Edge on localhost.',
+            }[errorCode] || `Microphone error: ${errorCode || 'unknown'}`);
+
+            const startRecognition = async () => {
                 if (!SpeechRecognition) {
                     updateStatus(sttStatus, 'Speech to text: unsupported');
                     statusCopy.textContent = 'This browser does not support microphone speech recognition.';
                     return;
                 }
 
+                recordButton && (recordButton.disabled = true);
                 recognition?.stop();
                 recognition = new SpeechRecognition();
                 recognition.lang = sttLanguage.value;
                 recognition.continuous = true;
                 recognition.interimResults = true;
-                recognition.onstart = () => updateStatus(sttStatus, 'Speech to text: listening');
+                recognition.onstart = () => {
+                    updateStatus(sttStatus, 'Speech to text: listening');
+                    statusCopy.textContent = 'Microphone is active. Please speak now.';
+                };
                 recognition.onresult = (event) => {
                     let transcript = '';
                     for (let index = 0; index < event.results.length; index += 1) {
@@ -376,9 +411,26 @@
                     }
                     sttText.value = transcript.trim();
                 };
-                recognition.onerror = () => updateStatus(sttStatus, 'Speech to text: microphone error');
-                recognition.onend = () => updateStatus(sttStatus, 'Speech to text: idle');
-                recognition.start();
+                recognition.onerror = (event) => {
+                    updateStatus(sttStatus, `Speech to text: ${event.error || 'error'}`);
+                    statusCopy.textContent = microphoneErrorMessage(event.error);
+                };
+                recognition.onend = () => {
+                    updateStatus(sttStatus, 'Speech to text: idle');
+                    if (recordButton) recordButton.disabled = false;
+                };
+
+                try {
+                    await getMicrophonePermission();
+                    recognition.start();
+                } catch (error) {
+                    updateStatus(sttStatus, 'Speech to text: microphone unavailable');
+                    const errorCode = error.name === 'NotAllowedError'
+                        ? 'not-allowed'
+                        : (error.name === 'NotFoundError' ? 'audio-capture' : error.message);
+                    statusCopy.textContent = microphoneErrorMessage(errorCode);
+                    if (recordButton) recordButton.disabled = false;
+                }
             };
 
             document.querySelector('[data-sound-play]')?.addEventListener('click', playVoice);

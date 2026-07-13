@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\ShopBakongPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -10,12 +11,14 @@ use Illuminate\View\View;
 
 class ShopPaymentController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, ShopBakongPaymentService $paymentService): View
     {
         $payments = collect();
         $shopReady = Schema::hasTable('shop_payments');
 
         if ($shopReady) {
+            $paymentService->syncExpiredPendingPayments();
+
             $query = DB::table('shop_payments')
                 ->leftJoin('users', 'shop_payments.user_id', '=', 'users.id')
                 ->leftJoin('shop_orders', 'shop_payments.shop_order_id', '=', 'shop_orders.id')

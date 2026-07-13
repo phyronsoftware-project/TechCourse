@@ -46,6 +46,44 @@
         display: none;
     }
 
+    .dashboard-sidebar,
+    .dashboard-header,
+    .dashboard-content,
+    [data-sidebar-brand],
+    [data-sidebar-label],
+    [data-sidebar-footer] {
+        transition: width 0.2s ease, left 0.2s ease, padding 0.2s ease, opacity 0.2s ease;
+    }
+
+    @media (min-width: 1024px) {
+        .sidebar-collapsed .dashboard-sidebar { width: 72px; }
+        .sidebar-collapsed .dashboard-header { left: 72px; }
+        .sidebar-collapsed .dashboard-content { padding-left: 72px; }
+
+        .sidebar-collapsed [data-sidebar-brand],
+        .sidebar-collapsed [data-sidebar-label],
+        .sidebar-collapsed [data-sidebar-footer],
+        .sidebar-collapsed .submenu-arrow {
+            width: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-collapsed .sidebar-trigger,
+        .sidebar-collapsed .dashboard-sidebar nav a {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .sidebar-collapsed .submenu {
+            max-height: 0 !important;
+            opacity: 0;
+        }
+
+        .sidebar-collapsed .sidebar-collapse-icon { transform: rotate(180deg); }
+    }
+
     .submenu {
         max-height: 0;
         transition: max-height 0.3s ease, opacity 0.25s ease, transform 0.25s ease;
