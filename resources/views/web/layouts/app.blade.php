@@ -1087,55 +1087,54 @@
                 transform: scale(1);
             }
 
-            .web-loading-indicator__cube {
-                /* Keep the folding loader compact without changing its animation. */
+            .web-loading-indicator__cube-grid {
+                /* Keep the cube grid compact on the page overlay. */
                 width: 28px;
                 height: 28px;
-                position: relative;
-                transform: rotateZ(45deg);
             }
 
-            .web-loading-indicator__cube-part {
+            .web-loading-indicator__cube {
                 float: left;
-                width: 50%;
-                height: 50%;
-                position: relative;
-                transform: scale(1.1);
-            }
-
-            .web-loading-indicator__cube-part::before {
-                content: '';
-                position: absolute;
-                inset: 0;
+                width: 33.333%;
+                height: 33.333%;
                 background: linear-gradient(145deg, #f8fafc 0%, #6ee7f9 100%);
-                animation: web-loading-fold-cube 2.4s infinite linear both;
-                transform-origin: 100% 100%;
-                border-radius: 4px;
-                box-shadow: 0 0 18px rgba(110, 231, 249, 0.28);
+                animation: web-loading-cube-grid 1.3s infinite ease-in-out;
             }
 
-            .web-loading-indicator__cube-part--2 {
-                transform: scale(1.1) rotateZ(90deg);
+            .web-loading-indicator__cube--1 {
+                animation-delay: 0.2s;
             }
 
-            .web-loading-indicator__cube-part--3 {
-                transform: scale(1.1) rotateZ(180deg);
-            }
-
-            .web-loading-indicator__cube-part--4 {
-                transform: scale(1.1) rotateZ(270deg);
-            }
-
-            .web-loading-indicator__cube-part--2::before {
+            .web-loading-indicator__cube--2 {
                 animation-delay: 0.3s;
             }
 
-            .web-loading-indicator__cube-part--3::before {
-                animation-delay: 0.6s;
+            .web-loading-indicator__cube--3 {
+                animation-delay: 0.4s;
             }
 
-            .web-loading-indicator__cube-part--4::before {
-                animation-delay: 0.9s;
+            .web-loading-indicator__cube--4 {
+                animation-delay: 0.1s;
+            }
+
+            .web-loading-indicator__cube--5 {
+                animation-delay: 0.2s;
+            }
+
+            .web-loading-indicator__cube--6 {
+                animation-delay: 0.3s;
+            }
+
+            .web-loading-indicator__cube--7 {
+                animation-delay: 0s;
+            }
+
+            .web-loading-indicator__cube--8 {
+                animation-delay: 0.1s;
+            }
+
+            .web-loading-indicator__cube--9 {
+                animation-delay: 0.2s;
             }
 
             .web-loading-indicator__text {
@@ -1197,23 +1196,15 @@
                 will-change: transform;
             }
 
-            @keyframes web-loading-fold-cube {
+            @keyframes web-loading-cube-grid {
                 0%,
-                10% {
-                    transform: perspective(140px) rotateX(-180deg);
-                    opacity: 0;
-                }
-
-                25%,
-                75% {
-                    transform: perspective(140px) rotateX(0deg);
-                    opacity: 1;
-                }
-
-                90%,
+                70%,
                 100% {
-                    transform: perspective(140px) rotateY(180deg);
-                    opacity: 0;
+                    transform: scale3d(1, 1, 1);
+                }
+
+                35% {
+                    transform: scale3d(0, 0, 1);
                 }
             }
 
@@ -2978,11 +2969,16 @@
         {{-- Shared loading overlay covers slow page changes and async actions. --}}
         <div class="web-loading-indicator" data-web-loading aria-live="polite" aria-hidden="true">
             <div class="web-loading-indicator__box">
-                <div class="web-loading-indicator__cube" aria-hidden="true">
-                    <div class="web-loading-indicator__cube-part web-loading-indicator__cube-part--1"></div>
-                    <div class="web-loading-indicator__cube-part web-loading-indicator__cube-part--2"></div>
-                    <div class="web-loading-indicator__cube-part web-loading-indicator__cube-part--4"></div>
-                    <div class="web-loading-indicator__cube-part web-loading-indicator__cube-part--3"></div>
+                <div class="web-loading-indicator__cube-grid" aria-hidden="true">
+                    <div class="web-loading-indicator__cube web-loading-indicator__cube--1"></div>
+                    <div class="web-loading-indicator__cube web-loading-indicator__cube--2"></div>
+                    <div class="web-loading-indicator__cube web-loading-indicator__cube--3"></div>
+                    <div class="web-loading-indicator__cube web-loading-indicator__cube--4"></div>
+                    <div class="web-loading-indicator__cube web-loading-indicator__cube--5"></div>
+                    <div class="web-loading-indicator__cube web-loading-indicator__cube--6"></div>
+                    <div class="web-loading-indicator__cube web-loading-indicator__cube--7"></div>
+                    <div class="web-loading-indicator__cube web-loading-indicator__cube--8"></div>
+                    <div class="web-loading-indicator__cube web-loading-indicator__cube--9"></div>
                 </div>
                 <span class="web-loading-indicator__text">{{ __('Loading...') }}</span>
             </div>
