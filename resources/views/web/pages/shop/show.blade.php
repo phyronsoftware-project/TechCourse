@@ -1387,6 +1387,14 @@
             white-space: nowrap;
         }
 
+        .shop-card__fee-description {
+            display: block;
+            max-width: 150px;
+            overflow: hidden;
+            color: #718096;
+            white-space: nowrap;
+        }
+
         .shop-card__installment strong {
             color: #214f99;
             font-weight: 400;
@@ -2255,6 +2263,7 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
+            
             @include('components.khqr-card', [
                 'cardId' => $shopKhqrCardId,
                 'merchantName' => $shopKhqrMerchantName,

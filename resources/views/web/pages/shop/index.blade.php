@@ -428,6 +428,14 @@
             white-space: nowrap;
         }
 
+        .shop-card__fee-description {
+            display: block;
+            max-width: 150px;
+            overflow: hidden;
+            color: #718096;
+            white-space: nowrap;
+        }
+
         .shop-card__installment strong {
             color: #214f99;
             font-weight: 400;
@@ -1604,6 +1612,7 @@
                 lockPage();
                 requestAnimationFrame(() => checkoutModal.classList.add('is-open'));
                 checkoutStatus.textContent = 'Creating one KHQR for all cart products...';
+                window.TechCoursePageLoader?.show?.();
 
                 try {
                     const response = await fetch(createUrl, {
@@ -1634,6 +1643,8 @@
                         error.message || 'Unable to create cart payment.',
                         'error',
                     );
+                } finally {
+                    window.TechCoursePageLoader?.hide?.();
                 }
             };
 

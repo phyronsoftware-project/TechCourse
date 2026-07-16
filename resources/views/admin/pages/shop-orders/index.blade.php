@@ -33,6 +33,7 @@
                                 <option value="">All</option>
                                 <option value="pending" @selected(request('status') === 'pending')>Pending</option>
                                 <option value="paid" @selected(request('status') === 'paid')>Paid</option>
+                                <option value="paid_review" @selected(request('status') === 'paid_review')>Paid - Review</option>
                                 <option value="expired" @selected(request('status') === 'expired')>Expired</option>
                                 <option value="failed" @selected(request('status') === 'failed')>Failed</option>
                                 <option value="cancelled" @selected(request('status') === 'cancelled')>Cancelled</option>

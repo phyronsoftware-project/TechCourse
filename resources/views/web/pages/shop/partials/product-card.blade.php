@@ -3,12 +3,13 @@
     $salePrice = (float) $product->sale_price;
     $costPrice = (float) $product->cost_price;
     $saveAmount = max($costPrice - $salePrice, 0);
-    $monthlyPrice = $salePrice > 0 ? ceil(($salePrice / 12) * 100) / 100 : 0;
+    $deliveryFee = $selectedProvince?->delivery_fee;
     $productUrl = route('shop.show', $product->slug ?: $product->id);
 @endphp
 
-<article class="shop-card">
-    <div class="shop-card__media">
+{{-- Product card keeps shared skeleton hooks so slow images feel smoother. --}}
+<article class="shop-card" data-skeleton-card>
+    <div class="shop-card__media" data-skeleton-image>
         <span class="shop-card__warranty"><span>{{ __('New') }}</span></span>
         <a href="{{ $productUrl }}" class="shop-card__media-link" aria-label="{{ $product->name }}">
             @if ($product->image_url)
@@ -18,19 +19,19 @@
     </div>
 
     <div class="shop-card__body">
-        <div class="shop-card__category">{{ $product->category?->name ?: '-' }}</div>
-        <h2 class="shop-card__title">
+        <div class="shop-card__category" data-skeleton-line>{{ $product->category?->name ?: '-' }}</div>
+        <h2 class="shop-card__title" data-skeleton-line>
             <a href="{{ $productUrl }}" class="shop-card__title-link">{{ $product->name }}</a>
         </h2>
-        <div class="shop-card__copy">{{ $product->description }}</div>
+        <div class="shop-card__copy" data-skeleton-block>{{ $product->description }}</div>
 
-        <div class="shop-card__meta">
+        <div class="shop-card__meta" data-skeleton-line>
             <span class="shop-card__badge {{ $product->stock_qty > 0 ? 'is-stock' : 'is-out' }}">{{ $product->stock_qty > 0 ? __('In Stock') : __('Out of Stock') }}</span>
             <span>{{ __('Qty') }}: {{ $product->stock_qty }}</span>
         </div>
 
         <div class="shop-card__prices">
-            <div class="shop-card__price-row">
+            <div class="shop-card__price-row" data-skeleton-line>
                 <span class="shop-card__sale">${{ number_format($salePrice, 2) }}</span>
                 <div class="shop-card__cost-wrap">
                     @if ($saveAmount > 0)
@@ -41,9 +42,12 @@
             </div>
 
             <div class="shop-card__bottom-row">
-                <div class="shop-card__installment">
-                    <span class="shop-card__installment-line">{{ __('Or') }} <strong>${{ number_format($monthlyPrice, 2) }}</strong>/mo.</span>
-                    <span>{{ __('for 12 mo.') }}<sup>*</sup></span>
+                <div class="shop-card__installment" data-skeleton-block>
+                    <span class="shop-card__installment-line">
+                        {{ __('Delivery fee') }}:
+                        <strong>{{ $deliveryFee !== null ? '$'.number_format((float) $deliveryFee, 2) : '--' }}</strong>
+                    </span>
+                    <span class="shop-card__fee-description">{{ \Illuminate\Support\Str::limit(strip_tags((string) $product->description), 15, '...') }}</span>
                 </div>
                 <button
                     type="button"

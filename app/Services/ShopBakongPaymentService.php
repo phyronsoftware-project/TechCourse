@@ -33,12 +33,27 @@ class ShopBakongPaymentService
             throw new RuntimeException('Shop payment tables are not configured yet.');
         }
 
+        $reconciledPayment = $this->reconcileExpiredPaymentsForUser($user);
+
         $quantity = max(1, $quantity);
         $selectedImagePath = $this->resolveSelectedImagePath($product, $imagePath);
         $deliveryProvince = $user->deliveryProvince()->where('is_active', true)->first();
 
         if (! $deliveryProvince) {
             throw new RuntimeException('Please select your delivery province before payment.');
+        }
+
+        if ($reconciledPayment?->status === 'success') {
+            $reconciledPayment->loadMissing('order.items');
+            $reconciledItem = $reconciledPayment->order?->items?->first();
+
+            if ($reconciledPayment->order?->items?->count() === 1
+                && (int) $reconciledPayment->order?->province_id === (int) $deliveryProvince->id
+                && (int) $reconciledItem?->product_id === (int) $product->id
+                && (int) $reconciledItem?->qty === $quantity
+                && (string) $reconciledItem?->image_path === (string) $selectedImagePath) {
+                return $reconciledPayment;
+            }
         }
 
         $existing = ShopPayment::query()
@@ -199,6 +214,8 @@ class ShopBakongPaymentService
         if (! $this->isReady()) {
             throw new RuntimeException('Shop payment tables are not configured yet.');
         }
+
+        $this->reconcileExpiredPaymentsForUser($user);
 
         $deliveryProvince = $user->deliveryProvince()->where('is_active', true)->first();
         if (! $deliveryProvince) {
@@ -410,7 +427,24 @@ class ShopBakongPaymentService
             return $this->closeUnpaidCheckout($payment, 'failed');
         }
 
-        return DB::transaction(function () use ($payment, $transactionHash) {
+        $payment->loadMissing('order.items');
+        $checkoutFingerprint = $this->checkoutFingerprint($payment);
+        $newerMatchingPayments = ShopPayment::query()
+            ->with('order.items')
+            ->where('user_id', $payment->user_id)
+            ->where('id', '>', $payment->id)
+            ->whereIn('status', ['pending', 'success'])
+            ->get()
+            ->filter(fn (ShopPayment $candidate) => $this->checkoutFingerprint($candidate) === $checkoutFingerprint);
+
+        // A confirmed late payment owns this checkout; release any newer pending duplicate.
+        foreach ($newerMatchingPayments->where('status', 'pending') as $newerPendingPayment) {
+            $this->closeUnpaidCheckout($newerPendingPayment, 'cancelled');
+        }
+
+        $hasNewerSuccess = $newerMatchingPayments->contains('status', 'success');
+
+        return DB::transaction(function () use ($payment, $transactionHash, $hasNewerSuccess) {
             $lockedPayment = ShopPayment::query()->lockForUpdate()->findOrFail($payment->id);
 
             if ($lockedPayment->status === 'success') {
@@ -418,6 +452,25 @@ class ShopBakongPaymentService
             }
 
             $paidAt = now();
+            $wasExpired = $lockedPayment->status === 'expired';
+            $order = $lockedPayment->order()->lockForUpdate()->firstOrFail();
+            $orderStatus = $hasNewerSuccess ? 'paid_review' : 'paid';
+
+            if ($wasExpired && ! $hasNewerSuccess) {
+                foreach ($order->items()->get() as $item) {
+                    $product = ShopProduct::query()->lockForUpdate()->find($item->product_id);
+                    if (! $product || (int) $product->stock_qty < (int) $item->qty) {
+                        $orderStatus = 'paid_review';
+                        break;
+                    }
+                }
+
+                if ($orderStatus === 'paid') {
+                    foreach ($order->items()->get() as $item) {
+                        ShopProduct::query()->whereKey($item->product_id)->decrement('stock_qty', $item->qty);
+                    }
+                }
+            }
 
             $lockedPayment->forceFill([
                 'status' => 'success',
@@ -426,13 +479,13 @@ class ShopBakongPaymentService
                 'paid_at' => $paidAt,
             ])->save();
 
-            $lockedPayment->order()->update([
-                'status' => 'paid',
+            $order->forceFill([
+                'status' => $orderStatus,
                 'payment_method' => 'bakong_khqr',
                 'paid_at' => $paidAt,
-            ]);
+            ])->save();
 
-            if (data_get($lockedPayment->bakong_response, 'khqr_generation.cart_checkout') === true) {
+            if ($orderStatus === 'paid' && data_get($lockedPayment->bakong_response, 'khqr_generation.cart_checkout') === true) {
                 // Remove cart products only after a full-cart payment is confirmed.
                 $productIds = $lockedPayment->order->items()->pluck('product_id')->filter();
                 ShopCartItem::query()
@@ -453,11 +506,21 @@ class ShopBakongPaymentService
         }
 
         ShopPayment::query()
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'expired'])
             ->where('expired_at', '<=', now())
-            ->oldest('expired_at')
+            ->where('expired_at', '>=', now()->subDay())
+            ->latest('expired_at')
             ->limit($limit)
             ->get()
+            ->filter(function (ShopPayment $payment): bool {
+                if ($payment->status === 'pending') {
+                    return true;
+                }
+
+                $checkedAt = data_get($payment->bakong_response, 'checked_at');
+
+                return ! $checkedAt || \Illuminate\Support\Carbon::parse($checkedAt)->lte(now()->subMinutes(2));
+            })
             ->each(function (ShopPayment $payment): void {
                 try {
                     $this->checkStatus($payment);
@@ -465,6 +528,61 @@ class ShopBakongPaymentService
                     // Keep pending when Bakong cannot confirm whether payment succeeded.
                 }
             });
+    }
+
+    protected function reconcileExpiredPaymentsForUser(User $user): ?ShopPayment
+    {
+        $confirmedPayment = null;
+
+        ShopPayment::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'expired'])
+            ->where('expired_at', '<=', now())
+            ->latest('id')
+            ->limit(10)
+            ->get()
+            ->filter(function (ShopPayment $payment): bool {
+                if ($payment->status === 'pending') {
+                    return true;
+                }
+
+                $checkedAt = data_get($payment->bakong_response, 'checked_at');
+
+                return ! $checkedAt || \Illuminate\Support\Carbon::parse($checkedAt)->lte(now()->subMinutes(2));
+            })
+            ->each(function (ShopPayment $payment) use (&$confirmedPayment): void {
+                try {
+                    $checkedPayment = $this->checkStatus($payment);
+                    if ($payment->status !== 'success' && $checkedPayment->status === 'success') {
+                        $confirmedPayment = $checkedPayment;
+                    }
+                } catch (\Throwable) {
+                    // A new checkout must not replace an unverified prior payment.
+                }
+            });
+
+        return $confirmedPayment;
+    }
+
+    protected function checkoutFingerprint(ShopPayment $payment): string
+    {
+        $payment->loadMissing('order.items');
+        $order = $payment->order;
+        $items = $order?->items
+            ?->map(fn (ShopOrderItem $item) => [
+                'product_id' => (int) $item->product_id,
+                'qty' => (int) $item->qty,
+                'unit_price' => number_format((float) $item->unit_price, 2, '.', ''),
+                'image_path' => (string) $item->image_path,
+            ])
+            ->sortBy(fn (array $item) => $item['product_id'].'|'.$item['image_path'])
+            ->values()
+            ->all() ?? [];
+
+        return hash('sha256', json_encode([
+            'province_id' => (int) $order?->province_id,
+            'items' => $items,
+        ], JSON_THROW_ON_ERROR));
     }
 
     protected function checkTransactionByMd5(string $md5): array

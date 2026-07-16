@@ -3,16 +3,7 @@
 @section('title', 'Delivery Fees')
 
 @section('content')
-    <section class="dashboard-panel rounded-[30px] p-5 sm:p-6">
-        <div class="admin-page-header">
-            <div>
-                <h2 class="admin-page-title">Custom Delivery Fees</h2>
-                <p class="admin-page-copy">Set one fee for Phnom Penh and one shared fee for every other province.</p>
-            </div>
-            <span class="admin-chip">2 fee groups</span>
-        </div>
-
-        <form action="{{ route('admin.delivery-fees.update') }}" method="POST" class="mt-6">
+    <form action="{{ route('admin.delivery-fees.update') }}" method="POST" data-delivery-fee-form>
             @csrf
             @method('PUT')
 
@@ -52,11 +43,20 @@
                 </section>
             </div>
 
-            <button type="submit" class="admin-btn admin-btn-primary mt-5 w-full sm:w-auto">Update All Fees</button>
-        </form>
+    </form>
 
-        <div class="mt-5 rounded-[22px] border border-blue-100 bg-blue-50/70 px-5 py-4 text-sm leading-6 text-slate-600">
-            Updating <strong class="text-slate-900">Other Provinces</strong> applies the same fee to all provinces except Phnom Penh.
-        </div>
-    </section>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('[data-delivery-fee-form]');
+
+            // Save both fee groups automatically after either value changes.
+            form?.querySelectorAll('input[type="number"]').forEach((input) => {
+                input.addEventListener('change', () => {
+                    if (form.checkValidity()) {
+                        form.requestSubmit();
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

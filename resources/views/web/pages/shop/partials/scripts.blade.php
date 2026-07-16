@@ -48,25 +48,31 @@
             };
 
             const fetchJson = async (url, options = {}) => {
-                const response = await fetch(url, {
-                    credentials: 'same-origin',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        ...(options.headers || {}),
-                    },
-                    ...options,
-                });
+                window.TechCoursePageLoader?.show?.();
 
-                const data = await response.json().catch(() => ({}));
+                try {
+                    const response = await fetch(url, {
+                        credentials: 'same-origin',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            ...(options.headers || {}),
+                        },
+                        ...options,
+                    });
 
-                if (!response.ok) {
-                    throw data;
+                    const data = await response.json().catch(() => ({}));
+
+                    if (!response.ok) {
+                        throw data;
+                    }
+
+                    return data;
+                } finally {
+                    window.TechCoursePageLoader?.hide?.();
                 }
-
-                return data;
             };
 
             const getErrorMessage = (error, fallbackMessage) => {
@@ -272,13 +278,13 @@
                                 const salePrice = Number(item.salePrice || 0);
                                 const costPrice = Number(item.costPrice || item.salePrice || 0);
                                 const saveAmount = Math.max(costPrice - salePrice, 0);
-                                const monthlyPrice = salePrice > 0 ? Math.ceil((salePrice / 12) * 100) / 100 : 0;
+                                const deliveryFee = @json($selectedProvince?->delivery_fee !== null ? (float) $selectedProvince->delivery_fee : null);
                                 const isInCart = cartIds.has(item.id);
                                 const productUrl = getProductUrl(item);
 
                                 return `
-                                    <article class="shop-card" data-favorite-product-card data-product-url="${productUrl}">
-                                        <div class="shop-card__media">
+                                    <article class="shop-card" data-skeleton-card data-favorite-product-card data-product-url="${productUrl}">
+                                        <div class="shop-card__media" data-skeleton-image>
                                             <span class="shop-card__warranty"><span>{{ __('New') }}</span></span>
                                             <a href="${productUrl}" class="shop-card__media-link" data-favorite-product-link aria-label="${item.name}">
                                                 ${item.image ? `<img src="${item.image}" alt="${item.name}">` : ''}
@@ -286,17 +292,17 @@
                                         </div>
 
                                         <div class="shop-card__body">
-                                            <div class="shop-card__category">${item.category || '-'}</div>
-                                            <h3 class="shop-card__title">
+                                            <div class="shop-card__category" data-skeleton-line>${item.category || '-'}</div>
+                                            <h3 class="shop-card__title" data-skeleton-line>
                                                 <a href="${productUrl}" class="shop-card__title-link" data-favorite-product-link>${item.name}</a>
                                             </h3>
 
-                                            <div class="shop-card__meta">
+                                            <div class="shop-card__meta" data-skeleton-block>
                                                 <span class="shop-card__badge ${Number(item.stock || 0) > 0 ? 'is-stock' : 'is-out'}">${Number(item.stock || 0) > 0 ? `{{ __('In Stock') }}` : `{{ __('Out of Stock') }}`}</span>
                                                 <span>{{ __('Qty') }}: ${item.stock || 0}</span>
                                             </div>
 
-                                            <div class="shop-card__prices">
+                                            <div class="shop-card__prices" data-skeleton-block>
                                                 <div class="shop-card__price-row">
                                                     <span class="shop-card__sale">${formatMoney(salePrice)}</span>
                                                     <div class="shop-card__cost-wrap">
@@ -307,8 +313,8 @@
 
                                                 <div class="shop-card__bottom-row">
                                                     <div class="shop-card__installment">
-                                                        <span class="shop-card__installment-line">{{ __('Or') }} <strong>${formatMoney(monthlyPrice)}</strong>/mo.</span>
-                                                        <span>{{ __('for 12 mo.') }}<sup>*</sup></span>
+                                                        <span class="shop-card__installment-line">{{ __('Delivery fee') }}: <strong>${deliveryFee === null ? '--' : String(formatMoney(deliveryFee)).replace('$', '')}</strong></span>
+                                                        <span class="shop-card__fee-description">${String(item.description || '-').length > 15 ? `${String(item.description).slice(0, 15)}...` : String(item.description || '-')}</span>
                                                     </div>
                                                     <button
                                                         type="button"
@@ -353,6 +359,9 @@
                         `).join('')}
                     </div>
                 `;
+
+                // Apply skeleton loading to favorite cards created after page load.
+                window.TechCourseCardSkeleton?.init?.(favoriteItems);
             };
 
             const addToCart = async (button) => {
@@ -600,6 +609,7 @@
                     const paginationLink = event.target.closest('[data-shop-results] .web-page-btn[href]');
                     if (paginationLink) {
                         event.preventDefault();
+                        window.TechCoursePageLoader?.show?.();
 
                         try {
                             const response = await fetch(paginationLink.href, {
@@ -624,6 +634,7 @@
                             }
 
                             results.innerHTML = nextResults.innerHTML;
+                            window.TechCourseCardSkeleton?.init?.(results);
                             syncCardButtons();
                             syncFavoriteButtons();
                             renderFavorites();
@@ -633,6 +644,8 @@
                             });
                         } catch (error) {
                             window.location.href = paginationLink.href;
+                        } finally {
+                            window.TechCoursePageLoader?.hide?.();
                         }
                     }
                 }

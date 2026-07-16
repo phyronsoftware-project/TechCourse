@@ -1416,7 +1416,8 @@
                 </div>
             </div>
 
-            <div class="home-hero__mockup" data-hero-mockup>
+            {{-- Rellax stays only on decorative hero elements so the page remains stable. --}}
+            <div class="home-hero__mockup rellax" data-rellax-speed="-2" data-hero-mockup>
                 <div class="home-hero__window" data-hero-window>
                     <div class="home-hero__window-bar">
                         <span class="home-hero__window-dot is-red"></span>
@@ -1451,7 +1452,7 @@
                     <div class="home-hero__window-glare" data-hero-glare></div>
                 </div>
 
-                <div class="home-hero__floating is-top" data-hero-badge="top">
+                <div class="home-hero__floating is-top rellax" data-rellax-speed="2" data-hero-badge="top">
                     <span class="home-hero__floating-icon">
                         <i class="fa-solid fa-circle-check"></i>
                     </span>
@@ -1461,7 +1462,7 @@
                     </div>
                 </div>
 
-                <div class="home-hero__floating is-bottom" data-hero-badge="bottom">
+                <div class="home-hero__floating is-bottom rellax" data-rellax-speed="1" data-hero-badge="bottom">
                     <p class="home-hero__floating-title">{{ $isKhmer ? 'Featured Flow' : 'Featured Flow' }}</p>
                     <p class="home-hero__floating-copy">{{ $isKhmer ? 'មើល courses និង services បានលឿន' : 'Open courses and services quickly' }}</p>
                 </div>
@@ -1581,8 +1582,9 @@
                         $courseCategory = $course->category?->name ?: __('General');
                         $priceLabel = $course->is_free ? __('Free') : (($course->currency ?: 'USD') . ' ' . number_format((float) $course->price, 2));
                     @endphp
-                    <a href="{{ route('courses.show', $course->slug ?: $course->id) }}" class="home-featured-card">
-                        <div class="home-featured-card__media">
+                    {{-- Homepage featured course card reuses the shared skeleton loading hooks. --}}
+                    <a href="{{ route('courses.show', $course->slug ?: $course->id) }}" class="home-featured-card" data-skeleton-card>
+                        <div class="home-featured-card__media" data-skeleton-image>
                             @if ($course->thumbnail_url)
                                 <img src="{{ $course->thumbnail_url }}" alt="{{ $course->title }}">
                             @else
@@ -1593,12 +1595,12 @@
                         </div>
 
                         <div class="home-featured-card__body">
-                            <div class="home-featured-card__meta">{{ $courseCategory }}</div>
-                            <h3 class="home-featured-card__title">{{ $course->title }}</h3>
-                            <p class="home-featured-card__copy">
+                            <div class="home-featured-card__meta" data-skeleton-line>{{ $courseCategory }}</div>
+                            <h3 class="home-featured-card__title" data-skeleton-line>{{ $course->title }}</h3>
+                            <p class="home-featured-card__copy" data-skeleton-block>
                                 {{ \Illuminate\Support\Str::limit($course->short_description ?: $course->description ?: ($isKhmer ? 'វគ្គសិក្សាដែលអាចចាប់ផ្តើមមើលបានភ្លាមពីទំព័រដើម។' : 'A course you can open quickly from the homepage.'), 90) }}
                             </p>
-                            <div class="home-featured-card__footer">
+                            <div class="home-featured-card__footer" data-skeleton-line>
                                 <span>{{ $lessonCount }} {{ __('Lessons') }}</span>
                                 <span class="home-featured-card__price">{{ $priceLabel }}</span>
                             </div>

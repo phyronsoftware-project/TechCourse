@@ -430,8 +430,9 @@
                             $priceText = $course->is_free ? __('Free') : (($course->currency ?: '$') . number_format((float) $course->price, 2));
                         @endphp
 
-                        <a href="{{ route('courses.show', $course->slug ?: $course->id) }}" class="course-card">
-                            <div class="course-card__media">
+                        {{-- Course card uses shared skeleton hooks to soften slow network loads. --}}
+                        <a href="{{ route('courses.show', $course->slug ?: $course->id) }}" class="course-card" data-skeleton-card>
+                            <div class="course-card__media" data-skeleton-image>
                                 <div class="course-card__badges">
                                     <span class="course-card__badge">{{ $lessonCount }} {{ __('Lessons') }}</span>
                                     <span class="course-card__badge">{{ __(\Illuminate\Support\Str::headline($course->level ?: 'Beginner')) }}</span>
@@ -447,22 +448,22 @@
                             </div>
 
                             <div class="course-card__body">
-                                <div class="course-card__meta">
+                                <div class="course-card__meta" data-skeleton-line>
                                     <span>{{ $course->category?->name ?: __('General') }}</span>
                                     <span>{{ $course->language ?: __('Khmer') }}</span>
                                 </div>
 
-                                <h3 class="course-card__title course-card__title--small">{{ $course->title }}</h3>
-                                <p class="course-card__copy">
+                                <h3 class="course-card__title course-card__title--small" data-skeleton-line>{{ $course->title }}</h3>
+                                <p class="course-card__copy" data-skeleton-block>
                                     {{ $course->short_description ?: \Illuminate\Support\Str::limit(strip_tags((string) $course->description), 120) }}
                                 </p>
 
-                                <div class="course-card__info-row course-card__info-row--first">
+                                <div class="course-card__info-row course-card__info-row--first" data-skeleton-line>
                                     <span>{{ __('Total Resource') }}</span>
                                     <strong>{{ $resourceCount }}</strong>
                                 </div>
 
-                                <div class="course-card__info-row">
+                                <div class="course-card__info-row" data-skeleton-line>
                                     <span>{{ __('Price') }}</span>
                                     <span class="course-price-badge {{ $course->is_free ? 'is-free' : 'is-paid' }}">
                                         {{ $course->is_free ? __('Free') : $priceText }}

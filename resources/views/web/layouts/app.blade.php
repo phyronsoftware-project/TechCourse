@@ -76,6 +76,7 @@
                 margin: 0;
                 padding: 0;
                 overflow-x: hidden;
+                scroll-behavior: smooth;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
             }
@@ -1053,29 +1054,31 @@
                 content: "";
                 position: absolute;
                 inset: 0;
-                background: rgba(255, 255, 255, 0.32);
-                backdrop-filter: blur(2px);
-                -webkit-backdrop-filter: blur(2px);
+                background: rgba(0, 0, 0, 0.68);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
             }
 
             .web-loading-indicator.is-visible {
                 opacity: 1;
                 visibility: visible;
+                pointer-events: auto;
             }
 
             .web-loading-indicator__box {
                 position: relative;
                 z-index: 1;
                 display: inline-flex;
+                flex-direction: column;
                 align-items: center;
-                gap: 10px;
-                min-height: 42px;
-                padding: 0 14px;
-                border-radius: 999px;
-                background: rgba(255, 255, 255, 0.98);
-                border: 1px solid #dbe6f1;
-                color: #173f87;
-                box-shadow: 0 16px 28px rgba(15, 23, 42, 0.12);
+                justify-content: center;
+                gap: 18px;
+                /* Keep only the page overlay behind the loader icon. */
+                padding: 12px;
+                background: transparent;
+                border: 0;
+                color: #f8fafc;
+                box-shadow: none;
                 transform: scale(0.96);
                 transition: transform 0.2s ease;
             }
@@ -1084,12 +1087,55 @@
                 transform: scale(1);
             }
 
-            .web-loading-indicator__spinner {
-                width: 18px;
-                height: 18px;
-                color: #1d8cff;
-                animation: web-loading-spin 0.8s linear infinite;
-                flex-shrink: 0;
+            .web-loading-indicator__cube {
+                /* Keep the folding loader compact without changing its animation. */
+                width: 28px;
+                height: 28px;
+                position: relative;
+                transform: rotateZ(45deg);
+            }
+
+            .web-loading-indicator__cube-part {
+                float: left;
+                width: 50%;
+                height: 50%;
+                position: relative;
+                transform: scale(1.1);
+            }
+
+            .web-loading-indicator__cube-part::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(145deg, #f8fafc 0%, #6ee7f9 100%);
+                animation: web-loading-fold-cube 2.4s infinite linear both;
+                transform-origin: 100% 100%;
+                border-radius: 4px;
+                box-shadow: 0 0 18px rgba(110, 231, 249, 0.28);
+            }
+
+            .web-loading-indicator__cube-part--2 {
+                transform: scale(1.1) rotateZ(90deg);
+            }
+
+            .web-loading-indicator__cube-part--3 {
+                transform: scale(1.1) rotateZ(180deg);
+            }
+
+            .web-loading-indicator__cube-part--4 {
+                transform: scale(1.1) rotateZ(270deg);
+            }
+
+            .web-loading-indicator__cube-part--2::before {
+                animation-delay: 0.3s;
+            }
+
+            .web-loading-indicator__cube-part--3::before {
+                animation-delay: 0.6s;
+            }
+
+            .web-loading-indicator__cube-part--4::before {
+                animation-delay: 0.9s;
             }
 
             .web-loading-indicator__text {
@@ -1097,15 +1143,87 @@
                 font-weight: 700;
                 white-space: nowrap;
                 line-height: 1;
+                color: rgba(241, 245, 249, 0.92);
             }
 
-            @keyframes web-loading-spin {
-                from {
-                    transform: rotate(0deg);
+            /* Keep card skeleton loading shared across course and product card views. */
+            [data-skeleton-card] {
+                position: relative;
+            }
+
+            [data-skeleton-card].is-skeleton {
+                overflow: hidden;
+                pointer-events: none;
+            }
+
+            [data-skeleton-card].is-skeleton [data-skeleton-image],
+            [data-skeleton-card].is-skeleton [data-skeleton-block],
+            [data-skeleton-card].is-skeleton [data-skeleton-line] {
+                position: relative;
+                overflow: hidden;
+            }
+
+            [data-skeleton-card].is-skeleton [data-skeleton-image]::after,
+            [data-skeleton-card].is-skeleton [data-skeleton-block]::after,
+            [data-skeleton-card].is-skeleton [data-skeleton-line]::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                border-radius: inherit;
+                background: linear-gradient(90deg, #e8eef5 0%, #f8fbff 50%, #e8eef5 100%);
+                background-size: 200% 100%;
+                animation: web-card-skeleton-wave 1.4s ease-in-out infinite;
+            }
+
+            [data-skeleton-card].is-skeleton img,
+            [data-skeleton-card].is-skeleton i {
+                opacity: 0;
+            }
+
+            [data-skeleton-card].is-skeleton [data-skeleton-line] {
+                color: transparent !important;
+                min-height: 14px;
+            }
+
+            [data-skeleton-card].is-skeleton [data-skeleton-line] > * {
+                visibility: hidden;
+            }
+
+            [data-skeleton-card].is-skeleton [data-skeleton-block] {
+                color: transparent !important;
+            }
+
+            .rellax {
+                will-change: transform;
+            }
+
+            @keyframes web-loading-fold-cube {
+                0%,
+                10% {
+                    transform: perspective(140px) rotateX(-180deg);
+                    opacity: 0;
                 }
 
-                to {
-                    transform: rotate(360deg);
+                25%,
+                75% {
+                    transform: perspective(140px) rotateX(0deg);
+                    opacity: 1;
+                }
+
+                90%,
+                100% {
+                    transform: perspective(140px) rotateY(180deg);
+                    opacity: 0;
+                }
+            }
+
+            @keyframes web-card-skeleton-wave {
+                0% {
+                    background-position: 200% 0;
+                }
+
+                100% {
+                    background-position: -200% 0;
                 }
             }
 
@@ -2857,18 +2975,22 @@
             <i class="fa-solid fa-arrow-up"></i>
         </button>
 
+        {{-- Shared loading overlay covers slow page changes and async actions. --}}
         <div class="web-loading-indicator" data-web-loading aria-live="polite" aria-hidden="true">
             <div class="web-loading-indicator__box">
-                <svg class="web-loading-indicator__spinner" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.22" stroke-width="2.5"></circle>
-                    <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></path>
-                </svg>
+                <div class="web-loading-indicator__cube" aria-hidden="true">
+                    <div class="web-loading-indicator__cube-part web-loading-indicator__cube-part--1"></div>
+                    <div class="web-loading-indicator__cube-part web-loading-indicator__cube-part--2"></div>
+                    <div class="web-loading-indicator__cube-part web-loading-indicator__cube-part--4"></div>
+                    <div class="web-loading-indicator__cube-part web-loading-indicator__cube-part--3"></div>
+                </div>
                 <span class="web-loading-indicator__text">{{ __('Loading...') }}</span>
             </div>
         </div>
 
         @include('web.components.footer')
 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/rellax/1.12.1/rellax.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 if (Array.isArray(window.__techCourseGa4FlashEvents)) {
@@ -3011,6 +3133,59 @@
                     loadingIndicator.classList.remove('is-visible');
                     loadingIndicator.setAttribute('aria-hidden', 'true');
                 };
+
+                // Expose one small loader helper so page scripts can show the same loading UI.
+                window.TechCoursePageLoader = {
+                    show: showLoading,
+                    hide: hideLoading,
+                };
+
+                // Keep card skeletons reusable for initial and dynamically loaded cards.
+                const initializeCardSkeletons = (container = document) => {
+                    container.querySelectorAll('[data-skeleton-card]:not([data-skeleton-ready])').forEach((card) => {
+                        card.setAttribute('data-skeleton-ready', 'true');
+                        card.classList.add('is-skeleton');
+
+                        const media = Array.from(card.querySelectorAll('img'));
+                        if (!media.length) {
+                            window.setTimeout(() => card.classList.remove('is-skeleton'), 180);
+                            return;
+                        }
+
+                        let loadedCount = 0;
+                        const finishCard = () => {
+                            loadedCount += 1;
+
+                            if (loadedCount >= media.length) {
+                                window.setTimeout(() => card.classList.remove('is-skeleton'), 120);
+                            }
+                        };
+
+                        media.forEach((image) => {
+                            if (image.complete) {
+                                finishCard();
+                                return;
+                            }
+
+                            image.addEventListener('load', finishCard, { once: true });
+                            image.addEventListener('error', finishCard, { once: true });
+                        });
+                    });
+                };
+
+                window.TechCourseCardSkeleton = {
+                    init: initializeCardSkeletons,
+                };
+                initializeCardSkeletons();
+
+                // Initialize light parallax only on marked decorative homepage elements.
+                if (typeof window.Rellax === 'function' && document.querySelector('.rellax')) {
+                    new window.Rellax('.rellax', {
+                        center: false,
+                        round: true,
+                        vertical: true,
+                    });
+                }
 
                 const closeAlert = () => {
                     if (!webAlert || webAlert.classList.contains('is-leaving')) {
@@ -3180,19 +3355,30 @@
                     });
                 });
 
-                const loadingLinkSelectors = [
-                    '.course-card',
-                    '.learning-lesson-item',
-                    '.lesson-list-row',
-                    '.profile-course-link',
-                    '.profile-side-link',
-                    '.learning-video-frame__link',
-                    '[data-card-link]',
-                ];
-
-                document.querySelectorAll(loadingLinkSelectors.join(',')).forEach((link) => {
+                // Show the page loader for internal navigation without changing existing routes.
+                document.querySelectorAll('a[href]').forEach((link) => {
                     link.addEventListener('click', (event) => {
+                        const href = link.getAttribute('href') || '';
+                        const target = link.getAttribute('target');
+
                         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                            return;
+                        }
+
+                        if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+                            return;
+                        }
+
+                        if (target && target !== '_self') {
+                            return;
+                        }
+
+                        const absoluteUrl = new URL(href, window.location.href);
+                        const samePageAnchor = absoluteUrl.pathname === window.location.pathname
+                            && absoluteUrl.search === window.location.search
+                            && absoluteUrl.hash !== '';
+
+                        if (absoluteUrl.origin !== window.location.origin || samePageAnchor || link.hasAttribute('download')) {
                             return;
                         }
 
@@ -3200,14 +3386,8 @@
                     });
                 });
 
-                const loadingFormSelectors = [
-                    '.learning-action-form',
-                    '.lesson-chip-form',
-                    '.comment-form',
-                    '.lesson-comment-form',
-                ];
-
-                document.querySelectorAll(loadingFormSelectors.join(',')).forEach((form) => {
+                // Apply the same loader to normal form submits that may take time.
+                document.querySelectorAll('form').forEach((form) => {
                     form.addEventListener('submit', () => {
                         showLoading();
                     });
