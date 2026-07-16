@@ -1047,7 +1047,8 @@
                 visibility: hidden;
                 pointer-events: none;
                 transition: opacity 0.2s ease, visibility 0.2s ease;
-                z-index: 1001;
+                /* Keep loading above shop rails, drawers, and page modals. */
+                z-index: 9999;
             }
 
             .web-loading-indicator::before {
