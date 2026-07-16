@@ -1054,9 +1054,8 @@
                 content: "";
                 position: absolute;
                 inset: 0;
-                background: rgba(0, 0, 0, 0.68);
-                backdrop-filter: blur(8px);
-                -webkit-backdrop-filter: blur(8px);
+                /* Use a clear semi-transparent black overlay without blur. */
+                background: rgba(0, 0, 0, 0.55);
             }
 
             .web-loading-indicator.is-visible {
