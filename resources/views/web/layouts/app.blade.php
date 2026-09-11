@@ -46,6 +46,18 @@
                 window.__techCourseGa4FlashEvents = @json(array_values($ga4FlashEvents));
             </script>
         @endif
+        <script>
+            // Apply the saved web theme before rendering to prevent a color flash.
+            (() => {
+                try {
+                    if (window.localStorage.getItem('techcourse-web-theme') === 'dark') {
+                        document.documentElement.dataset.webTheme = 'dark';
+                    }
+                } catch (error) {
+                    // Keep light mode when browser storage is unavailable.
+                }
+            })();
+        </script>
         {{-- //logo --}}
         <link rel="icon" type="image/png" href="{{ asset('logo/logo1.png') }}">
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -2947,6 +2959,404 @@
                     background: #eff4fa;
                 }
             }
+
+            /* Keep the lesson order control shared across course learning pages. */
+            .lesson-sort-toggle {
+                min-height: 34px;
+                padding: 6px 11px;
+                border: 1px solid #d7e3f0;
+                border-radius: 999px;
+                background: #f8fafc;
+                color: #475569;
+                font: inherit;
+                font-size: 12px;
+                font-weight: 700;
+                white-space: nowrap;
+                cursor: pointer;
+                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+            }
+
+            .lesson-sort-toggle:hover {
+                background: #eaf2fb;
+                color: #0f2f57;
+                transform: translateY(-1px);
+            }
+
+            /* Provide one persistent light and dark theme for all shared web pages. */
+            .web-theme-toggle {
+                width: 42px;
+                height: 42px;
+                padding: 0;
+                border: 1px solid #d7e3f0;
+                border-radius: 999px;
+                background: #ffffff;
+                color: #0f172a;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
+                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+            }
+
+            .web-theme-toggle:hover {
+                background: #eff4fa;
+                transform: translateY(-1px);
+            }
+
+            .web-theme-toggle i {
+                transition: transform 0.3s ease;
+            }
+
+            html[data-web-theme='dark'] {
+                color-scheme: dark;
+                --footer-bg-color: #0e1113;
+                --footer-text-color: #f8fafc;
+                --footer-link-color: #cbd5e1;
+                --footer-link-hover-color: #ffffff;
+                --footer-border-color: #26313a;
+                --text: #f8fafc;
+                --border: #26313a;
+            }
+
+            html[data-web-theme='dark'] body.web-shell,
+            html[data-web-theme='dark'] body.web-shell .web-main {
+                background: #000000 !important;
+                color: #f8fafc;
+            }
+
+            html[data-web-theme='dark'] body.web-shell header,
+            html[data-web-theme='dark'] body.web-shell footer,
+            html[data-web-theme='dark'] body.web-shell .navbar.offcanvas-right,
+            html[data-web-theme='dark'] body.web-shell .menu-sublist,
+            html[data-web-theme='dark'] body.web-shell .lang-dropdown-menu,
+            html[data-web-theme='dark'] body.web-shell .header-notification__panel {
+                background: #0e1113 !important;
+                border-color: #26313a !important;
+                color: #f8fafc !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                [class$='-card'],
+                [class*='-card '],
+                [class$='-box'],
+                [class*='-box '],
+                [class$='-panel'],
+                [class*='-panel '],
+                [class$='-drawer'],
+                [class*='-drawer '],
+                [class$='-dropdown'],
+                [class*='-dropdown '],
+                [class$='-toolbar'],
+                [class*='-toolbar '],
+                [class$='-hero'],
+                [class*='-hero ']
+            ),
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                .home-hero__window,
+                .home-hero__floating,
+                .home-notice-popup,
+                .home-featured-card__media,
+                .home-featured-empty,
+                .home-why-item,
+                .faq-item,
+                .faq-toggle__icon,
+                .technology-empty,
+                .tech-detail-item,
+                .shop-detail-primary,
+                .shop-detail-payments,
+                .shop-detail-client-item,
+                .shop-detail-nav,
+                .shop-detail-thumb,
+                .shop-detail-select,
+                .shop-detail-qty,
+                .shop-detail-download,
+                .shop-detail-share a,
+                .shop-detail-pay-card--button,
+                .shop-detail-pay-icon,
+                .shop-detail-pay-arrow,
+                .shop-khqr-summary,
+                .shop-khqr-modal__download,
+                .shop-search,
+                .shop-search input,
+                .shop-category-mobile select,
+                .shop-category-chip,
+                .shop-card__body,
+                .shop-card__save,
+                .shop-card__favorite,
+                .shop-empty,
+                .shop-modal__dialog,
+                .shop-modal__close,
+                .shop-gallery-main,
+                .shop-gallery-thumb,
+                .shop-modal__meta,
+                .shop-cart-rail__btn,
+                .shop-favorite-card__media,
+                .shop-cart-empty,
+                .shop-cart-item,
+                .shop-cart-checkout-item,
+                .shop-cart-item__media,
+                .shop-cart-qty,
+                .shop-cart-drawer__foot,
+                .shop-cart-checkout-summary,
+                .profile-order,
+                .profile-order__course,
+                .profile-stat-item,
+                .profile-library-item,
+                .profile-side-link,
+                .profile-tabs,
+                .profile-field input,
+                .profile-field select,
+                .profile-empty,
+                .profile-errors,
+                .checkout-payments,
+                .checkout-pay-card--button,
+                .checkout-pay-icon,
+                .checkout-pay-status,
+                .checkout-pay-arrow,
+                .khqr-official-card__body,
+                .khqr-modal__download,
+                .course-toolbar-trigger,
+                .course-toolbar-dropdown,
+                .web-page-btn,
+                .learning-action-chip,
+                .comment-composer,
+                .comment-send-btn,
+                .comment-empty,
+                .comment-action-btn,
+                .comment-edit-form textarea,
+                .resource-open-btn,
+                .comment-item,
+                .lesson-chip,
+                .lesson-comment-area,
+                .lesson-comment-send,
+                .lesson-comment-empty,
+                .lesson-comment-action-btn,
+                .lesson-comment-edit-form textarea,
+                .lesson-resource-open-btn,
+                .lesson-comment-item,
+                .lesson-list-row,
+                .learning-lesson-item,
+                .resource-item,
+                .lesson-resource-item
+            ) {
+                background: #0e1113 !important;
+                background-image: none !important;
+                border-color: #26313a !important;
+                box-shadow: none;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main :where(input, textarea, select, option, summary),
+            html[data-web-theme='dark'] body.web-shell :where(
+                .lang-toggle,
+                .header-auth-btn,
+                .header-auth-user,
+                .web-theme-toggle,
+                .drawer__back,
+                .lesson-sort-toggle
+            ) {
+                background: #0e1113 !important;
+                border-color: #26313a !important;
+                color: #f8fafc !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main *,
+            html[data-web-theme='dark'] body.web-shell :where(
+                .brand-link,
+                .brand-logo__text,
+                .brand-logo__text span,
+                .logo h3,
+                .header-box ul li a,
+                .menu-dropdown-toggle,
+                .mobile-menu-icon,
+                .fo h3,
+                .fo1 h3,
+                .fo p,
+                .fo1 li a,
+                .copyright-text,
+                .contact-info-footer a
+            ) {
+                color: #f8fafc !important;
+            }
+
+            /* Keep dark text and icons readable when a badge keeps its light background. */
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                .hero-kicker,
+                .chip,
+                .home-hero__eyebrow,
+                .home-hero__button.is-secondary,
+                .home-hero__highlight-icon,
+                .home-hero__floating-icon,
+                .home-why-card__icon,
+                .technology-card__icon,
+                .home-featured-card__price,
+                .course-price-badge,
+                .shop-card__badge,
+                .shop-detail-badge,
+                .checkout-pill,
+                .learning-lesson-badge,
+                .lesson-list-badge,
+                .resource-badge,
+                .lesson-resource-badge,
+                .resource-item__icon,
+                .lesson-resource-item__icon
+            ),
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                .hero-kicker,
+                .chip,
+                .home-hero__eyebrow,
+                .home-hero__button.is-secondary,
+                .home-hero__highlight-icon,
+                .home-hero__floating-icon,
+                .home-why-card__icon,
+                .technology-card__icon,
+                .home-featured-card__price,
+                .course-price-badge,
+                .shop-card__badge,
+                .shop-detail-badge,
+                .checkout-pill,
+                .learning-lesson-badge,
+                .lesson-list-badge,
+                .resource-badge,
+                .lesson-resource-badge,
+                .resource-item__icon,
+                .lesson-resource-item__icon
+            ) * {
+                color: #173f87 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                .course-price-badge.is-free,
+                .shop-card__badge.is-stock,
+                .shop-detail-badge.is-stock
+            ),
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                .course-price-badge.is-free,
+                .shop-card__badge.is-stock,
+                .shop-detail-badge.is-stock
+            ) * {
+                color: #157347 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                .shop-card__badge.is-out,
+                .shop-detail-badge.is-out
+            ),
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                .shop-card__badge.is-out,
+                .shop-detail-badge.is-out
+            ) * {
+                color: #b4233f !important;
+            }
+
+            /* Preserve useful product and price colors on dark shop cards. */
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                .shop-card__sale,
+                .shop-detail-sale
+            ) {
+                color: #fb7185 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                .shop-card__cost,
+                .shop-detail-cost
+            ) {
+                color: #cbd5e1 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main :where(
+                .shop-card__category,
+                .shop-card__meta,
+                .shop-card__fee-description
+            ) {
+                color: #b8c4d4 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main .shop-card__save {
+                color: #93c5fd !important;
+                border-color: #3b82f6 !important;
+            }
+
+            /* Keep course dropdown states readable against the dark menu. */
+            html[data-web-theme='dark'] body.web-shell .web-main .course-toolbar-option:hover,
+            html[data-web-theme='dark'] body.web-shell .web-main .course-toolbar-option.is-active {
+                background: #182026 !important;
+                color: #f8fafc !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main .course-toolbar-option:hover *,
+            html[data-web-theme='dark'] body.web-shell .web-main .course-toolbar-option.is-active * {
+                color: #f8fafc !important;
+            }
+
+            /* Keep the about timeline wrapper transparent so its animated line stays visible. */
+            html[data-web-theme='dark'] body.web-shell .web-main .about-profile__timeline-item,
+            html[data-web-theme='dark'] body.web-shell .web-main .about-profile__timeline-card {
+                background: transparent !important;
+                border-color: transparent !important;
+                box-shadow: none !important;
+            }
+
+            /* Remove the year box while keeping its timeline label readable. */
+            html[data-web-theme='dark'] body.web-shell .web-main .about-profile__timeline-card::before {
+                background: transparent !important;
+                color: #f8fafc !important;
+                box-shadow: none !important;
+            }
+
+            /* Keep the platform purpose and certificate boxes as dark surfaces. */
+            html[data-web-theme='dark'] body.web-shell .web-main .about-profile__summary-card {
+                background: #0e1113 !important;
+                border-color: #26313a !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main .about-profile__timeline::before {
+                background: #405064 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main .about-profile__experience,
+            html[data-web-theme='dark'] body.web-shell .web-main .about-profile__experience * {
+                color: #1d4ed8 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main :where(.policy-page, .terms-page) {
+                background: #000000 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-main :where(input, textarea)::placeholder {
+                color: #94a3b8 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell :where(
+                .header-box ul li a:hover,
+                .header-box ul li a.active-link,
+                .header-auth-btn:hover,
+                .lang-toggle:hover,
+                .web-theme-toggle:hover,
+                .drawer__back:hover,
+                .lesson-sort-toggle:hover
+            ) {
+                background: #182026 !important;
+                border-color: #33414c !important;
+            }
+
+            body.web-shell,
+            body.web-shell .web-main,
+            body.web-shell header,
+            body.web-shell footer {
+                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            }
+
+            @media (max-width: 992px) {
+                .theme-item,
+                .web-theme-toggle {
+                    width: 100%;
+                }
+
+                .web-theme-toggle {
+                    border-radius: 12px;
+                }
+            }
         </style>
         @stack('web_styles')
     </head>
@@ -2986,7 +3396,8 @@
 
         @include('web.components.footer')
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/rellax/1.12.1/rellax.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        {{-- Load the parallax helper from the local app domain so CSP does not block it. --}}
+        <script src="{{ asset('vendor/rellax.min.js') }}"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 if (Array.isArray(window.__techCourseGa4FlashEvents)) {
@@ -3013,6 +3424,7 @@
                 const notificationToggle = document.querySelector('[data-web-notification-toggle]');
                 const notificationPanel = document.querySelector('[data-web-notification-panel]');
                 const notificationBadge = document.querySelector('[data-web-notification-badge]');
+                const themeToggle = document.querySelector('[data-web-theme-toggle]');
                 const scrollTopButton = document.querySelector('[data-scroll-top]');
                 const loadingIndicator = document.querySelector('[data-web-loading]');
                 const webAlert = document.querySelector('[data-web-alert]');
@@ -3020,6 +3432,62 @@
                 let notificationReadRequestSent = false;
                 let lastScrollY = window.scrollY;
                 const headerHideOffset = 160;
+
+                // Toggle and remember the visitor's selected web color theme.
+                const applyWebTheme = (theme) => {
+                    const selectedTheme = theme === 'dark' ? 'dark' : 'light';
+
+                    if (selectedTheme === 'dark') {
+                        root.dataset.webTheme = 'dark';
+                    } else {
+                        delete root.dataset.webTheme;
+                    }
+
+                    if (themeToggle) {
+                        const opensDarkMode = selectedTheme === 'light';
+                        const label = opensDarkMode ? @json(__('Dark mode')) : @json(__('Light mode'));
+                        const icon = themeToggle.querySelector('i');
+
+                        themeToggle.setAttribute('aria-label', label);
+                        themeToggle.setAttribute('title', label);
+                        themeToggle.setAttribute('aria-pressed', selectedTheme === 'dark' ? 'true' : 'false');
+
+                        if (icon) {
+                            icon.className = opensDarkMode ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+                        }
+                    }
+                };
+
+                applyWebTheme(root.dataset.webTheme === 'dark' ? 'dark' : 'light');
+
+                themeToggle?.addEventListener('click', () => {
+                    const nextTheme = root.dataset.webTheme === 'dark' ? 'light' : 'dark';
+                    applyWebTheme(nextTheme);
+
+                    try {
+                        window.localStorage.setItem('techcourse-web-theme', nextTheme);
+                    } catch (error) {
+                        // Keep the selected theme for this page when storage is unavailable.
+                    }
+                });
+
+                // Reverse lesson boxes without changing the existing lesson routes or data.
+                document.querySelectorAll('[data-lesson-sort-toggle]').forEach((button) => {
+                    const list = button.closest('aside')?.querySelector('[data-lesson-sort-list]');
+
+                    if (!list) {
+                        return;
+                    }
+
+                    button.addEventListener('click', () => {
+                        const descending = button.getAttribute('aria-pressed') !== 'true';
+                        Array.from(list.children).reverse().forEach((lesson) => list.appendChild(lesson));
+                        button.setAttribute('aria-pressed', descending ? 'true' : 'false');
+                        button.textContent = descending
+                            ? button.dataset.descendingLabel
+                            : button.dataset.ascendingLabel;
+                    });
+                });
 
                 // Keep the page fully frozen while payment and success popups are open.
                 window.TechCourseScrollLock = window.TechCourseScrollLock || (() => {
@@ -3385,6 +3853,11 @@
                 // Apply the same loader to normal form submits that may take time.
                 document.querySelectorAll('form').forEach((form) => {
                     form.addEventListener('submit', () => {
+                        // Async forms manage their own request state without page navigation.
+                        if (form.hasAttribute('data-async-form')) {
+                            return;
+                        }
+
                         showLoading();
                     });
                 });

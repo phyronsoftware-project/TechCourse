@@ -11,11 +11,15 @@ class GoogleAnalyticsRealtimeService
 {
     protected const TOKEN_CACHE_KEY = 'ga4_service_account_access_token';
     protected const ACTIVE_USERS_CACHE_KEY = 'ga4_realtime_active_users';
+    protected const UNAVAILABLE_CACHE_KEY = 'ga4_temporarily_unavailable';
+    protected const REQUEST_TIMEOUT_SECONDS = 3;
+    protected const CONNECT_TIMEOUT_SECONDS = 2;
 
     // Fetch the GA4 realtime active user count with lightweight caching.
     public function activeUsers(): ?int
     {
-        if (! $this->isConfigured()) {
+        // Skip GA4 while the remote service is temporarily unavailable.
+        if (! $this->isConfigured() || $this->isTemporarilyUnavailable()) {
             return null;
         }
 
@@ -31,7 +35,8 @@ class GoogleAnalyticsRealtimeService
             try {
                 $response = Http::withToken($accessToken)
                     ->acceptJson()
-                    ->timeout(15)
+                    ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
+                    ->timeout(self::REQUEST_TIMEOUT_SECONDS)
                     ->post("https://analyticsdata.googleapis.com/v1beta/properties/{$propertyId}:runRealtimeReport", [
                         'metrics' => [
                             ['name' => 'activeUsers'],
@@ -39,6 +44,8 @@ class GoogleAnalyticsRealtimeService
                     ]);
 
                 if (! $response->successful()) {
+                    $this->markTemporarilyUnavailable();
+
                     Log::warning('GA4 realtime report request failed.', [
                         'status' => $response->status(),
                         'body' => $response->json(),
@@ -52,6 +59,8 @@ class GoogleAnalyticsRealtimeService
 
                 return is_numeric($value) ? (int) $value : 0;
             } catch (Throwable $exception) {
+                $this->markTemporarilyUnavailable();
+
                 Log::warning('GA4 realtime report request threw an exception.', [
                     'message' => $exception->getMessage(),
                 ]);
@@ -89,7 +98,8 @@ class GoogleAnalyticsRealtimeService
 
     protected function runReportMetricByPath(string $metricName, string $path, int $days = 30, ?string $eventName = null): ?int
     {
-        if (! $this->isConfigured()) {
+        // Keep lesson pages responsive when GA4 is timing out or rate limited.
+        if (! $this->isConfigured() || $this->isTemporarilyUnavailable()) {
             return null;
         }
 
@@ -130,7 +140,8 @@ class GoogleAnalyticsRealtimeService
             try {
                 $response = Http::withToken($accessToken)
                     ->acceptJson()
-                    ->timeout(15)
+                    ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
+                    ->timeout(self::REQUEST_TIMEOUT_SECONDS)
                     ->post("https://analyticsdata.googleapis.com/v1beta/properties/{$propertyId}:runReport", [
                         'dateRanges' => [
                             [
@@ -152,6 +163,8 @@ class GoogleAnalyticsRealtimeService
                     ]);
 
                 if (! $response->successful()) {
+                    $this->markTemporarilyUnavailable();
+
                     Log::warning('GA4 standard report request failed.', [
                         'status' => $response->status(),
                         'body' => $response->json(),
@@ -168,6 +181,8 @@ class GoogleAnalyticsRealtimeService
 
                 return is_numeric($value) ? (int) $value : 0;
             } catch (Throwable $exception) {
+                $this->markTemporarilyUnavailable();
+
                 Log::warning('GA4 standard report request threw an exception.', [
                     'message' => $exception->getMessage(),
                     'metric' => $metricName,
@@ -198,13 +213,16 @@ class GoogleAnalyticsRealtimeService
             try {
                 $response = Http::asForm()
                     ->acceptJson()
-                    ->timeout(15)
+                    ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
+                    ->timeout(self::REQUEST_TIMEOUT_SECONDS)
                     ->post((string) ($credentials['token_uri'] ?? 'https://oauth2.googleapis.com/token'), [
                         'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
                         'assertion' => $jwt,
                     ]);
 
                 if (! $response->successful()) {
+                    $this->markTemporarilyUnavailable();
+
                     Log::warning('GA4 OAuth token request failed.', [
                         'status' => $response->status(),
                         'body' => $response->json(),
@@ -215,6 +233,8 @@ class GoogleAnalyticsRealtimeService
 
                 return $response->json('access_token');
             } catch (Throwable $exception) {
+                $this->markTemporarilyUnavailable();
+
                 Log::warning('GA4 OAuth token request threw an exception.', [
                     'message' => $exception->getMessage(),
                 ]);
@@ -222,6 +242,18 @@ class GoogleAnalyticsRealtimeService
                 return null;
             }
         });
+    }
+
+    // Pause repeated GA4 requests briefly after a remote failure.
+    protected function markTemporarilyUnavailable(): void
+    {
+        Cache::put(self::UNAVAILABLE_CACHE_KEY, true, now()->addMinutes(5));
+    }
+
+    // Check whether a recent GA4 request already failed.
+    protected function isTemporarilyUnavailable(): bool
+    {
+        return Cache::has(self::UNAVAILABLE_CACHE_KEY);
     }
 
     protected function buildJwtAssertion(array $credentials): ?string

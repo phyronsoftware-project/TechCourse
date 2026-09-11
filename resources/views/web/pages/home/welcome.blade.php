@@ -539,6 +539,8 @@
             width: 100vw;
             margin-left: calc(50% - 50vw);
             padding: 0 0 24px;
+            /* Keep the stats background full width at every browser zoom level. */
+            background: #111111;
         }
 
         .home-notice-popup {

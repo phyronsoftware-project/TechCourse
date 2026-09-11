@@ -1325,8 +1325,9 @@
             display: grid;
             gap: 10px;
             width: min(360px, calc(100vw - 28px));
-            max-height: 92vh;
-            overflow-y: auto;
+            /* Keep the cart checkout popup fully visible without showing an outer scrollbar. */
+            max-height: none;
+            overflow: visible;
             padding: 0;
             border: 0;
             border-radius: 0;
@@ -1406,6 +1407,158 @@
             color: #fff;
             font-size: 0.8rem;
         }
+
+        /* Show a clear thank-you message after the cart payment is confirmed. */
+        .shop-cart-success-modal[hidden] {
+            display: none;
+        }
+
+        .shop-cart-success-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.56);
+            opacity: 0;
+            transition: opacity 300ms ease;
+        }
+
+        .shop-cart-success-modal.is-open {
+            opacity: 1;
+        }
+
+        .shop-cart-success-card {
+            position: relative;
+            width: min(480px, calc(100vw - 32px));
+            padding: 44px 38px 36px;
+            overflow: hidden;
+            border-radius: 24px;
+            background: #fff;
+            color: #0f1f3d;
+            text-align: center;
+            box-shadow: 0 24px 70px rgba(15, 31, 61, 0.24);
+            transform: translateY(18px) scale(0.97);
+            transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .shop-cart-success-modal.is-open .shop-cart-success-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .shop-cart-success-close {
+            position: absolute;
+            top: 15px;
+            right: 18px;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #9ca3af;
+            font-size: 2rem;
+            font-weight: 300;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .shop-cart-success-icon {
+            position: relative;
+            width: 132px;
+            height: 132px;
+            margin: 8px auto 24px;
+            display: grid;
+            place-items: center;
+            border: 20px solid rgba(49, 205, 76, 0.14);
+            border-radius: 50%;
+            background: linear-gradient(180deg, #55d415 0%, #00bc45 100%);
+            box-sizing: border-box;
+            box-shadow: 0 0 0 1px rgba(73, 211, 94, 0.08);
+        }
+
+        .shop-cart-success-icon::before,
+        .shop-cart-success-icon::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(85, 212, 21, 0.18);
+        }
+
+        .shop-cart-success-icon::before {
+            width: 13px;
+            height: 13px;
+            left: -48px;
+            top: 35px;
+            box-shadow: 30px -51px 0 -3px rgba(85, 212, 21, 0.16);
+        }
+
+        .shop-cart-success-icon::after {
+            width: 8px;
+            height: 8px;
+            right: -34px;
+            top: -2px;
+            box-shadow: 18px 33px 0 -2px rgba(85, 212, 21, 0.16);
+        }
+
+        .shop-cart-success-icon svg {
+            width: 64px;
+            height: 64px;
+            color: #fff;
+        }
+
+        .shop-cart-success-title {
+            margin: 0;
+            color: #0f1f3d;
+            font-size: clamp(2rem, 7vw, 2.65rem);
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .shop-cart-success-text {
+            max-width: 340px;
+            margin: 22px auto 34px;
+            color: #74748d;
+            font-size: 1.12rem;
+            line-height: 1.5;
+        }
+
+        .shop-cart-success-done {
+            width: 100%;
+            min-height: 64px;
+            border: 0;
+            border-radius: 12px;
+            background: linear-gradient(100deg, #5d95f5 0%, #2467f4 100%);
+            color: #fff;
+            font-size: 1.65rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(36, 103, 244, 0.2);
+        }
+
+        @media (max-width: 520px) {
+            .shop-cart-success-card {
+                padding: 38px 24px 26px;
+                border-radius: 20px;
+            }
+
+            .shop-cart-success-icon {
+                width: 116px;
+                height: 116px;
+                border-width: 17px;
+            }
+
+            .shop-cart-success-text {
+                margin: 18px auto 28px;
+                font-size: 1rem;
+            }
+
+            .shop-cart-success-done {
+                min-height: 56px;
+                font-size: 1.35rem;
+            }
+        }
     </style>
 
     <div class="shop-cart-checkout-modal" data-cart-checkout-modal hidden>
@@ -1439,6 +1592,23 @@
             </div>
 
             <p class="shop-cart-checkout-status" data-cart-checkout-status>{{ __('Preparing cart checkout...') }}</p>
+        </div>
+    </div>
+
+    {{-- Confirm the completed cart payment with the requested success popup. --}}
+    <div class="shop-cart-success-modal" data-cart-success-modal hidden>
+        <div class="shop-cart-success-card" role="dialog" aria-modal="true" aria-labelledby="shop-cart-success-title">
+            <button type="button" class="shop-cart-success-close" data-cart-success-close aria-label="{{ __('Close') }}">&times;</button>
+            <div class="shop-cart-success-icon" aria-hidden="true">
+                <svg viewBox="0 0 64 64" fill="none">
+                    <path d="M15 32.5L27 44.5L50 19.5" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2 class="shop-cart-success-title" id="shop-cart-success-title">{{ __('Success!') }}</h2>
+            <p class="shop-cart-success-text">
+                {{ __('Your payment was completed successfully. Thank you for your purchase!') }}
+            </p>
+            <button type="button" class="shop-cart-success-done" data-cart-success-close>{{ __('Done') }}</button>
         </div>
     </div>
 
@@ -1500,6 +1670,8 @@
             const checkoutDelivery = document.querySelector('[data-cart-checkout-delivery]');
             const checkoutTotal = document.querySelector('[data-cart-checkout-total]');
             const closeButton = document.querySelector('[data-cart-checkout-close]');
+            const successModal = document.querySelector('[data-cart-success-modal]');
+            const successCloseButtons = document.querySelectorAll('[data-cart-success-close]');
             const cardId = @json($shopCartKhqrCardId);
             const createUrl = @json(auth()->check() ? route('shop-payments.cart.bakong.create') : null);
             const statusBaseUrl = @json(url('/shop-payments'));
@@ -1516,16 +1688,51 @@
             const lockPage = () => window.TechCourseScrollLock?.lock?.() ?? (document.body.style.overflow = 'hidden');
             const unlockPage = () => window.TechCourseScrollLock?.unlock?.() ?? (document.body.style.overflow = '');
 
-            const closeCheckout = () => {
+            // Close checkout normally or keep the page locked while switching popups.
+            const closeCheckout = (immediate = false, keepPageLocked = false) => {
                 if (pollTimer) {
                     window.clearTimeout(pollTimer);
                     pollTimer = null;
                 }
+
+                paymentStatusUrl = null;
                 checkoutModal.classList.remove('is-open');
+
+                if (immediate) {
+                    checkoutModal.hidden = true;
+                    if (!keepPageLocked) {
+                        unlockPage();
+                    }
+                    return;
+                }
+
                 window.setTimeout(() => {
                     checkoutModal.hidden = true;
                     unlockPage();
                 }, 180);
+            };
+
+            // Replace the checkout popup with the thank-you popup after payment.
+            const showCartSuccess = () => {
+                if (!successModal) {
+                    unlockPage();
+                    return;
+                }
+
+                successModal.hidden = false;
+                requestAnimationFrame(() => successModal.classList.add('is-open'));
+            };
+
+            const closeCartSuccess = () => {
+                if (!successModal || successModal.hidden) {
+                    return;
+                }
+
+                successModal.classList.remove('is-open');
+                window.setTimeout(() => {
+                    successModal.hidden = true;
+                    unlockPage();
+                }, 300);
             };
 
             const renderCheckout = (items) => {
@@ -1578,9 +1785,10 @@
                     const status = result?.data?.status;
 
                     if (status === 'success') {
-                        checkoutStatus.textContent = 'Payment succeeded. Cart has been cleared.';
+                        // Hide cart checkout immediately, then show the payment success message.
                         window.dispatchEvent(new Event('shop:payment-success'));
-                        window.setTimeout(closeCheckout, 1800);
+                        closeCheckout(true, true);
+                        showCartSuccess();
                         return;
                     }
 
@@ -1649,13 +1857,24 @@
             };
 
             window.addEventListener('shop:cart-checkout', (event) => startCheckout(event.detail?.items || []));
-            closeButton?.addEventListener('click', closeCheckout);
+            closeButton?.addEventListener('click', () => closeCheckout());
+            successCloseButtons.forEach((button) => button.addEventListener('click', closeCartSuccess));
             checkoutModal.addEventListener('click', (event) => {
                 if (event.target === checkoutModal) {
                     closeCheckout();
                 }
             });
+            successModal?.addEventListener('click', (event) => {
+                if (event.target === successModal) {
+                    closeCartSuccess();
+                }
+            });
             document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && successModal && !successModal.hidden) {
+                    closeCartSuccess();
+                    return;
+                }
+
                 if (event.key === 'Escape' && !checkoutModal.hidden) {
                     closeCheckout();
                 }

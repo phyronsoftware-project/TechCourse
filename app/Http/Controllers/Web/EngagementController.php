@@ -9,6 +9,7 @@ use App\Models\CourseLesson;
 use App\Models\CourseReview;
 use App\Models\CourseSave;
 use App\Models\LessonComment;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -16,11 +17,19 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class EngagementController extends Controller
 {
-    public function toggleLike(Request $request, string $course): RedirectResponse
+    public function toggleLike(Request $request, string $course): JsonResponse|RedirectResponse
     {
         $courseModel = $this->findCourse($course);
 
         if (! Schema::hasTable('course_favorites')) {
+            // Return a usable error when the like action is submitted without a page refresh.
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Course likes table is not ready yet.'),
+                ], 422);
+            }
+
             return back()->with('warning', __('Course likes table is not ready yet.'));
         }
 
@@ -32,6 +41,15 @@ class EngagementController extends Controller
         if ($favorite) {
             $favorite->delete();
 
+            // Return the latest like state to the course detail button.
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('Removed from liked courses.'),
+                    'data' => ['is_liked' => false],
+                ]);
+            }
+
             return back()->with('success', __('Removed from liked courses.'));
         }
 
@@ -40,14 +58,31 @@ class EngagementController extends Controller
             'course_id' => $courseModel->id,
         ]);
 
+        // Return the latest like state to the course detail button.
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('Added to liked courses.'),
+                'data' => ['is_liked' => true],
+            ]);
+        }
+
         return back()->with('success', __('Added to liked courses.'));
     }
 
-    public function toggleSave(Request $request, string $course): RedirectResponse
+    public function toggleSave(Request $request, string $course): JsonResponse|RedirectResponse
     {
         $courseModel = $this->findCourse($course);
 
         if (! Schema::hasTable('course_saves')) {
+            // Return a usable error when the save action is submitted without a page refresh.
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Course saves table is not ready yet.'),
+                ], 422);
+            }
+
             return back()->with('warning', __('Course saves table is not ready yet.'));
         }
 
@@ -59,6 +94,15 @@ class EngagementController extends Controller
         if ($saved) {
             $saved->delete();
 
+            // Return the latest saved state to the course detail button.
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('Removed from saved courses.'),
+                    'data' => ['is_saved' => false],
+                ]);
+            }
+
             return back()->with('success', __('Removed from saved courses.'));
         }
 
@@ -66,6 +110,15 @@ class EngagementController extends Controller
             'user_id' => $request->user()->id,
             'course_id' => $courseModel->id,
         ]);
+
+        // Return the latest saved state to the course detail button.
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('Saved course successfully.'),
+                'data' => ['is_saved' => true],
+            ]);
+        }
 
         return back()->with('success', __('Saved course successfully.'));
     }

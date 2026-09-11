@@ -387,9 +387,10 @@
         }
 
         .course-payment-success__icon {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 22px;
+            /* Enlarge the success artwork while preserving its transparent spacing. */
+            width: 180px;
+            height: 115px;
+            margin: 0 auto 18px;
             display: block;
             object-fit: contain;
         }
@@ -747,7 +748,8 @@
 
     <div class="course-payment-success" data-course-payment-success hidden>
         <div class="course-payment-success__card" role="dialog" aria-modal="true" aria-labelledby="course-payment-success-title">
-            <img src="{{ asset('logo/pray (1).gif') }}" alt="" class="course-payment-success__icon" aria-hidden="true">
+            {{-- Show the requested payment success icon after course payment confirmation. --}}
+            <img src="{{ asset('ABA_Images/icon_payment.png') }}" alt="" class="course-payment-success__icon" aria-hidden="true">
             <h2 class="course-payment-success__title" id="course-payment-success-title">{{ __('Payment succeeded!') }}</h2>
             <p class="course-payment-success__text">{{ __('Your transaction was completed successfully. Your course is now unlocked.') }}</p>
         </div>

@@ -314,6 +314,17 @@
             background: #f8fafc;
         }
 
+        /* Keep the course listing cards and controls with square corners. */
+        .course-index .course-toolbar-trigger,
+        .course-index .course-toolbar-dropdown,
+        .course-index .course-toolbar-option,
+        .course-index .course-card,
+        .course-index .course-card__badge,
+        .course-index .course-price-badge,
+        .course-index .web-page-btn {
+            border-radius: 0;
+        }
+
         @media (max-width: 1180px) {
             .course-grid-shell {
                 grid-template-columns: repeat(3, minmax(0, 1fr));

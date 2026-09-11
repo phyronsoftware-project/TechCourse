@@ -39,13 +39,17 @@ class EnrollmentController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        // Preselect a user when access is granted from the user management list.
+        $selectedUserId = $request->integer('user_id') ?: null;
+
         return view('admin.pages.enrollments.create', [
-            'pageTitle' => 'Create Enrollment',
+            'pageTitle' => 'Grant Course Access',
             'users' => User::query()->orderBy('name')->get(),
             'courses' => Course::query()->orderBy('title')->get(),
             'orders' => Order::query()->orderByDesc('id')->get(),
+            'selectedUserId' => $selectedUserId,
         ]);
     }
 
@@ -63,11 +67,24 @@ class EnrollmentController extends Controller
 
         $data['started_at'] = $data['started_at'] ?? now();
 
-        CourseEnrollment::create($data);
+        // Grant new access or safely reactivate an existing user-course enrollment.
+        CourseEnrollment::query()->updateOrCreate(
+            [
+                'user_id' => $data['user_id'],
+                'course_id' => $data['course_id'],
+            ],
+            [
+                'order_id' => $data['order_id'] ?? null,
+                'access_type' => $data['access_type'],
+                'status' => $data['status'],
+                'started_at' => $data['started_at'],
+                'completed_at' => $data['completed_at'] ?? null,
+            ],
+        );
 
         return redirect()
             ->route('admin.enrollments.index')
-            ->with('success', 'Enrollment created successfully.');
+            ->with('success', 'Course access granted successfully.');
     }
 
     public function show(CourseEnrollment $enrollment): View

@@ -38,10 +38,10 @@
     <section class="admin-index-panel admin-index-panel-table">
         <div class="admin-page-header">
             <div>
-                <h3 class="admin-page-title">Enrollments</h3>
-                <p class="admin-page-copy">Track user access to free and paid courses.</p>
+                <h3 class="admin-page-title">Course Access</h3>
+                <p class="admin-page-copy">Manage paid, free, and admin-granted course access.</p>
             </div>
-            <a href="{{ route('admin.enrollments.create') }}" class="admin-btn admin-btn-primary">Create Enrollment</a>
+            <a href="{{ route('admin.enrollments.create') }}" class="admin-btn admin-btn-primary">Grant Course Access</a>
         </div>
 
         <div class="admin-table-wrap">

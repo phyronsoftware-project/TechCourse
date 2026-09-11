@@ -88,6 +88,13 @@
                     </div>
                 </li>
 
+                {{-- Toggle the public website between the default light theme and dark theme. --}}
+                <li class="theme-item">
+                    <button type="button" class="web-theme-toggle" data-web-theme-toggle aria-label="{{ __('Dark mode') }}" title="{{ __('Dark mode') }}" aria-pressed="false">
+                        <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                    </button>
+                </li>
+
                 <li class="auth-item">
                     <div class="header-auth-actions">
                         @auth

@@ -4,14 +4,9 @@
 
 @php
     // Prefer uploaded lesson video file when lesson uses local upload.
-    $uploadedVideoUrl = null;
-
-    if (($activeLesson->video_type ?? null) === 'upload' && !empty($activeLesson->video_file)) {
-        $videoFilePath = ltrim((string) $activeLesson->video_file, '/');
-        $uploadedVideoUrl = \Illuminate\Support\Str::startsWith($videoFilePath, ['http://', 'https://'])
-            ? $videoFilePath
-            : route('media.public', ['path' => $videoFilePath]);
-    }
+    $uploadedVideoUrl = ($activeLesson->video_type === 'upload' && $activeLesson->video_file)
+        ? \App\Support\VideoPlayback::uploadedUrl($activeLesson->video_file)
+        : null;
 
     $videoUrl = $uploadedVideoUrl ?: ($activeLesson->video_url ?: $course->intro_video_url);
     $checkoutRoute = route('courses.checkout', $course->slug ?: $course->id);
@@ -20,17 +15,8 @@
     $courseRouteKey = $course->slug ?: $course->id;
     $currentLessonRoute = route('learning.show', [$courseRouteKey, $lessonRouteKey]);
     $lessonViewCount = (int) (($lessonAnalytics['video_views'] ?? null) ?: ($lessonAnalytics['page_views'] ?? 0));
-    $embedUrl = null;
-
-    if ($videoUrl) {
-        if (str_contains($videoUrl, 'watch?v=')) {
-            $embedUrl = str_replace('watch?v=', 'embed/', $videoUrl);
-        } elseif (str_contains($videoUrl, 'youtu.be/')) {
-            $embedUrl = str_replace('youtu.be/', 'www.youtube.com/embed/', $videoUrl);
-        } elseif (str_contains($videoUrl, 'vimeo.com/')) {
-            $embedUrl = str_replace('vimeo.com/', 'player.vimeo.com/video/', $videoUrl);
-        }
-    }
+    // Build the correct iframe source for YouTube and Vimeo lessons.
+    $embedUrl = \App\Support\VideoPlayback::embedUrl($videoUrl, $activeLesson->video_type);
     $canAccessPaidResources = !($courseNeedsPayment ?? false) || ($hasCourseAccess ?? false);
     $visibleResources = $course->resources
         ->filter(function ($resource) use ($activeLesson, $canAccessPaidResources) {
@@ -100,6 +86,8 @@
         .lesson-learning-shell {
             width: min(1280px, calc(100% - 32px));
             margin: 0 auto;
+            /* Move the lesson content lower so it does not touch the header. */
+            padding-top: 32px;
             padding-bottom: 56px;
         }
 
@@ -124,6 +112,8 @@
         }
 
         .lesson-video-shell {
+            /* Keep the lesson video box with square corners. */
+            border-radius: 0;
             overflow: hidden;
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
@@ -161,8 +151,8 @@
         }
 
         .lesson-detail-box {
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
+            /* Keep the lesson information box with square corners. */
+            border-radius: 0;
             padding-top: 30px;
             margin-bottom: 20px;
         }
@@ -875,10 +865,19 @@
             <aside class="lesson-sidebar-box">
                 <div class="lesson-sidebar-head">
                     <h3>{{ $course->title }}</h3>
-                    <span>{{ __('Sort Lesson') }}</span>
+                    {{-- Toggle lesson boxes between ascending and descending order. --}}
+                    <button
+                        type="button"
+                        class="lesson-sort-toggle"
+                        data-lesson-sort-toggle
+                        data-ascending-label="{{ $course->lessons->count() > 1 ? '1-' . $course->lessons->count() : '1' }}"
+                        data-descending-label="{{ $course->lessons->count() > 1 ? $course->lessons->count() . '-1' : '1' }}"
+                        aria-label="{{ __('Sort Lesson') }}"
+                        aria-pressed="false"
+                    >{{ $course->lessons->count() > 1 ? '1-' . $course->lessons->count() : '1' }}</button>
                 </div>
 
-                <div class="lesson-list-shell">
+                <div class="lesson-list-shell" data-lesson-sort-list>
                     @foreach ($course->lessons as $lesson)
                         @php
                             $lessonLocked = ($courseNeedsPayment ?? false) && !($hasCourseAccess ?? false) && !$lesson->is_preview;

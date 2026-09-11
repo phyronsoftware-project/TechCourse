@@ -50,10 +50,16 @@
                             'active' => request()->routeIs('admin.users.*'),
                         ],
                         [
-                            'label' => 'Enrollments',
+                            'label' => 'Course Access',
                             'icon' => 'check',
                             'route' => route('admin.enrollments.index'),
-                            'active' => request()->routeIs('admin.enrollments.*'),
+                            'active' => request()->routeIs('admin.enrollments.index', 'admin.enrollments.show'),
+                        ],
+                        [
+                            'label' => 'Grant Course Access',
+                            'icon' => 'star',
+                            'route' => route('admin.enrollments.create'),
+                            'active' => request()->routeIs('admin.enrollments.create'),
                         ],
                     ],
                 ],

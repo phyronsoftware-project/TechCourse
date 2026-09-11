@@ -1,11 +1,11 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Create Enrollment')
+@section('title', 'Grant Course Access')
 
 @section('content')
     <section class="admin-form-card p-6">
-        <h2 class="admin-section-title">Create Enrollment</h2>
-        <p class="admin-section-copy">Grant course access to a user.</p>
+        <h2 class="admin-section-title">Grant Course Access</h2>
+        <p class="admin-section-copy">Give a user direct course access without requiring a payment.</p>
 
         <form action="{{ route('admin.enrollments.store') }}" method="POST" class="admin-form-grid mt-6">
             @csrf
@@ -15,7 +15,8 @@
                 <div class="admin-input-group">
                     <select name="user_id" class="admin-select" required>
                         @foreach ($users as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                            {{-- Keep the selected user after validation or when opened from Users. --}}
+                            <option value="{{ $user->id }}" @selected((int) old('user_id', $selectedUserId) === (int) $user->id)>{{ $user->name }} ({{ $user->email }})</option>
                         @endforeach
                     </select>
                     <span class="admin-input-addon">USR</span>
@@ -27,7 +28,7 @@
                 <div class="admin-input-group">
                     <select name="course_id" class="admin-select" required>
                         @foreach ($courses as $course)
-                            <option value="{{ $course->id }}">{{ $course->title }}</option>
+                            <option value="{{ $course->id }}" @selected((int) old('course_id') === (int) $course->id)>{{ $course->title }}</option>
                         @endforeach
                     </select>
                     <span class="admin-input-addon">CRS</span>
@@ -40,7 +41,7 @@
                     <select name="order_id" class="admin-select">
                         <option value="">No order</option>
                         @foreach ($orders as $order)
-                            <option value="{{ $order->id }}">{{ $order->order_no }}</option>
+                            <option value="{{ $order->id }}" @selected((int) old('order_id') === (int) $order->id)>{{ $order->order_no }}</option>
                         @endforeach
                     </select>
                     <span class="admin-input-addon">ORD</span>
@@ -51,9 +52,10 @@
                 <label>Access Type</label>
                 <div class="admin-input-group">
                     <select name="access_type" class="admin-select">
-                        <option value="free">Free</option>
-                        <option value="paid">Paid</option>
-                        <option value="admin_grant">Admin Grant</option>
+                        {{-- Default to an admin grant while retaining existing access types. --}}
+                        <option value="admin_grant" @selected(old('access_type', 'admin_grant') === 'admin_grant')>Admin Grant</option>
+                        <option value="free" @selected(old('access_type') === 'free')>Free</option>
+                        <option value="paid" @selected(old('access_type') === 'paid')>Paid</option>
                     </select>
                     <span class="admin-input-addon">ACC</span>
                 </div>
@@ -63,9 +65,9 @@
                 <label>Status</label>
                 <div class="admin-input-group">
                     <select name="status" class="admin-select">
-                        <option value="active">Active</option>
-                        <option value="expired">Expired</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="active" @selected(old('status', 'active') === 'active')>Active</option>
+                        <option value="expired" @selected(old('status') === 'expired')>Expired</option>
+                        <option value="cancelled" @selected(old('status') === 'cancelled')>Cancelled</option>
                     </select>
                     <span class="admin-input-addon">ST</span>
                 </div>
@@ -82,7 +84,7 @@
             </div>
 
             <div class="admin-form-actions" style="grid-column: 1 / -1;">
-                <button type="submit" class="admin-btn admin-btn-primary">Save Enrollment</button>
+                <button type="submit" class="admin-btn admin-btn-primary">Grant Course Access</button>
                 <a href="{{ route('admin.enrollments.index') }}" class="admin-btn admin-btn-secondary">Cancel</a>
             </div>
         </form>

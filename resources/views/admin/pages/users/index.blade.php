@@ -109,6 +109,16 @@
                                             </svg>
                                             <span>Edit user</span>
                                         </a>
+                                        {{-- Open manual course access with this user already selected. --}}
+                                        <a href="{{ route('admin.enrollments.create', ['user_id' => $user->id]) }}" class="admin-action-link" title="Grant course access">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
+                                                <path d="M12 7v6" />
+                                                <path d="M9 10h6" />
+                                            </svg>
+                                            <span>Grant course access</span>
+                                        </a>
                                         <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Delete this user?');">
                                             @csrf
                                             @method('DELETE')

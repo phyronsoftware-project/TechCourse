@@ -1047,6 +1047,7 @@
             font-weight: 500;
         }
 
+        /* Match the product payment message with the requested success popup. */
         .shop-payment-success-modal[hidden] {
             display: none;
         }
@@ -1059,9 +1060,9 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.36);
+            background: rgba(15, 23, 42, 0.56);
             opacity: 0;
-            transition: opacity 1.5s ease;
+            transition: opacity 300ms ease;
         }
 
         .shop-payment-success-modal.is-open {
@@ -1069,43 +1070,97 @@
         }
 
         .shop-payment-success-card {
-            width: min(360px, calc(100vw - 36px));
-            padding: 34px 26px 28px;
-            border-radius: 20px;
-            background: #FFFFFF;
-            color: #1f2937;
+            position: relative;
+            width: min(360px, calc(100vw - 32px));
+            padding: 30px 26px 26px;
+            overflow: hidden;
+            box-sizing: border-box;
+            border-radius: 18px;
+            background: #fff;
+            color: #0f1f3d;
             text-align: center;
-            box-shadow: 0 20px 55px rgba(0, 0, 0, 0.22);
-            transform: translateY(14px) scale(0.98);
-            transition: transform 1.5s ease;
+            box-shadow: 0 24px 70px rgba(15, 31, 61, 0.24);
+            transform: translateY(18px) scale(0.97);
+            transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .shop-payment-success-modal.is-open .shop-payment-success-card {
             transform: translateY(0) scale(1);
         }
 
-        .shop-payment-success-pray {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 22px;
+        .shop-payment-success-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: #9ca3af;
+            font-size: 1.65rem;
+            font-weight: 300;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .shop-payment-success-icon {
+            width: 88px;
+            height: 88px;
+            margin: 4px auto 18px;
             display: block;
             object-fit: contain;
         }
 
         .shop-payment-success-title {
             margin: 0;
-            color: #202020;
-            font-size: 25px;
-            font-weight: 800;
-            line-height: 1.2;
+            color: #0f1f3d;
+            font-size: 1.8rem;
+            font-weight: 900;
+            line-height: 1.1;
         }
 
         .shop-payment-success-text {
-            margin: 12px auto 24px;
             max-width: 290px;
-            color: #697386;
-            font-size: 14px;
-            line-height: 1.55;
+            margin: 14px auto 22px;
+            color: #74748d;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .shop-payment-success-done {
+            width: 100%;
+            min-height: 50px;
+            border: 0;
+            border-radius: 10px;
+            background: linear-gradient(100deg, #5d95f5 0%, #2467f4 100%);
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(36, 103, 244, 0.2);
+        }
+
+        @media (max-width: 520px) {
+            .shop-payment-success-card {
+                padding: 28px 22px 22px;
+                border-radius: 16px;
+            }
+
+            .shop-payment-success-icon {
+                width: 78px;
+                height: 78px;
+            }
+
+            .shop-payment-success-text {
+                margin: 12px auto 20px;
+                font-size: 0.88rem;
+            }
+
+            .shop-payment-success-done {
+                min-height: 48px;
+                font-size: 1.1rem;
+            }
         }
 
         .shop-related {
@@ -2263,7 +2318,7 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
-            
+
             @include('components.khqr-card', [
                 'cardId' => $shopKhqrCardId,
                 'merchantName' => $shopKhqrMerchantName,
@@ -2315,15 +2370,18 @@
         </div>
     </div>
 
+    {{-- Show the requested success design after a product payment. --}}
     <div class="shop-payment-success-modal" data-shop-payment-success hidden>
         <div class="shop-payment-success-card" role="dialog" aria-modal="true" aria-labelledby="shop-payment-success-title">
-            <img src="{{ asset('logo/pray (1).gif') }}" alt="" class="shop-payment-success-pray" aria-hidden="true">
+            <button type="button" class="shop-payment-success-close" data-shop-payment-success-close aria-label="{{ __('Close') }}">&times;</button>
+            <img src="{{ asset('khqr/check.png') }}" alt="" class="shop-payment-success-icon" aria-hidden="true">
             <h2 class="shop-payment-success-title" id="shop-payment-success-title">
-                {{ __('Payment succeeded!') }}
+                {{ __('Success!') }}
             </h2>
             <p class="shop-payment-success-text">
-                {{ __('Your transaction was completed successfully. Thank you for your purchase!') }}
+                {{ __('Your payment was completed successfully. Thank you for your purchase!') }}
             </p>
+            <button type="button" class="shop-payment-success-done" data-shop-payment-success-close>{{ __('Done') }}</button>
         </div>
     </div>
 
@@ -2401,6 +2459,7 @@
 
             const modal = document.querySelector('[data-shop-khqr-modal]');
             const successModal = document.querySelector('[data-shop-payment-success]');
+            const successCloseButtons = document.querySelectorAll('[data-shop-payment-success-close]');
             const openButton = document.querySelector('[data-shop-khqr-open]');
             const closeButtons = document.querySelectorAll('[data-shop-khqr-close]');
             const jsKhqrEmpty = document.querySelector('[data-shop-js-khqr-empty]');
@@ -2584,6 +2643,20 @@
                 }, 1500);
             };
 
+            // Close the product success popup from Done, close, backdrop, or timer.
+            const closePaymentSuccess = () => {
+                if (!successModal || successModal.hidden) {
+                    return;
+                }
+
+                window.clearTimeout(successHideTimer);
+                successModal.classList.remove('is-open');
+                window.setTimeout(() => {
+                    successModal.hidden = true;
+                    unlockPageScroll();
+                }, 300);
+            };
+
             const showPaymentSuccess = () => {
                 if (!successModal) {
                     return;
@@ -2595,13 +2668,27 @@
                 requestAnimationFrame(() => successModal.classList.add('is-open'));
 
                 // Keep the success message visible for six seconds, then hide it smoothly.
-                successHideTimer = window.setTimeout(() => {
-                    successModal.classList.remove('is-open');
-                    window.setTimeout(() => {
-                        successModal.hidden = true;
-                        unlockPageScroll();
-                    }, 1500);
-                }, 6000);
+                successHideTimer = window.setTimeout(closePaymentSuccess, 6000);
+            };
+
+            // Clear the completed transaction before creating another KHQR payment.
+            const resetShopPaymentState = () => {
+                stopShopStatusPolling();
+                shopPaymentStatusUrl = null;
+                shopStatusLocked = false;
+                window.TechCourseKhqrCards?.setStatus(shopKhqrCardId, 'pending', 'Creating a new payment...');
+
+                const khqrCard = document.querySelector(`[data-khqr-card][data-card-id="${shopKhqrCardId}"]`);
+                const qrWrapper = khqrCard?.querySelector('[data-khqr-wrapper]');
+                const timerNode = khqrCard?.querySelector('[data-khqr-timer]');
+
+                if (qrWrapper) {
+                    qrWrapper.hidden = true;
+                }
+
+                if (timerNode) {
+                    timerNode.textContent = 'Creating a new payment...';
+                }
             };
 
             window.addEventListener('shop:cart-checkout', (event) => {
@@ -2642,6 +2729,7 @@
                     return;
                 }
 
+                resetShopPaymentState();
                 openModal();
                 updatePaymentSummary({
                     quantity: shopCartCheckoutRequest?.items?.reduce((sum, item) => sum + Number(item.qty || 0), 0) || getDetailQuantity(),
@@ -2671,6 +2759,12 @@
                     }
 
                     shopPaymentStatusUrl = `${shopPaymentStatusBaseUrl}/${result.data.payment_id}/bakong-status`;
+                    // Set the new payment state before starting its QR countdown.
+                    window.TechCourseKhqrCards?.setStatus(
+                        shopKhqrCardId,
+                        result.data.status || 'pending',
+                        result.message || '',
+                    );
                     window.TechCourseKhqrCards?.setQr(
                         shopKhqrCardId,
                         result.data.khqr_string,
@@ -2687,14 +2781,26 @@
                 } catch (error) {
                     window.TechCourseKhqrCards?.showToast(error.message || 'Unable to create shop payment.', 'error');
                     shopCartCheckoutRequest = null;
+                    closeModal();
                 } finally {
                     openButton.disabled = false;
                 }
             });
             deliveryProvinceSelect?.addEventListener('change', saveDeliveryProvince);
             closeButtons.forEach((button) => button.addEventListener('click', closeModal));
+            successCloseButtons.forEach((button) => button.addEventListener('click', closePaymentSuccess));
+            successModal?.addEventListener('click', (event) => {
+                if (event.target === successModal) {
+                    closePaymentSuccess();
+                }
+            });
 
             document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && successModal && !successModal.hidden) {
+                    closePaymentSuccess();
+                    return;
+                }
+
                 if (event.key === 'Escape' && !modal.hidden) {
                     closeModal();
                 }

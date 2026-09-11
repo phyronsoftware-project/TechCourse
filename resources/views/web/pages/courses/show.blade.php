@@ -4,7 +4,18 @@
 
 @php
     $previewLesson = $activeLesson;
-    $previewVideo = $previewLesson?->video_url ?: $course->intro_video_url;
+
+    // Display the selected lesson upload or external video in the course preview player.
+    $previewVideo = ($previewLesson?->video_type === 'upload' && $previewLesson?->video_file)
+        ? \App\Support\VideoPlayback::uploadedUrl($previewLesson->video_file)
+        : $previewLesson?->video_url;
+    $previewVideoType = $previewLesson?->video_type;
+
+    if (!$previewVideo) {
+        $previewVideo = $course->intro_video_url;
+        $previewVideoType = null;
+    }
+
     $startLessonRoute = null;
     $checkoutRoute = route('courses.checkout', $course->slug ?: $course->id);
     $loginRedirectRoute = route('web.login', ['redirect' => $checkoutRoute]);
@@ -15,17 +26,8 @@
             : route('learning.show', [$course->slug ?: $course->id, $previewLesson->slug ?: $previewLesson->id]);
     }
 
-    $embedUrl = null;
-
-    if ($previewVideo) {
-        if (str_contains($previewVideo, 'watch?v=')) {
-            $embedUrl = str_replace('watch?v=', 'embed/', $previewVideo);
-        } elseif (str_contains($previewVideo, 'youtu.be/')) {
-            $embedUrl = str_replace('youtu.be/', 'www.youtube.com/embed/', $previewVideo);
-        } elseif (str_contains($previewVideo, 'vimeo.com/')) {
-            $embedUrl = str_replace('vimeo.com/', 'player.vimeo.com/video/', $previewVideo);
-        }
-    }
+    // Build a valid embed URL without breaking YouTube playlist parameters.
+    $embedUrl = \App\Support\VideoPlayback::embedUrl($previewVideo, $previewVideoType);
     $resourceCount = $course->resources->count();
     $courseRouteKey = $course->slug ?: $course->id;
     $canAccessPaidResources = !($courseNeedsPayment ?? false) || ($hasCourseAccess ?? false);
@@ -66,6 +68,8 @@
         .learning-shell {
             width: min(1280px, calc(100% - 32px));
             margin: 0 auto;
+            /* Separate the course video section from the site header. */
+            padding-top: 24px;
             padding-bottom: 56px;
         }
 
@@ -91,6 +95,8 @@
         }
 
         .learning-content-card {
+            /* Keep the main course content boxes with square corners. */
+            border-radius: 0;
             overflow: hidden;
         }
 
@@ -196,6 +202,12 @@
             background: #dbeafe;
             border-color: #bfd8fb;
             color: #155eef;
+        }
+
+        /* Show that a like or save request is currently being processed. */
+        .learning-action-chip:disabled {
+            cursor: wait;
+            opacity: 0.7;
         }
 
         .learning-statline {
@@ -720,16 +732,18 @@
 
                         <div class="learning-actions">
                             @auth
-                                <form action="{{ route('courses.like', $courseRouteKey) }}" method="POST" class="learning-action-form">
+                                {{-- Update the like state without reloading the course page. --}}
+                                <form action="{{ route('courses.like', $courseRouteKey) }}" method="POST" class="learning-action-form" data-course-engagement-form data-async-form data-state-key="is_liked">
                                     @csrf
-                                    <button type="submit" class="learning-action-chip {{ $isLiked ? 'is-active' : '' }}">
+                                    <button type="submit" class="learning-action-chip {{ $isLiked ? 'is-active' : '' }}" aria-pressed="{{ $isLiked ? 'true' : 'false' }}">
                                         <i class="{{ $isLiked ? 'fa-solid' : 'fa-regular' }} fa-heart"></i> {{ __('Like') }}
                                     </button>
                                 </form>
 
-                                <form action="{{ route('courses.save', $courseRouteKey) }}" method="POST" class="learning-action-form">
+                                {{-- Update the saved state without reloading the course page. --}}
+                                <form action="{{ route('courses.save', $courseRouteKey) }}" method="POST" class="learning-action-form" data-course-engagement-form data-async-form data-state-key="is_saved">
                                     @csrf
-                                    <button type="submit" class="learning-action-chip {{ $isSaved ? 'is-active' : '' }}">
+                                    <button type="submit" class="learning-action-chip {{ $isSaved ? 'is-active' : '' }}" aria-pressed="{{ $isSaved ? 'true' : 'false' }}">
                                         <i class="{{ $isSaved ? 'fa-solid' : 'fa-regular' }} fa-bookmark"></i> {{ __('Save List') }}
                                     </button>
                                 </form>
@@ -861,11 +875,20 @@
             <aside class="learning-sidebar-card">
                 <div class="learning-sidebar-head">
                     <h3>{{ $course->title }}</h3>
-                    <span>{{ __('Sort Lesson') }}</span>
+                    {{-- Toggle lesson boxes between ascending and descending order. --}}
+                    <button
+                        type="button"
+                        class="lesson-sort-toggle"
+                        data-lesson-sort-toggle
+                        data-ascending-label="{{ $course->lessons->count() > 1 ? '1-' . $course->lessons->count() : '1' }}"
+                        data-descending-label="{{ $course->lessons->count() > 1 ? $course->lessons->count() . '-1' : '1' }}"
+                        aria-label="{{ __('Sort Lesson') }}"
+                        aria-pressed="false"
+                    >{{ $course->lessons->count() > 1 ? '1-' . $course->lessons->count() : '1' }}</button>
                 </div>
 
                 @if ($course->lessons->count())
-                    <div class="learning-lesson-list">
+                    <div class="learning-lesson-list" data-lesson-sort-list>
                         @foreach ($course->lessons as $lesson)
                             @php
                                 $lessonLocked = ($courseNeedsPayment ?? false) && !($hasCourseAccess ?? false) && !$lesson->is_preview;
@@ -935,6 +958,51 @@
 
                     if (url && item.getAttribute('href') !== url) {
                         window.location.href = url;
+                    }
+                });
+            });
+
+            // Submit course like and save actions without refreshing the page.
+            document.querySelectorAll('[data-course-engagement-form]').forEach((form) => {
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    const button = form.querySelector('button[type="submit"]');
+                    const icon = button?.querySelector('i');
+
+                    if (!button || button.disabled) {
+                        return;
+                    }
+
+                    button.disabled = true;
+                    window.TechCoursePageLoader?.hide?.();
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            body: new FormData(form),
+                        });
+                        const payload = await response.json().catch(() => ({}));
+
+                        if (!response.ok) {
+                            throw new Error(payload.message || @json(__('Unable to update this course right now.')));
+                        }
+
+                        const isActive = Boolean(payload.data?.[form.dataset.stateKey]);
+                        button.classList.toggle('is-active', isActive);
+                        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                        icon?.classList.toggle('fa-solid', isActive);
+                        icon?.classList.toggle('fa-regular', !isActive);
+                    } catch (error) {
+                        window.alert(error.message || @json(__('Unable to update this course right now.')));
+                    } finally {
+                        button.disabled = false;
+                        window.TechCoursePageLoader?.hide?.();
                     }
                 });
             });
