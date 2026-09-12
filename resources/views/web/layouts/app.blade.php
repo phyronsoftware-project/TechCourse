@@ -3179,6 +3179,29 @@
                 color: #f8fafc !important;
             }
 
+            /* Keep notification cards black and readable in dark mode. */
+            html[data-web-theme='dark'] body.web-shell .header-notification__item,
+            html[data-web-theme='dark'] body.web-shell .header-box ul li a.header-notification__item,
+            html[data-web-theme='dark'] body.web-shell .navbar.offcanvas-right .drawer__menu li a.header-notification__item,
+            html[data-web-theme='dark'] body.web-shell .header-notification__item:hover,
+            html[data-web-theme='dark'] body.web-shell .header-notification__item.is-unread {
+                background: #000000 !important;
+                background-image: none !important;
+                border-color: #26313a !important;
+            }
+
+            /* Keep notification labels visible on the black card background. */
+            html[data-web-theme='dark'] body.web-shell .header-notification__panel-head strong,
+            html[data-web-theme='dark'] body.web-shell .header-notification__item-content strong {
+                color: #f8fafc !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .header-notification__panel-head span,
+            html[data-web-theme='dark'] body.web-shell .header-notification__item-message,
+            html[data-web-theme='dark'] body.web-shell .header-notification__item-time {
+                color: #cbd5e1 !important;
+            }
+
             /* Keep dark text and icons readable when a badge keeps its light background. */
             html[data-web-theme='dark'] body.web-shell .web-main :where(
                 .hero-kicker,

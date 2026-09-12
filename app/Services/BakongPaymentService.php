@@ -117,6 +117,11 @@ class BakongPaymentService
         }
 
         if (! $this->isBakongPaid($result)) {
+            // Quota exhaustion is inconclusive, so never expire a payment that may already be paid.
+            if ((int) data_get($result, 'errorCode', 0) === 17) {
+                return $payment->fresh();
+            }
+
             // Check Bakong once before expiring so a payment made near the deadline is not missed.
             if ($payment->isExpired()) {
                 $payment->forceFill(['status' => 'expired'])->save();
@@ -239,6 +244,7 @@ class BakongPaymentService
         ];
 
         $lastException = null;
+        $quotaResponse = null;
 
         foreach ($paths as $path) {
             try {
@@ -274,6 +280,12 @@ class BakongPaymentService
                         return $data;
                     }
 
+                    // Preserve quota exhaustion as pending even when the fallback endpoint is forbidden.
+                    if ($errorCode === 17) {
+                        $quotaResponse = $data;
+                        continue;
+                    }
+
                     throw new RuntimeException($message !== '' ? $message : 'Bakong API returned an error.', 503);
                 }
 
@@ -281,6 +293,10 @@ class BakongPaymentService
             } catch (Throwable $exception) {
                 $lastException = $exception;
             }
+        }
+
+        if (is_array($quotaResponse)) {
+            return $quotaResponse;
         }
 
         if ($lastException instanceof RuntimeException) {

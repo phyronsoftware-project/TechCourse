@@ -215,7 +215,27 @@ class ShopBakongPaymentService
             throw new RuntimeException('Shop payment tables are not configured yet.');
         }
 
-        $this->reconcileExpiredPaymentsForUser($user);
+        $reconciledPayment = $this->reconcileExpiredPaymentsForUser($user);
+
+        // Return a recovered cart payment so the existing frontend can show its success popup.
+        if ($reconciledPayment?->status === 'success'
+            && data_get($reconciledPayment->bakong_response, 'khqr_generation.cart_checkout') === true) {
+            return $reconciledPayment;
+        }
+
+        // Prevent a second charge while an earlier cart payment waits for Bakong quota recovery.
+        $unresolvedQuotaPayment = ShopPayment::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'failed'])
+            ->latest('id')
+            ->limit(10)
+            ->get()
+            ->first(fn (ShopPayment $payment) => $this->hasRetryableQuotaFailure($payment)
+                && data_get($payment->bakong_response, 'khqr_generation.cart_checkout') === true);
+
+        if ($unresolvedQuotaPayment) {
+            throw new RuntimeException('Your previous cart payment is waiting for Bakong confirmation. Please try again later without paying again.');
+        }
 
         $deliveryProvince = $user->deliveryProvince()->where('is_active', true)->first();
         if (! $deliveryProvince) {
@@ -387,7 +407,9 @@ class ShopBakongPaymentService
             return $payment;
         }
 
-        if (in_array($payment->status, ['failed', 'cancelled'], true)) {
+        // Retry rows that were marked failed only because the Bakong daily lookup quota was unavailable.
+        if ($payment->status === 'cancelled'
+            || ($payment->status === 'failed' && ! $this->hasRetryableQuotaFailure($payment))) {
             return $payment;
         }
 
@@ -401,6 +423,13 @@ class ShopBakongPaymentService
 
         if (! $this->isPaid($response)) {
             $errorCode = (int) data_get($response, 'errorCode', 0);
+
+            // API quota exhaustion cannot prove that the customer's payment failed.
+            if ($errorCode === 17) {
+                $payment->setAttribute('status', 'pending');
+
+                return $payment;
+            }
 
             if ($errorCode !== 0 && $errorCode !== 1) {
                 return $this->closeUnpaidCheckout($payment, 'failed');
@@ -452,11 +481,12 @@ class ShopBakongPaymentService
             }
 
             $paidAt = now();
-            $wasExpired = $lockedPayment->status === 'expired';
+            // Expired and quota-failed rows already released stock and must reserve it again after confirmation.
+            $stockWasReleased = in_array($lockedPayment->status, ['expired', 'failed'], true);
             $order = $lockedPayment->order()->lockForUpdate()->firstOrFail();
             $orderStatus = $hasNewerSuccess ? 'paid_review' : 'paid';
 
-            if ($wasExpired && ! $hasNewerSuccess) {
+            if ($stockWasReleased && ! $hasNewerSuccess) {
                 foreach ($order->items()->get() as $item) {
                     $product = ShopProduct::query()->lockForUpdate()->find($item->product_id);
                     if (! $product || (int) $product->stock_qty < (int) $item->qty) {
@@ -498,6 +528,12 @@ class ShopBakongPaymentService
         });
     }
 
+    // Recognize old shop rows that failed only because Bakong returned its daily quota error.
+    protected function hasRetryableQuotaFailure(ShopPayment $payment): bool
+    {
+        return (int) data_get($payment->bakong_response, 'check_transaction_by_md5.errorCode', 0) === 17;
+    }
+
     // Reconcile stale KHQR rows when no checkout browser remains open to poll them.
     public function syncExpiredPendingPayments(int $limit = 25): void
     {
@@ -536,12 +572,17 @@ class ShopBakongPaymentService
 
         ShopPayment::query()
             ->where('user_id', $user->id)
-            ->whereIn('status', ['pending', 'expired'])
+            // Retry quota-failed rows because their payment result was never actually confirmed.
+            ->whereIn('status', ['pending', 'expired', 'failed'])
             ->where('expired_at', '<=', now())
             ->latest('id')
             ->limit(10)
             ->get()
             ->filter(function (ShopPayment $payment): bool {
+                if ($payment->status === 'failed' && ! $this->hasRetryableQuotaFailure($payment)) {
+                    return false;
+                }
+
                 if ($payment->status === 'pending') {
                     return true;
                 }
@@ -592,6 +633,7 @@ class ShopBakongPaymentService
         }
 
         $baseUrl = rtrim((string) config('bakong.open_api_base_url'), '/');
+        $quotaResponse = null;
 
         foreach (['/v1/check_transaction_by_md5', '/local/v1/check_transaction_by_md5'] as $path) {
             $response = Http::acceptJson()
@@ -611,7 +653,21 @@ class ShopBakongPaymentService
                 throw new RuntimeException('Bakong API is unavailable right now.');
             }
 
-            return $response->json();
+            $data = $response->json();
+            $responseCode = (int) data_get($data, 'responseCode', 1);
+            $errorCode = (int) data_get($data, 'errorCode', 0);
+
+            // Fall back to the local Bakong endpoint when the first endpoint has exhausted its quota.
+            if ($responseCode !== 0 && $errorCode === 17) {
+                $quotaResponse = $data;
+                continue;
+            }
+
+            return $data;
+        }
+
+        if (is_array($quotaResponse)) {
+            return $quotaResponse;
         }
 
         throw new RuntimeException('Bakong transaction status endpoint was not found.');

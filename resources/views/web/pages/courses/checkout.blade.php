@@ -768,6 +768,8 @@
             const successRedirectUrl = @json($successRedirectUrl);
             const statusText = document.querySelector('[data-payment-status-text]');
             let pollTimer = null;
+            let pollAttempt = 0;
+            let statusChecking = false;
             let statusLocked = false;
             let successTimer = null;
             // Reuse the shared layout helper so course checkout popup fully freezes page scroll.
@@ -863,8 +865,19 @@
                     return;
                 }
 
-                checkPaymentStatus();
-                pollTimer = window.setInterval(checkPaymentStatus, 3000);
+                scheduleStatusCheck(0);
+            }
+
+            // Back off repeated checks so the checkout does not exhaust the Bakong daily quota.
+            function scheduleStatusCheck(delay) {
+                if (pollTimer || statusLocked) {
+                    return;
+                }
+
+                pollTimer = window.setTimeout(() => {
+                    pollTimer = null;
+                    checkPaymentStatus();
+                }, delay);
             }
 
             function stopStatusPolling() {
@@ -872,14 +885,16 @@
                     return;
                 }
 
-                window.clearInterval(pollTimer);
+                window.clearTimeout(pollTimer);
                 pollTimer = null;
             }
 
             async function checkPaymentStatus() {
-                if (statusLocked) {
+                if (statusLocked || statusChecking) {
                     return;
                 }
+
+                statusChecking = true;
 
                 try {
                     const response = await window.fetch(paymentStatusUrl, {
@@ -918,13 +933,22 @@
                         stopStatusPolling();
                         window.TechCourseKhqrCards?.setStatus(khqrCardId, 'failed', 'Payment verification failed. Please contact support or try again.');
                         window.TechCourseKhqrCards?.showToast('Payment verification failed.', 'error');
+                        return;
                     }
+
+                    const nextDelay = Math.min(5000 * (2 ** Math.min(pollAttempt, 4)), 60000);
+                    pollAttempt += 1;
+                    scheduleStatusCheck(nextDelay);
                 } catch (error) {
                     console.error('Bakong payment status polling failed.', error);
                     if (statusText) {
                         statusText.textContent = 'check_error';
                     }
                     window.TechCourseKhqrCards?.setStatus(khqrCardId, 'pending', 'Unable to check payment status right now.');
+                    pollAttempt += 1;
+                    scheduleStatusCheck(60000);
+                } finally {
+                    statusChecking = false;
                 }
             }
 

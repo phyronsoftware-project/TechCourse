@@ -1060,9 +1060,9 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: rgba(15, 23, 42, 0.56);
+            background: rgba(0, 0, 0, 0.72);
             opacity: 0;
-            transition: opacity 300ms ease;
+            transition: opacity 1.5s ease;
         }
 
         .shop-payment-success-modal.is-open {
@@ -1070,18 +1070,15 @@
         }
 
         .shop-payment-success-card {
-            position: relative;
-            width: min(360px, calc(100vw - 32px));
-            padding: 30px 26px 26px;
-            overflow: hidden;
-            box-sizing: border-box;
-            border-radius: 18px;
-            background: #fff;
-            color: #0f1f3d;
+            width: min(360px, calc(100vw - 36px));
+            padding: 34px 26px 28px;
+            border-radius: 20px;
+            background: #FFFFFF;
+            color: #1f2937;
             text-align: center;
-            box-shadow: 0 24px 70px rgba(15, 31, 61, 0.24);
-            transform: translateY(18px) scale(0.97);
-            transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 20px 55px rgba(0, 0, 0, 0.22);
+            transform: translateY(14px) scale(0.98);
+            transition: transform 1.5s ease;
         }
 
         .shop-payment-success-modal.is-open .shop-payment-success-card {
@@ -1105,27 +1102,28 @@
         }
 
         .shop-payment-success-icon {
-            width: 88px;
-            height: 88px;
-            margin: 4px auto 18px;
+            /* Match the enlarged payment artwork used by the course success popup. */
+            width: 180px;
+            height: 115px;
+            margin: 0 auto 18px;
             display: block;
             object-fit: contain;
         }
 
         .shop-payment-success-title {
             margin: 0;
-            color: #0f1f3d;
-            font-size: 1.8rem;
-            font-weight: 900;
-            line-height: 1.1;
+            color: #202020;
+            font-size: 25px;
+            font-weight: 800;
+            line-height: 1.2;
         }
 
         .shop-payment-success-text {
             max-width: 290px;
-            margin: 14px auto 22px;
-            color: #74748d;
-            font-size: 0.92rem;
-            line-height: 1.5;
+            margin: 12px auto 0;
+            color: #697386;
+            font-size: 14px;
+            line-height: 1.55;
         }
 
         .shop-payment-success-done {
@@ -1139,28 +1137,6 @@
             font-weight: 800;
             cursor: pointer;
             box-shadow: 0 10px 24px rgba(36, 103, 244, 0.2);
-        }
-
-        @media (max-width: 520px) {
-            .shop-payment-success-card {
-                padding: 28px 22px 22px;
-                border-radius: 16px;
-            }
-
-            .shop-payment-success-icon {
-                width: 78px;
-                height: 78px;
-            }
-
-            .shop-payment-success-text {
-                margin: 12px auto 20px;
-                font-size: 0.88rem;
-            }
-
-            .shop-payment-success-done {
-                min-height: 48px;
-                font-size: 1.1rem;
-            }
         }
 
         .shop-related {
@@ -2373,15 +2349,14 @@
     {{-- Show the requested success design after a product payment. --}}
     <div class="shop-payment-success-modal" data-shop-payment-success hidden>
         <div class="shop-payment-success-card" role="dialog" aria-modal="true" aria-labelledby="shop-payment-success-title">
-            <button type="button" class="shop-payment-success-close" data-shop-payment-success-close aria-label="{{ __('Close') }}">&times;</button>
-            <img src="{{ asset('khqr/check.png') }}" alt="" class="shop-payment-success-icon" aria-hidden="true">
+            {{-- Reuse the same success artwork displayed after a course payment. --}}
+            <img src="{{ asset('ABA_Images/icon_payment.png') }}" alt="" class="shop-payment-success-icon" aria-hidden="true">
             <h2 class="shop-payment-success-title" id="shop-payment-success-title">
-                {{ __('Success!') }}
+                {{ __('Payment succeeded!') }}
             </h2>
             <p class="shop-payment-success-text">
-                {{ __('Your payment was completed successfully. Thank you for your purchase!') }}
+                {{ __('Your transaction was completed successfully. Thank you for your purchase!') }}
             </p>
-            <button type="button" class="shop-payment-success-done" data-shop-payment-success-close>{{ __('Done') }}</button>
         </div>
     </div>
 

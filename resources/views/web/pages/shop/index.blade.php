@@ -1678,6 +1678,7 @@
             const csrfToken = @json(csrf_token());
             const deliveryReady = @json((bool) $selectedProvince);
             let pollTimer = null;
+            let pollAttempt = 0;
             let paymentStatusUrl = null;
 
             if (!checkoutModal) {
@@ -1695,6 +1696,7 @@
                     pollTimer = null;
                 }
 
+                pollAttempt = 0;
                 paymentStatusUrl = null;
                 checkoutModal.classList.remove('is-open');
 
@@ -1798,10 +1800,14 @@
                     }
 
                     checkoutStatus.textContent = 'Waiting for payment confirmation...';
-                    scheduleStatusCheck(3000);
+                    // Back off status checks so one checkout does not exhaust the Bakong daily quota.
+                    const nextDelay = Math.min(5000 * (2 ** Math.min(pollAttempt, 4)), 60000);
+                    pollAttempt += 1;
+                    scheduleStatusCheck(nextDelay);
                 } catch (error) {
                     checkoutStatus.textContent = 'Checking payment status again...';
-                    scheduleStatusCheck(5000);
+                    pollAttempt += 1;
+                    scheduleStatusCheck(60000);
                 }
             }
 
@@ -1816,6 +1822,8 @@
                 }
 
                 renderCheckout(items);
+                // Start each cart payment with a fresh polling backoff sequence.
+                pollAttempt = 0;
                 checkoutModal.hidden = false;
                 lockPage();
                 requestAnimationFrame(() => checkoutModal.classList.add('is-open'));

@@ -78,6 +78,39 @@ class BakongPaymentStatusTest extends TestCase
         ]);
     }
 
+    public function test_course_payment_quota_error_remains_pending_when_local_endpoint_is_forbidden(): void
+    {
+        Http::fake([
+            'https://api-bakong.test/v1/check_transaction_by_md5' => Http::response([
+                'data' => null,
+                'errorCode' => 17,
+                'responseCode' => 1,
+                'responseMessage' => 'Daily request limit of 100 exceeded. Please try again tomorrow.',
+            ]),
+            'https://api-bakong.test/local/v1/check_transaction_by_md5' => Http::response(null, 403),
+        ]);
+
+        $payment = Payment::query()->create([
+            'payment_no' => 'PAY-TEST-QUOTA',
+            'payment_provider' => 'bakong_open_api',
+            'amount' => 20,
+            'currency' => 'USD',
+            'khqr_md5' => 'test-md5',
+            'status' => 'pending',
+            'expired_at' => now()->subSecond(),
+        ]);
+
+        // Keep course checkout pending when Bakong quota prevents a conclusive verification.
+        $checked = (new BakongPaymentService(
+            Mockery::mock(BakongKhqrService::class),
+            app(PaymentHistoryService::class),
+        ))->checkPaymentStatus($payment);
+
+        $this->assertSame('pending', $checked->status);
+        $this->assertSame(17, data_get($checked->bakong_response, 'check_transaction_by_md5.errorCode'));
+        Http::assertSentCount(2);
+    }
+
     public function test_shop_payment_success_marks_order_paid_with_real_hash(): void
     {
         Http::fake([
@@ -91,6 +124,84 @@ class BakongPaymentStatusTest extends TestCase
         $this->assertSame(str_repeat('a', 64), $checked->transaction_hash);
         $this->assertSame('paid', $order->fresh()->status);
         $this->assertNotNull($checked->paid_at);
+        $this->assertSame(0, ShopProduct::query()->value('stock_qty'));
+    }
+
+    public function test_shop_payment_stays_pending_when_bakong_daily_limit_is_exceeded(): void
+    {
+        Http::fake([
+            'https://api-bakong.test/v1/check_transaction_by_md5' => Http::response([
+                'responseCode' => 1,
+                'responseMessage' => 'Daily request limit of 100 exceeded. Please try again tomorrow.',
+                'errorCode' => 17,
+                'data' => null,
+            ]),
+            'https://api-bakong.test/local/v1/check_transaction_by_md5' => Http::response([
+                'responseCode' => 1,
+                'responseMessage' => 'Daily request limit of 100 exceeded. Please try again tomorrow.',
+                'errorCode' => 17,
+                'data' => null,
+            ]),
+        ]);
+
+        [$payment, $order] = $this->createPendingShopPayment(now()->addMinute());
+
+        // Keep an unverified bank payment pending when only the API quota is unavailable.
+        $checked = $this->shopService()->checkStatus($payment);
+
+        $this->assertSame('pending', $checked->status);
+        $this->assertSame('pending', $payment->fresh()->status);
+        $this->assertSame('pending', $order->fresh()->status);
+        $this->assertSame(0, ShopProduct::query()->value('stock_qty'));
+    }
+
+    public function test_shop_payment_uses_local_endpoint_when_primary_endpoint_quota_is_exceeded(): void
+    {
+        Http::fake([
+            'https://api-bakong.test/v1/check_transaction_by_md5' => Http::response([
+                'responseCode' => 1,
+                'responseMessage' => 'Daily request limit of 100 exceeded. Please try again tomorrow.',
+                'errorCode' => 17,
+                'data' => null,
+            ]),
+            'https://api-bakong.test/local/v1/check_transaction_by_md5' => Http::response($this->paidResponse()),
+        ]);
+
+        [$payment, $order] = $this->createPendingShopPayment(now()->addMinute());
+
+        // Confirm the product payment through the same fallback endpoint used by course payments.
+        $checked = $this->shopService()->checkStatus($payment);
+
+        $this->assertSame('success', $checked->status);
+        $this->assertSame('paid', $order->fresh()->status);
+        Http::assertSentCount(2);
+    }
+
+    public function test_shop_payment_recovers_after_an_old_quota_failure_is_confirmed(): void
+    {
+        Http::fake([
+            'https://api-bakong.test/v1/check_transaction_by_md5' => Http::response($this->paidResponse()),
+        ]);
+
+        [$payment, $order] = $this->createPendingShopPayment(now()->addMinute());
+        ShopProduct::query()->increment('stock_qty');
+        $order->forceFill(['status' => 'failed'])->save();
+        $payment->forceFill([
+            'status' => 'failed',
+            'bakong_response' => [
+                'check_transaction_by_md5' => [
+                    'responseCode' => 1,
+                    'errorCode' => 17,
+                    'responseMessage' => 'Daily request limit exceeded.',
+                ],
+            ],
+        ])->save();
+
+        // Recheck a falsely failed quota row and reserve its released stock after confirmation.
+        $checked = $this->shopService()->checkStatus($payment->fresh());
+
+        $this->assertSame('success', $checked->status);
+        $this->assertSame('paid', $order->fresh()->status);
         $this->assertSame(0, ShopProduct::query()->value('stock_qty'));
     }
 
