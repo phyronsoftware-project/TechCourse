@@ -33,6 +33,14 @@
             gap: 10px;
         }
 
+        /* Keep the course filter row transparent in dark mode. */
+        html[data-web-theme='dark'] body.web-shell .web-main .course-toolbar {
+            background: transparent !important;
+            background-image: none !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+        }
+
         .course-toolbar-menu {
             position: relative;
         }

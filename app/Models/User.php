@@ -47,6 +47,16 @@ class User extends Authenticatable
         return $this->hasMany(CourseEnrollment::class);
     }
 
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    public function subscriptionCouponUsages(): HasMany
+    {
+        return $this->hasMany(SubscriptionCouponUsage::class);
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);

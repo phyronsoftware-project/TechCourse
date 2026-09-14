@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Models\CourseCategory;
 use App\Services\NotificationService;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
@@ -29,6 +31,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Keep Remember Me authentication aligned with the seven-day session lifetime.
+        $authGuard = Auth::guard();
+
+        if ($authGuard instanceof SessionGuard) {
+            $authGuard->setRememberDuration((int) config('session.lifetime'));
+        }
+
         $appUrlHost = parse_url((string) config('app.url'), PHP_URL_HOST);
         $isLocalHost = in_array($appUrlHost, ['localhost', '127.0.0.1'], true);
 

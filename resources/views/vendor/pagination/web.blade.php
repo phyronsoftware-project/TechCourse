@@ -4,29 +4,22 @@
         $lastPage = $paginator->lastPage();
         $pages = [];
 
-        if ($lastPage <= 7) {
-            $pages = range(1, $lastPage);
-        } else {
-            $pages = [1, 2];
-
-            if ($currentPage <= 3) {
-                $pages[] = 3;
-                $pages[] = '...';
-            } elseif ($currentPage >= $lastPage - 2) {
-                $pages[] = '...';
-                $pages[] = $lastPage - 2;
-            } else {
-                $pages[] = '...';
-                $pages[] = $currentPage - 1;
-                $pages[] = $currentPage;
+        // Show the first, current neighbors, and last page with gaps like the requested example.
+        $visiblePages = [1, $lastPage];
+        for ($page = max(1, $currentPage - 1); $page <= min($lastPage, $currentPage + 1); $page++) {
+            $visiblePages[] = $page;
+        }
+        $visiblePages = array_values(array_unique($visiblePages));
+        sort($visiblePages);
+        $previousVisiblePage = 0;
+        foreach ($visiblePages as $page) {
+            if ($previousVisiblePage && $page - $previousVisiblePage === 2) {
+                $pages[] = $previousVisiblePage + 1;
+            } elseif ($previousVisiblePage && $page - $previousVisiblePage > 2) {
                 $pages[] = '...';
             }
-
-            $pages[] = $lastPage - 1;
-            $pages[] = $lastPage;
-            $pages = array_values(array_unique(array_filter($pages, static function ($page) use ($lastPage) {
-                return $page === '...' || ($page >= 1 && $page <= $lastPage);
-            }), SORT_REGULAR));
+            $pages[] = $page;
+            $previousVisiblePage = $page;
         }
     @endphp
 
@@ -48,7 +41,7 @@
                 @elseif ($page == $currentPage)
                     <span class="web-page-btn is-active" aria-current="page">{{ $page }}</span>
                 @else
-                    <a href="{{ $paginator->url($page) }}" class="web-page-btn">{{ $page }}</a>
+                    <a href="{{ $paginator->url($page) }}" class="web-page-btn" aria-label="{{ __('Page :page', ['page' => $page]) }}">{{ $page }}</a>
                 @endif
             @endforeach
         </div>

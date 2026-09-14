@@ -18,6 +18,7 @@
     $navItems = [
         ['label' => __('Home'), 'href' => route('home'), 'active' => request()->routeIs('home')],
         ['label' => __('Course'), 'href' => route('courses.index'), 'active' => request()->routeIs('courses.*')],
+        ['label' => __('Plans'), 'href' => route('subscriptions.index'), 'active' => request()->routeIs('subscriptions.*')],
         ['label' => app()->getLocale() === 'km' ? 'បច្ចេកវិទ្យា' : 'Technology', 'href' => route('service'), 'active' => request()->routeIs('service')],
         ['label' => __('Shop'), 'href' => route('shop.index'), 'active' => request()->routeIs('shop.*')],
         ['label' => __('About Us'), 'href' => route('about'), 'active' => request()->routeIs('about')],
@@ -98,8 +99,9 @@
                 <li class="auth-item">
                     <div class="header-auth-actions">
                         @auth
-                            @if (in_array($authUser?->role, ['admin', 'super_admin'], true))
-                                <a href="{{ route('admin.dashboard') }}" class="header-auth-user" data-web-menu-close>
+                            {{-- Keep account actions together in an accessible animated profile menu. --}}
+                            <div class="header-profile" data-web-profile>
+                                <button type="button" class="header-auth-user header-profile__toggle" data-web-profile-toggle aria-expanded="false" aria-haspopup="true" aria-label="{{ __('Account menu') }}">
                                     <span class="header-auth-user__avatar">
                                         @if ($authUser?->avatar_url)
                                             <img src="{{ $authUser->avatar_url }}" alt="{{ $authUser?->name }}" class="header-auth-user__avatar-image">
@@ -111,22 +113,16 @@
                                         <strong>{{ $authUser?->name }}</strong>
                                         <span>{{ $authUser?->email }}</span>
                                     </span>
-                                </a>
-                            @else
-                                <a href="{{ route('profile.show') }}" class="header-auth-user" data-web-menu-close>
-                                    <span class="header-auth-user__avatar">
-                                        @if ($authUser?->avatar_url)
-                                            <img src="{{ $authUser->avatar_url }}" alt="{{ $authUser?->name }}" class="header-auth-user__avatar-image">
-                                        @else
-                                            {{ $userInitial }}
-                                        @endif
-                                    </span>
-                                    <span class="header-auth-user__content">
-                                        <strong>{{ $authUser?->name }}</strong>
-                                        <span>{{ $authUser?->email }}</span>
-                                    </span>
-                                </a>
-                            @endif
+                                    <i class="fa-solid fa-chevron-down header-profile__caret" aria-hidden="true"></i>
+                                </button>
+                                <div class="header-profile__menu" data-web-profile-menu hidden>
+                                    <a href="{{ route('profile.show') }}" data-web-menu-close><i class="fa-regular fa-user" aria-hidden="true"></i>{{ __('Profile') }}</a>
+                                    <form action="{{ route('web.logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>{{ __('Logout') }}</button>
+                                    </form>
+                                </div>
+                            </div>
 
                             <span class="header-auth-divider" aria-hidden="true"></span>
 
@@ -201,13 +197,6 @@
                                 </div>
                             </div>
 
-                            <form action="{{ route('web.logout') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="header-auth-btn header-auth-btn-logout" aria-label="{{ __('Logout') }}" title="{{ __('Logout') }}">
-                                    <i class="fa-solid fa-right-from-bracket"></i>
-                                    <span class="header-auth-btn__label">{{ __('Logout') }}</span>
-                                </button>
-                            </form>
                         @endauth
 
                         @guest

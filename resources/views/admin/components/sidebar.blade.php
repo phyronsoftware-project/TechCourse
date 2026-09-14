@@ -64,6 +64,36 @@
                     ],
                 ],
                 [
+                    'label' => 'Subscriptions',
+                    'icon' => 'wallet',
+                    'children' => [
+                        [
+                            'label' => 'Plans',
+                            'icon' => 'ticket',
+                            'route' => route('admin.subscription-plans.index'),
+                            'active' => request()->routeIs('admin.subscription-plans.*'),
+                        ],
+                        [
+                            'label' => 'Coupons',
+                            'icon' => 'ticket',
+                            'route' => route('admin.subscription-coupons.index'),
+                            'active' => request()->routeIs('admin.subscription-coupons.*'),
+                        ],
+                        [
+                            'label' => 'Subscribers',
+                            'icon' => 'users',
+                            'route' => route('admin.user-subscriptions.index'),
+                            'active' => request()->routeIs('admin.user-subscriptions.index'),
+                        ],
+                        [
+                            'label' => 'Assign Plan',
+                            'icon' => 'star',
+                            'route' => route('admin.user-subscriptions.create'),
+                            'active' => request()->routeIs('admin.user-subscriptions.create'),
+                        ],
+                    ],
+                ],
+                [
                     'label' => 'Shopping',
                     'icon' => 'ticket',
                     'children' => [

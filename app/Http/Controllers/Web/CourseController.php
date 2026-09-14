@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
-use App\Models\CourseEnrollment;
 use App\Models\CourseFavorite;
 use App\Models\CourseReview;
 use App\Models\CourseSave;
 use App\Models\CourseCategory;
+use App\Services\CourseAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -18,6 +18,10 @@ use Throwable;
 
 class CourseController extends Controller
 {
+    public function __construct(protected CourseAccessService $courseAccessService)
+    {
+    }
+
     public function index(Request $request): View
     {
         $query = Course::query()
@@ -163,15 +167,8 @@ class CourseController extends Controller
 
     protected function userHasCourseAccess(int $courseId): bool
     {
-        if (! Auth::check()) {
-            return false;
-        }
-
-        return CourseEnrollment::query()
-            ->where('user_id', Auth::id())
-            ->where('course_id', $courseId)
-            ->where('status', 'active')
-            ->exists();
+        // Resolve both direct enrollment and subscription access in one place.
+        return $this->courseAccessService->userHasCourseAccess(Auth::user(), $courseId);
     }
 
     protected function courseNeedsPayment(Course $course): bool

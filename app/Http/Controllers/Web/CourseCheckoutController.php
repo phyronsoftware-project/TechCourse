@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Services\BakongKhqrService;
 use App\Services\BakongOpenApiService;
 use App\Services\BakongPaymentService;
+use App\Services\CourseAccessService;
 use App\Services\PaymentHistoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -26,7 +27,8 @@ use Throwable;
 class CourseCheckoutController extends Controller
 {
     public function __construct(
-        protected PaymentHistoryService $paymentHistoryService
+        protected PaymentHistoryService $paymentHistoryService,
+        protected CourseAccessService $courseAccessService
     ) {}
 
     public function show(
@@ -494,15 +496,8 @@ class CourseCheckoutController extends Controller
     // ABA checkout uses a short unique tran id for KHQR generation requests.
     protected function userHasCourseAccess(int $courseId): bool
     {
-        if (! Auth::check()) {
-            return false;
-        }
-
-        return CourseEnrollment::query()
-            ->where('user_id', Auth::id())
-            ->where('course_id', $courseId)
-            ->where('status', 'active')
-            ->exists();
+        // Avoid charging a learner who already owns the course through a plan.
+        return $this->courseAccessService->userHasCourseAccess(Auth::user(), $courseId);
     }
 
     protected function courseIsFree(Course $course): bool

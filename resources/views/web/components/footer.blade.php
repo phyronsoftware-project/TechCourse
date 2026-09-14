@@ -18,12 +18,13 @@
         <div class="fo1 footer-download-panel">
             <h3>{{ __('Download TechCourse App') }}</h3>
             <div class="footer-store-links footer-store-links--panel">
-                <a href="#" aria-label="{{ __('Download on the App Store') }}">
+                {{-- Store badges announce availability without navigating to an empty link. --}}
+                <button type="button" data-footer-store-open aria-label="{{ __('Download on the App Store') }}">
                     <img src="{{ asset('ABA_Images/appstore.png') }}" alt="{{ __('Download on the App Store') }}">
-                </a>
-                <a href="#" aria-label="{{ __('Get it on Google Play') }}">
+                </button>
+                <button type="button" data-footer-store-open aria-label="{{ __('Get it on Google Play') }}">
                     <img src="{{ asset('ABA_Images/Playstore.png') }}" alt="{{ __('Get it on Google Play') }}">
-                </a>
+                </button>
             </div>
         </div>
 
@@ -57,7 +58,7 @@
             <ul class="sol" data-footer-social-list data-api-url="{{ route('api.social-media.index') }}">
                 @foreach ($socialMediaFallback as $social)
                     <li>
-                        <a href="{{ $social['url'] }}" target="_blank" rel="noopener noreferrer" aria-label="{{ $social['name'] }}">
+                        <a href="{{ $social['url'] }}" target="_blank" rel="noopener noreferrer" aria-label="{{ $social['name'] }}" data-tooltip="{{ $social['name'] }}">
                             <i class="{{ $social['icon'] }}"></i>
                         </a>
                     </li>
@@ -71,7 +72,48 @@
     </p>
 </footer>
 
+{{-- Reuse a lightweight KHQR-style overlay for the app-store announcement. --}}
+<div class="footer-store-modal" data-footer-store-modal hidden role="dialog" aria-modal="true" aria-labelledby="footer-store-modal-title">
+    <div class="footer-store-modal__card">
+        <button type="button" class="footer-store-modal__close" data-footer-store-close aria-label="{{ __('Close') }}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        <span class="footer-store-modal__icon"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i></span>
+        <h2 id="footer-store-modal-title">{{ __('Coming soon!') }}</h2>
+        <p>{{ __('The TechCourse app will be available soon.') }}</p>
+        <button type="button" class="footer-store-modal__done" data-footer-store-close>{{ __('Done') }}</button>
+    </div>
+</div>
+
 <script>
+    // Open and close the store announcement with a short, reduced-motion-safe transition.
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.querySelector('[data-footer-store-modal]');
+        const closeButton = modal?.querySelector('.footer-store-modal__close');
+        let lastTrigger = null;
+        let closeTimer = null;
+        const closeModal = () => {
+            if (!modal || modal.hidden) return;
+            modal.classList.remove('is-open');
+            window.clearTimeout(closeTimer);
+            closeTimer = window.setTimeout(() => {
+                modal.hidden = true;
+                lastTrigger?.focus();
+            }, 220);
+        };
+        document.querySelectorAll('[data-footer-store-open]').forEach((button) => {
+            button.addEventListener('click', () => {
+                if (!modal) return;
+                lastTrigger = button;
+                window.clearTimeout(closeTimer);
+                modal.hidden = false;
+                requestAnimationFrame(() => modal.classList.add('is-open'));
+                closeButton?.focus();
+            });
+        });
+        modal?.querySelectorAll('[data-footer-store-close]').forEach((button) => button.addEventListener('click', closeModal));
+        modal?.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
+        document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
+    });
+
     document.addEventListener('DOMContentLoaded', async () => {
         const socialList = document.querySelector('[data-footer-social-list]');
 
@@ -114,6 +156,7 @@
                 anchor.target = '_blank';
                 anchor.rel = 'noopener noreferrer';
                 anchor.setAttribute('aria-label', item.name ?? 'Social Media');
+                anchor.dataset.tooltip = item.name ?? 'Social Media';
 
                 icon.className = item.icon ?? 'fa-solid fa-globe';
 

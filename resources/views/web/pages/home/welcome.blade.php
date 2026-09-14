@@ -1396,7 +1396,8 @@
                 <p class="home-hero__copy">{{ $heroCopy }}</p>
 
                 <div class="home-hero__actions">
-                    <a href="#home-featured-section" class="home-hero__button is-primary">
+                    {{-- Send the primary course action to the full course catalog. --}}
+                    <a href="{{ route('courses.index') }}" class="home-hero__button is-primary">
                         <i class="fa-solid fa-graduation-cap"></i>
                         {{ $heroPrimaryCta }}
                     </a>

@@ -14,6 +14,8 @@ class Payment extends Model
     protected $fillable = [
         'order_id',
         'user_id',
+        'subscription_id',
+        'coupon_id',
         'payment_no',
         'payment_provider',
         'transaction_id',
@@ -22,6 +24,8 @@ class Payment extends Model
         'req_time',
         'payment_option',
         'amount',
+        'subtotal_amount',
+        'discount_amount',
         'currency',
         'khqr_string',
         'khqr_md5',
@@ -41,6 +45,8 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'subtotal_amount' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'bakong_response' => 'array',
             'response_payload' => 'array',
             'callback_payload' => 'array',
@@ -57,6 +63,16 @@ class Payment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(UserSubscription::class, 'subscription_id');
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionCoupon::class, 'coupon_id');
     }
 
     public function histories(): HasMany

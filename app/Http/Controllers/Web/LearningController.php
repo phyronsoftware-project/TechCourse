@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
-use App\Models\CourseEnrollment;
 use App\Models\CourseFavorite;
 use App\Models\CourseLesson;
 use App\Models\CourseSave;
 use App\Models\LessonComment;
 use App\Services\GoogleAnalyticsRealtimeService;
+use App\Services\CourseAccessService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -18,9 +18,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class LearningController extends Controller
 {
-    public function __construct(protected GoogleAnalyticsRealtimeService $googleAnalyticsRealtimeService)
-    {
-    }
+    public function __construct(
+        protected GoogleAnalyticsRealtimeService $googleAnalyticsRealtimeService,
+        protected CourseAccessService $courseAccessService
+    ) {}
 
     public function show(string $course, string $lesson): View|RedirectResponse
     {
@@ -86,15 +87,8 @@ class LearningController extends Controller
 
     protected function userHasCourseAccess(int $courseId): bool
     {
-        if (! Auth::check()) {
-            return false;
-        }
-
-        return CourseEnrollment::query()
-            ->where('user_id', Auth::id())
-            ->where('course_id', $courseId)
-            ->where('status', 'active')
-            ->exists();
+        // Resolve both direct enrollment and subscription access in one place.
+        return $this->courseAccessService->userHasCourseAccess(Auth::user(), $courseId);
     }
 
     protected function lessonNeedsPayment(Course $course, CourseLesson $lesson): bool

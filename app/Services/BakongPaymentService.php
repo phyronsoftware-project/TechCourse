@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CourseEnrollment;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\UserSubscription;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -17,7 +18,8 @@ class BakongPaymentService
 {
     public function __construct(
         protected BakongKhqrService $bakongKhqrService,
-        protected PaymentHistoryService $paymentHistoryService
+        protected PaymentHistoryService $paymentHistoryService,
+        protected ?SubscriptionCouponService $subscriptionCouponService = null
     ) {}
 
     // Create a pending Bakong KHQR payment that the frontend can display as QR.
@@ -27,7 +29,7 @@ class BakongPaymentService
 
         // Keep API-created USD KHQR payments at 2 decimal places for dollar-based checkout.
         $amount = round((float) ($data['amount'] ?? 0), 2);
-        if ($amount < 1) {
+        if ($amount <= 0) {
             throw new RuntimeException('Invalid amount.', 422);
         }
 
@@ -47,13 +49,19 @@ class BakongPaymentService
         $payment = Payment::query()->create([
             'order_id' => $data['order_id'] ?? null,
             'user_id' => $data['user_id'] ?? null,
+            'subscription_id' => $data['subscription_id'] ?? null,
+            'coupon_id' => $data['coupon_id'] ?? null,
             'payment_no' => $paymentNo,
             'payment_provider' => 'bakong_open_api',
             'payment_option' => 'bakong_khqr',
             'amount' => $amount,
+            'subtotal_amount' => $data['subtotal_amount'] ?? $amount,
+            'discount_amount' => $data['discount_amount'] ?? 0,
             'currency' => 'USD',
             'khqr_string' => $khqrString,
-            'khqr_md5' => md5($khqrString),
+            'khqr_md5' => $khqr['md5'] ?? md5($khqrString),
+            'khqr_deeplink' => $khqr['deep_link'] ?? null,
+            'qr_image_url' => $khqr['image_data_uri'] ?? null,
             'status' => 'pending',
             'expired_at' => now()->addMinutes(max(1, (int) config('bakong.dynamic_expire_minutes', 10))),
             'bakong_response' => [
@@ -61,6 +69,11 @@ class BakongPaymentService
                     'md5' => $khqr['md5'] ?? null,
                     'generated_at' => now()->toIso8601String(),
                 ],
+            ],
+            'response_payload' => [
+                'coupon_code' => $data['coupon_code'] ?? null,
+                'subtotal_amount' => $data['subtotal_amount'] ?? $amount,
+                'discount_amount' => $data['discount_amount'] ?? 0,
             ],
         ]);
 
@@ -402,6 +415,11 @@ class BakongPaymentService
             return $payment;
         }
 
+        // Activate a purchased subscription without changing the course-order flow.
+        if ($payment->subscription_id) {
+            return $this->finalizeConfirmedSubscriptionPayment($payment);
+        }
+
         $payment->loadMissing('order.items');
         $order = $payment->order;
 
@@ -447,6 +465,52 @@ class BakongPaymentService
         if (! $orderWasPaid) {
             // Keep the related order state change visible in backend history.
             $this->paymentHistoryService->log($payment->fresh('order'), 'order_paid', 'Order marked as paid after Bakong confirmation.');
+        }
+
+        return $payment->fresh();
+    }
+
+    // Start the paid plan after any current period of the same plan finishes.
+    protected function finalizeConfirmedSubscriptionPayment(Payment $payment): Payment
+    {
+        $subscription = UserSubscription::query()
+            ->with('plan')
+            ->find($payment->subscription_id);
+
+        if (! $subscription || (int) $subscription->user_id !== (int) $payment->user_id) {
+            return $payment;
+        }
+
+        $wasActivated = $subscription->status === 'active';
+
+        DB::transaction(function () use ($payment, $subscription) {
+            $paidAt = $payment->paid_at ?? now();
+            $currentExpiry = UserSubscription::query()
+                ->where('user_id', $subscription->user_id)
+                ->where('plan_id', $subscription->plan_id)
+                ->where('id', '!=', $subscription->id)
+                ->where('status', 'active')
+                ->where('expires_at', '>', $paidAt)
+                ->max('expires_at');
+            $startsAt = $currentExpiry ? Carbon::parse($currentExpiry) : $paidAt;
+
+            $subscription->forceFill([
+                'source' => 'payment',
+                'status' => 'active',
+                'starts_at' => $startsAt,
+                'expires_at' => $startsAt->copy()->addDays(max(1, (int) $subscription->plan->duration_days)),
+                'cancelled_at' => null,
+            ])->save();
+
+            ($this->subscriptionCouponService ?? app(SubscriptionCouponService::class))
+                ->recordUsage($payment, $subscription);
+        });
+
+        if (! $wasActivated) {
+            $this->paymentHistoryService->log($payment->fresh(), 'subscription_activated', 'Subscription activated after Bakong confirmation.', [
+                'subscription_id' => $subscription->id,
+                'plan_id' => $subscription->plan_id,
+            ]);
         }
 
         return $payment->fresh();

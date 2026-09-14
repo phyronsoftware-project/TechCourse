@@ -20,10 +20,13 @@ use App\Http\Controllers\Admin\ShopPaymentController;
 use App\Http\Controllers\Admin\ShopProductController;
 use App\Http\Controllers\Admin\SocialMediaController;
 use App\Http\Controllers\Admin\SoundToolController;
+use App\Http\Controllers\Admin\SubscriptionPlanController;
+use App\Http\Controllers\Admin\SubscriptionCouponController;
 use App\Http\Controllers\Admin\TechCategoryController;
 use App\Http\Controllers\Admin\TechDetailController;
 use App\Http\Controllers\Admin\TechTableSetupController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserSubscriptionController;
 use App\Http\Controllers\Web\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -71,6 +74,11 @@ Route::middleware(['auth', 'admin'])
         Route::resource('courses.resources', ResourceController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
         Route::resource('enrollments', EnrollmentController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+        // Manage subscription plans and direct student assignments separately from course grants.
+        Route::resource('subscription-plans', SubscriptionPlanController::class)->except(['show']);
+        Route::resource('subscription-coupons', SubscriptionCouponController::class)->except(['show']);
+        Route::resource('user-subscriptions', UserSubscriptionController::class)->only(['index', 'create', 'store']);
+        Route::post('user-subscriptions/{userSubscription}/cancel', [UserSubscriptionController::class, 'cancel'])->name('user-subscriptions.cancel');
         Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
         Route::resource('payments', PaymentController::class)->only(['index', 'show', 'destroy']);
         Route::resource('reviews', ReviewController::class)->only(['index', 'show', 'destroy']);

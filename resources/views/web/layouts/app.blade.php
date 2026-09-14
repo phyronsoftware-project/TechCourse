@@ -3370,6 +3370,57 @@
                 transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
             }
 
+            /* Slide the notification panel down from the header without changing its contents. */
+            .header-notification__panel { opacity: 0; transform: translateY(-12px); transition: opacity .24s ease, transform .24s ease; }
+            .header-notification.is-open .header-notification__panel { opacity: 1; transform: translateY(0); }
+
+            /* Keep profile and logout actions in one compact, keyboard-friendly menu. */
+            .header-profile { position: relative; min-width: 0; flex-shrink: 0; }
+            .header-box ul li .header-profile__toggle { display: inline-flex; align-items: center; gap: 10px; max-width: 275px; min-height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; font: inherit; }
+            .header-profile__toggle:hover { opacity: .9; }
+            .header-profile__caret { color: #64748b; font-size: 11px; transition: transform .24s ease; }
+            .header-profile.is-open .header-profile__caret { transform: rotate(180deg); }
+            .header-profile__menu { position: absolute; top: calc(100% + 12px); left: 0; z-index: 36; width: 220px; padding: 8px; border: 1px solid #d7e3f0; border-radius: 14px; background: #fff; box-shadow: 0 18px 40px rgba(15,23,42,.14); opacity: 0; transform: translateY(-10px); transition: opacity .24s ease, transform .24s ease; }
+            .header-profile__menu[hidden] { display: none; }
+            .header-profile.is-open .header-profile__menu { opacity: 1; transform: translateY(0); }
+            .header-box ul li .header-profile__menu a, .header-box ul li .header-profile__menu button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 42px; padding: 9px 12px; border: 0; border-radius: 9px; background: transparent; color: #173f87; font: inherit; font-size: 13px; font-weight: 700; text-align: left; text-decoration: none; cursor: pointer; }
+            .header-profile__menu form { margin: 0; }
+            .header-box ul li .header-profile__menu a:hover, .header-box ul li .header-profile__menu button:hover { background: #eff6ff; }
+            html[data-web-theme='dark'] body.web-shell .header-profile__menu { background: #0e1113; border-color: #26313a; }
+            html[data-web-theme='dark'] body.web-shell .header-profile__menu :is(a, button) { color: #f8fafc; }
+            html[data-web-theme='dark'] body.web-shell .header-profile__menu :is(a, button):hover { background: #182026; }
+
+            /* Match the reference pagination while retaining normal server-side links. */
+            .web-pagination-wrap, .web-pagination-pages { gap: 10px; }
+            .web-pagination-wrap .web-page-btn { min-width: 44px; height: 44px; border-radius: 4px; box-shadow: none; }
+            .web-pagination-wrap .web-page-btn.is-active { background: #343bb4; border-color: #343bb4; color: #fff; }
+            .web-pagination-wrap .web-page-btn.is-muted { border-color: transparent; background: transparent; color: #334155; }
+            /* Preserve the active page highlight above the existing dark-theme control rule. */
+            html[data-web-theme='dark'] body.web-shell .web-main .web-page-btn.is-active { background: #343bb4 !important; border-color: #343bb4 !important; color: #fff !important; }
+            html[data-web-theme='dark'] body.web-shell .web-main .web-page-btn.is-muted { background: transparent !important; border-color: transparent !important; color: #cbd5e1 !important; }
+
+            /* Show short social names on hover and keyboard focus. */
+            .sol li { position: relative; }
+            .sol li a[data-tooltip]::after { content: attr(data-tooltip); position: absolute; left: 50%; bottom: calc(100% + 9px); transform: translate(-50%, 5px); padding: 5px 9px; border-radius: 6px; background: #172033; color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; z-index: 3; }
+            .sol li a[data-tooltip]:is(:hover, :focus-visible)::after { opacity: 1; transform: translate(-50%, 0); }
+
+            /* Present unavailable app badges as a lightweight payment-style announcement. */
+            .footer-store-links button { display: inline-flex; padding: 0; border: 0; background: transparent; cursor: pointer; transition: transform .2s ease, opacity .2s ease; }
+            .footer-store-links button:hover { transform: translateY(-2px); opacity: .92; }
+            .footer-store-modal[hidden] { display: none; }
+            .footer-store-modal { position: fixed; inset: 0; z-index: 1500; display: grid; place-items: center; padding: 20px; background: rgba(15,23,42,.7); opacity: 0; transition: opacity .22s ease; }
+            .footer-store-modal.is-open { opacity: 1; }
+            .footer-store-modal__card { position: relative; width: min(430px, 100%); padding: 42px 30px 30px; border-radius: 20px; background: #fff; color: #172033; text-align: center; transform: translateY(14px) scale(.97); transition: transform .22s ease; box-shadow: 0 24px 50px rgba(0,0,0,.18); }
+            .footer-store-modal.is-open .footer-store-modal__card { transform: translateY(0) scale(1); }
+            .footer-store-modal__close { position: absolute; top: 12px; right: 14px; border: 0; background: transparent; color: #64748b; font-size: 19px; cursor: pointer; }
+            .footer-store-modal__icon { display: inline-grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; background: #e8f1ff; color: #2563eb; font-size: 31px; }
+            .footer-store-modal__card h2 { margin: 18px 0 6px; font-size: 1.7rem; }
+            .footer-store-modal__card p { margin: 0 0 22px; color: #64748b; }
+            .footer-store-modal__done { width: 100%; min-height: 45px; border: 0; border-radius: 9px; background: #2563eb; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+            /* Keep the profile menu inside the mobile drawer instead of floating over it. */
+            @media (max-width: 992px) { .header-profile { width: min(100%, 300px); } .header-profile__menu { position: static; width: 100%; margin-top: 8px; box-shadow: none; } .header-box ul li .header-profile__toggle { max-width: calc(100vw - 140px); } .navbar.offcanvas-right .drawer__menu li .header-profile__menu a { display: flex; align-items: center; width: 100%; padding: 9px 12px; } }
+            @media (prefers-reduced-motion: reduce) { .header-notification__panel, .header-profile__menu, .header-profile__caret, .footer-store-modal, .footer-store-modal__card, .sol li a[data-tooltip]::after { transition-duration: .01ms; } }
+
             @media (max-width: 992px) {
                 .theme-item,
                 .web-theme-toggle {
@@ -3447,12 +3498,17 @@
                 const notificationToggle = document.querySelector('[data-web-notification-toggle]');
                 const notificationPanel = document.querySelector('[data-web-notification-panel]');
                 const notificationBadge = document.querySelector('[data-web-notification-badge]');
+                const profileWrap = document.querySelector('[data-web-profile]');
+                const profileToggle = document.querySelector('[data-web-profile-toggle]');
+                const profileMenu = document.querySelector('[data-web-profile-menu]');
                 const themeToggle = document.querySelector('[data-web-theme-toggle]');
                 const scrollTopButton = document.querySelector('[data-scroll-top]');
                 const loadingIndicator = document.querySelector('[data-web-loading]');
                 const webAlert = document.querySelector('[data-web-alert]');
                 const menuItems = document.querySelectorAll('.menu-item.has-submenu');
                 let notificationReadRequestSent = false;
+                let notificationCloseTimer;
+                let profileCloseTimer;
                 let lastScrollY = window.scrollY;
                 const headerHideOffset = 160;
 
@@ -3555,14 +3611,25 @@
                     body.classList.remove('menu-open');
                 };
 
+                // Let the notification panel finish its upward closing animation.
                 const closeNotificationPanel = () => {
                     if (!notificationWrap || !notificationToggle || !notificationPanel) {
                         return;
                     }
 
                     notificationWrap.classList.remove('is-open');
-                    notificationPanel.hidden = true;
                     notificationToggle.setAttribute('aria-expanded', 'false');
+                    window.clearTimeout(notificationCloseTimer);
+                    notificationCloseTimer = window.setTimeout(() => { notificationPanel.hidden = true; }, 240);
+                };
+
+                // Close the profile menu on outside click or Escape without changing logout's POST flow.
+                const closeProfileMenu = () => {
+                    if (!profileWrap || !profileToggle || !profileMenu) return;
+                    profileWrap.classList.remove('is-open');
+                    profileToggle.setAttribute('aria-expanded', 'false');
+                    window.clearTimeout(profileCloseTimer);
+                    profileCloseTimer = window.setTimeout(() => { profileMenu.hidden = true; }, 240);
                 };
 
                 const markNotificationsAsRead = async () => {
@@ -3751,13 +3818,13 @@
                 if (notificationWrap && notificationToggle && notificationPanel) {
                     notificationToggle.addEventListener('click', async (event) => {
                         event.stopPropagation();
-                        const isOpen = notificationWrap.classList.toggle('is-open');
-                        notificationPanel.hidden = !isOpen;
-                        notificationToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-
-                        if (isOpen) {
-                            await markNotificationsAsRead();
-                        }
+                        if (notificationWrap.classList.contains('is-open')) { closeNotificationPanel(); return; }
+                        closeProfileMenu();
+                        window.clearTimeout(notificationCloseTimer);
+                        notificationPanel.hidden = false;
+                        requestAnimationFrame(() => notificationWrap.classList.add('is-open'));
+                        notificationToggle.setAttribute('aria-expanded', 'true');
+                        await markNotificationsAsRead();
                     });
 
                     notificationPanel.addEventListener('click', (event) => {
@@ -3767,6 +3834,28 @@
                     document.addEventListener('click', (event) => {
                         if (!notificationWrap.contains(event.target)) {
                             closeNotificationPanel();
+                        }
+                    });
+                }
+
+                // Toggle the account dropdown with the same short slide as notifications.
+                if (profileWrap && profileToggle && profileMenu) {
+                    profileToggle.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        if (profileWrap.classList.contains('is-open')) { closeProfileMenu(); return; }
+                        closeNotificationPanel();
+                        window.clearTimeout(profileCloseTimer);
+                        profileMenu.hidden = false;
+                        requestAnimationFrame(() => profileWrap.classList.add('is-open'));
+                        profileToggle.setAttribute('aria-expanded', 'true');
+                    });
+                    document.addEventListener('click', (event) => {
+                        if (!profileWrap.contains(event.target)) closeProfileMenu();
+                    });
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape' && profileWrap.classList.contains('is-open')) {
+                            closeProfileMenu();
+                            profileToggle.focus();
                         }
                     });
                 }

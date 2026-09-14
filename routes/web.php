@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\PublicMediaController;
 use App\Http\Controllers\Web\ShopController;
 use App\Http\Controllers\Web\ShopInteractionController;
 use App\Http\Controllers\Web\ShopPaymentController;
+use App\Http\Controllers\Web\SubscriptionController;
 use App\Http\Controllers\Web\UserAuthController;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
@@ -32,9 +33,12 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/{product}', [ShopController::class, 'show'])->name('shop.show');
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+// Show public subscription plans before the authenticated checkout routes.
+Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
 Route::get('/learning/{course}/{lesson}', [LearningController::class, 'show'])->name('learning.show');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/subscriptions/{subscriptionPlan}/checkout', [SubscriptionController::class, 'checkout'])->name('subscriptions.checkout');
     Route::get('/courses/{course}/checkout', [CourseCheckoutController::class, 'show'])->name('courses.checkout');
     Route::post('/courses/{course}/checkout/verify-bakong', [CourseCheckoutController::class, 'verify'])->name('courses.checkout.verify-bakong');
     Route::get('/payments/{payment}/bakong-status', [CourseCheckoutController::class, 'status'])->name('payments.bakong.status');
