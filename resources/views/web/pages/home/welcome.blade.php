@@ -201,12 +201,24 @@
             background: linear-gradient(135deg, rgba(191, 219, 254, 0.18), rgba(125, 211, 252, 0.08));
         }
 
+        /* Drift the hero dots gently using the TechCourse blue in both themes. */
         .home-hero__pattern {
             position: absolute;
-            inset: 0;
-            opacity: 0.32;
-            background-image: radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.1) 1px, transparent 0);
+            inset: -28px;
+            opacity: 0.72;
+            background-image: radial-gradient(circle at 1px 1px, rgba(37, 99, 235, 0.22) 1.15px, transparent 1.7px);
             background-size: 28px 28px;
+            animation: home-hero-dot-drift 10s ease-in-out infinite alternate;
+            will-change: transform;
+        }
+
+        @keyframes home-hero-dot-drift {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(18px, 12px, 0); }
+        }
+
+        html[data-web-theme='dark'] .home-hero__pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(96, 165, 250, 0.44) 1.15px, transparent 1.7px);
         }
 
         .home-hero__inner {
@@ -241,12 +253,27 @@
             box-shadow: 0 12px 22px rgba(59, 130, 246, 0.08);
         }
 
+        /* Pulse the badge dot softly without moving its text or layout. */
         .home-hero__eyebrow-dot {
             width: 8px;
             height: 8px;
             border-radius: 999px;
             background: #2563eb;
             box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.12);
+            animation: home-hero-dot-pulse 2.8s ease-in-out infinite;
+        }
+
+        @keyframes home-hero-dot-pulse {
+            0%, 100% { box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.12); }
+            50% { box-shadow: 0 0 0 9px rgba(37, 99, 235, 0.04); }
+        }
+
+        html[data-web-theme='dark'] .home-hero__eyebrow-dot {
+            background: #60a5fa;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .home-hero__pattern, .home-hero__eyebrow-dot { animation: none; will-change: auto; }
         }
 
         .home-hero__title {
