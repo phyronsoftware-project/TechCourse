@@ -4,9 +4,14 @@
 
 @php
     $authUser = auth()->user();
-    $shareUrl = request()->fullUrl();
+    // Use one public product URL and put the price first in social preview descriptions.
+    $shareUrl = route('shop.show', $product->slug ?: $product->id);
     $shareTitle = $product->name . ' - TechCourse Shop';
-    $shareDescription = trim((string) ($product->description ?: 'Useful IT product for app development, web development, learning, and daily productivity setup.'));
+    $sharePrice = 'USD ' . number_format((float) $product->sale_price, 2);
+    $shareDescription = $sharePrice . ' · ' . \Illuminate\Support\Str::limit(
+        \Illuminate\Support\Str::squish(strip_tags((string) ($product->description ?: 'Useful IT product for learning and daily productivity.'))),
+        140
+    );
     $salePrice = (float) $product->sale_price;
     $costPrice = (float) $product->cost_price;
     // Keep the shop KHQR currency explicit because Bakong checkout now uses USD pricing.
@@ -49,18 +54,16 @@
 
 @section('meta_description', $shareDescription)
 @section('meta_og_type', 'product')
+@section('meta_og_title', $shareTitle)
+@section('meta_og_url', $shareUrl)
 
 @push('meta')
-    <meta property="og:title" content="{{ $shareTitle }}">
-    <meta property="og:description" content="{{ $shareDescription }}">
-    <meta property="og:url" content="{{ $shareUrl }}">
+    {{-- Product images and price enrich the shared link preview on supported social apps. --}}
     <meta property="og:image" content="{{ $shareImage }}">
     <meta property="og:image:alt" content="{{ $product->name }}">
     <meta property="product:price:amount" content="{{ number_format($salePrice, 2, '.', '') }}">
     <meta property="product:price:currency" content="USD">
     <meta property="product:availability" content="{{ $product->stock_qty > 0 ? 'in stock' : 'out of stock' }}">
-    <meta name="twitter:title" content="{{ $shareTitle }}">
-    <meta name="twitter:description" content="{{ $shareDescription }}">
     <meta name="twitter:image" content="{{ $shareImage }}">
 @endpush
 
@@ -492,18 +495,6 @@
             color: #ffffff;
         }
 
-        .shop-detail-share a.shop-detail-share__x {
-            background: #60748f;
-            border-color: #60748f;
-            color: #ffffff;
-        }
-
-        .shop-detail-share a.shop-detail-share__email {
-            background: #6d4aff;
-            border-color: #6d4aff;
-            color: #ffffff;
-        }
-
         .shop-detail-share a.shop-detail-share__copy {
             background: #0f7ccf;
             border-color: #0f7ccf;
@@ -518,16 +509,6 @@
         .shop-detail-share a.shop-detail-share__telegram:hover {
             border-color: #1b8cc3;
             background: #1b8cc3;
-        }
-
-        .shop-detail-share a.shop-detail-share__x:hover {
-            border-color: #52657d;
-            background: #52657d;
-        }
-
-        .shop-detail-share a.shop-detail-share__email:hover {
-            border-color: #5d3fe0;
-            background: #5d3fe0;
         }
 
         .shop-detail-share a.shop-detail-share__copy:hover {
@@ -602,6 +583,14 @@
         .shop-detail-pay-card--button:hover {
             border-color: #dbe6f1;
             box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+        }
+
+        /* Keep unavailable payment methods colorful and readable with a subdued card background. */
+        .shop-detail-pay-card.is-unavailable {
+            background: #f4f7fb;
+            border-color: #dbe5f0;
+            cursor: not-allowed;
+            user-select: none;
         }
 
         .shop-detail-pay-icon {
@@ -2108,14 +2097,8 @@
                         <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($shareUrl) }}" target="_blank" rel="noopener noreferrer" class="shop-detail-share__facebook" aria-label="{{ __('Share on Facebook') }}">
                             <i class="fa-brands fa-facebook-f"></i>
                         </a>
-                        <a href="https://t.me/share/url?url={{ urlencode($shareUrl) }}&text={{ urlencode($shareTitle) }}" target="_blank" rel="noopener noreferrer" class="shop-detail-share__telegram" aria-label="{{ __('Share on Telegram') }}">
+                        <a href="https://t.me/share/url?url={{ urlencode($shareUrl) }}&text={{ urlencode($shareTitle . ' · ' . $sharePrice) }}" target="_blank" rel="noopener noreferrer" class="shop-detail-share__telegram" aria-label="{{ __('Share on Telegram') }}">
                             <i class="fa-brands fa-telegram"></i>
-                        </a>
-                        <a href="https://twitter.com/intent/tweet?url={{ urlencode($shareUrl) }}&text={{ urlencode($shareTitle) }}" target="_blank" rel="noopener noreferrer" class="shop-detail-share__x" aria-label="{{ __('Share on X') }}">
-                            <i class="fa-brands fa-twitter"></i>
-                        </a>
-                        <a href="mailto:?subject={{ rawurlencode($shareTitle) }}&body={{ rawurlencode($shareUrl) }}" class="shop-detail-share__email" aria-label="{{ __('Share by email') }}">
-                            <i class="fa-solid fa-envelope"></i>
                         </a>
                         <a href="#" data-copy-share="{{ $shareUrl }}" class="shop-detail-share__copy" aria-label="{{ __('Copy link') }}">
                             <i class="fa-solid fa-link"></i>
@@ -2164,7 +2147,7 @@
                                 </span>
                             </button>
                         @elseif (! $loop->first)
-                            <div class="shop-detail-pay-card">
+                            <div class="shop-detail-pay-card is-unavailable" aria-disabled="true">
                                 <div class="shop-detail-pay-icon">
                                     <img src="{{ $method['image'] }}" alt="{{ $method['name'] }}">
                                 </div>

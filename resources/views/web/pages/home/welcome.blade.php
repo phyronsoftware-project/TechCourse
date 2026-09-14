@@ -1011,30 +1011,33 @@
         .home-featured-grid {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 14px;
+            gap: 18px;
         }
 
+        /* Match the featured cards to the course catalog without changing other homepage cards. */
+        #home-featured-section { width: min(1320px, calc(100% - 32px)); }
         .home-featured-card {
             display: flex;
             flex-direction: column;
             text-decoration: none;
             min-height: 100%;
-            border-radius: 20px;
+            border-radius: 0;
             overflow: hidden;
             background: #ffffff;
             border: 1px solid #dbe6f1;
-            box-shadow: 0 12px 22px rgba(15, 23, 42, 0.06);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .home-featured-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 18px 28px rgba(15, 23, 42, 0.1);
+            box-shadow: 0 16px 28px rgba(15, 23, 42, 0.1);
         }
 
         .home-featured-card__media {
             position: relative;
-            height: 150px;
+            height: 178px;
+            min-height: 178px;
             background: #f8fafc;
             border-bottom: 1px solid #e7eef5;
         }
@@ -1051,34 +1054,66 @@
             display: grid;
             place-items: center;
             color: #5b708a;
-            font-size: 34px;
+            font-size: 48px;
+        }
+
+        .home-featured-card__badges {
+            position: absolute;
+            top: 9px;
+            right: 9px;
+            z-index: 2;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+
+        .home-featured-card__badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 20px;
+            padding: 0 7px;
+            background: rgba(21, 31, 48, 0.9);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
         }
 
         .home-featured-card__body {
             display: grid;
-            gap: 8px;
-            padding: 12px 12px 14px;
+            grid-template-rows: auto auto minmax(44px, 1fr) auto auto;
+            gap: 6px;
+            flex: 1;
+            padding: 12px;
         }
 
         .home-featured-card__meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 2px;
             color: #64748b;
             font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
         }
 
         .home-featured-card__title {
             margin: 0;
             color: #0f172a;
             font-size: 0.92rem;
-            line-height: 1.4;
+            line-height: 1.36;
             font-family: var(--font-lato);
         }
 
         .home-featured-card__copy {
-            margin: 0;
+            margin: 0 0 2px;
             color: #64748b;
-            font-size: 0.82rem;
-            line-height: 1.6;
-            min-height: 40px;
+            font-size: 12px;
+            line-height: 1.52;
+            min-height: 44px;
         }
 
         .home-featured-card__footer {
@@ -1087,21 +1122,30 @@
             justify-content: space-between;
             gap: 8px;
             color: #64748b;
-            font-size: 11px;
+            font-size: 12px;
+        }
+
+        .home-featured-card__footer strong { color: #0f172a; font-size: 12px; }
+
+        html[data-web-theme='dark'] .home-featured-card__footer strong {
+            color: #f8fafc;
         }
 
         .home-featured-card__price {
             min-height: 22px;
             padding: 0 9px;
-            border-radius: 999px;
+            border-radius: 0;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             background: #eef4ff;
             color: #1d4ed8;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
         }
+
+        .home-featured-card__price.is-free { background: #e6f8ee; color: #157347; }
+        html[data-web-theme='dark'] body.web-shell .web-main .home-featured-card__price.is-free { color: #157347 !important; }
 
         .home-featured-empty {
             min-height: 160px;
@@ -1608,31 +1652,43 @@
             <div class="home-featured-grid">
                 @foreach ($featuredCourses->take(4) as $course)
                     @php
-                        $lessonCount = (int) ($course->total_lessons ?: $course->lessons?->count() ?: 0);
+                        $lessonCount = (int) ($course->lessons_count ?? $course->total_lessons ?? 0);
+                        $resourceCount = (int) ($course->resources_count ?? 0);
                         $courseCategory = $course->category?->name ?: __('General');
-                        $priceLabel = $course->is_free ? __('Free') : (($course->currency ?: 'USD') . ' ' . number_format((float) $course->price, 2));
+                        $priceLabel = $course->is_free ? __('Free') : (($course->currency ?: '$') . number_format((float) $course->price, 2));
                     @endphp
-                    {{-- Homepage featured course card reuses the shared skeleton loading hooks. --}}
+                    {{-- Featured course cards mirror the catalog while retaining the homepage links and skeleton hooks. --}}
                     <a href="{{ route('courses.show', $course->slug ?: $course->id) }}" class="home-featured-card" data-skeleton-card>
                         <div class="home-featured-card__media" data-skeleton-image>
+                            <div class="home-featured-card__badges">
+                                <span class="home-featured-card__badge">{{ $lessonCount }} {{ __('Lessons') }}</span>
+                                <span class="home-featured-card__badge">{{ __(\Illuminate\Support\Str::headline($course->level ?: 'Beginner')) }}</span>
+                            </div>
                             @if ($course->thumbnail_url)
                                 <img src="{{ $course->thumbnail_url }}" alt="{{ $course->title }}">
                             @else
                                 <div class="home-featured-card__fallback">
-                                    <i class="fa-solid fa-graduation-cap"></i>
+                                    <i class="fa-solid fa-laptop-code" aria-hidden="true"></i>
                                 </div>
                             @endif
                         </div>
 
                         <div class="home-featured-card__body">
-                            <div class="home-featured-card__meta" data-skeleton-line>{{ $courseCategory }}</div>
+                            <div class="home-featured-card__meta" data-skeleton-line>
+                                <span>{{ $courseCategory }}</span>
+                                <span>{{ $course->language ?: __('Khmer') }}</span>
+                            </div>
                             <h3 class="home-featured-card__title" data-skeleton-line>{{ $course->title }}</h3>
                             <p class="home-featured-card__copy" data-skeleton-block>
-                                {{ \Illuminate\Support\Str::limit($course->short_description ?: $course->description ?: ($isKhmer ? 'វគ្គសិក្សាដែលអាចចាប់ផ្តើមមើលបានភ្លាមពីទំព័រដើម។' : 'A course you can open quickly from the homepage.'), 90) }}
+                                {{ $course->short_description ?: \Illuminate\Support\Str::limit(strip_tags((string) $course->description), 120) }}
                             </p>
                             <div class="home-featured-card__footer" data-skeleton-line>
-                                <span>{{ $lessonCount }} {{ __('Lessons') }}</span>
-                                <span class="home-featured-card__price">{{ $priceLabel }}</span>
+                                <span>{{ __('Total Resource') }}</span>
+                                <strong>{{ $resourceCount }}</strong>
+                            </div>
+                            <div class="home-featured-card__footer" data-skeleton-line>
+                                <span>{{ __('Price') }}</span>
+                                <span class="home-featured-card__price {{ $course->is_free ? 'is-free' : 'is-paid' }}">{{ $priceLabel }}</span>
                             </div>
                         </div>
                     </a>

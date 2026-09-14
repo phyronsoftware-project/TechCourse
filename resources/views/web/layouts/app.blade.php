@@ -6,15 +6,17 @@
         <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
 
         <title>@yield('title', 'TechCourse')</title>
-        <meta name="description" content="@yield('meta_description', 'TechCourse is a learning platform for app development, web development, and useful IT skills.')">
+        {{-- Escape dynamic descriptions so product names and text cannot break preview tags. --}}
+        <meta name="description" content="{{ $__env->yieldContent('meta_description', 'TechCourse is a learning platform for app development, web development, and useful IT skills.') }}">
         <meta property="og:site_name" content="TechCourse">
         <meta property="og:type" content="@yield('meta_og_type', 'website')">
-        <meta property="og:title" content="@yield('title', 'TechCourse')">
-        <meta property="og:description" content="@yield('meta_description', 'TechCourse is a learning platform for app development, web development, and useful IT skills.')">
-        <meta property="og:url" content="{{ url()->current() }}">
+        {{-- Let product pages provide one canonical social title and URL without duplicate OG tags. --}}
+        <meta property="og:title" content="{{ $__env->yieldContent('meta_og_title', $__env->yieldContent('title', 'TechCourse')) }}">
+        <meta property="og:description" content="{{ $__env->yieldContent('meta_description', 'TechCourse is a learning platform for app development, web development, and useful IT skills.') }}">
+        <meta property="og:url" content="{{ $__env->yieldContent('meta_og_url', url()->current()) }}">
         <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:title" content="@yield('title', 'TechCourse')">
-        <meta name="twitter:description" content="@yield('meta_description', 'TechCourse is a learning platform for app development, web development, and useful IT skills.')">
+        <meta name="twitter:title" content="{{ $__env->yieldContent('meta_og_title', $__env->yieldContent('title', 'TechCourse')) }}">
+        <meta name="twitter:description" content="{{ $__env->yieldContent('meta_description', 'TechCourse is a learning platform for app development, web development, and useful IT skills.') }}">
         @stack('meta')
         {{-- Load GA4 base tracking so page_view starts collecting immediately. --}}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-6EP9GQSD30"></script>

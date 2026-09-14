@@ -148,7 +148,8 @@ class HomeController extends Controller
                 return collect();
             }
 
-            $query = Course::query()->with('category');
+            // Load only the counts needed to display homepage cards like the course catalog.
+            $query = Course::query()->with('category')->withCount(['lessons', 'resources']);
 
             if (Schema::hasColumn('courses', 'is_published')) {
                 $query->where('is_published', true);

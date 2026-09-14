@@ -5,12 +5,13 @@
 @php
     $isKhmer = app()->getLocale() === 'km';
 
-    // Localize static content for the about page.
+    // Localize the certificate list, including C and C++.
     $certificates = $isKhmer
         ? [
             'វិញ្ញាបនបត្រ Front-End Web Design',
             'វិញ្ញាបនបត្រ Internship Program',
             'វិញ្ញាបនបត្រ Microsoft Office (Word, Excel, PowerPoint)',
+            'វិញ្ញាបនបត្រ C និង C++',
             'វិញ្ញាបនបត្រស្មោះស្នេហ៍',
             'វិញ្ញាបនបត្រពូកែដើរលេង',
         ]
@@ -18,10 +19,11 @@
             'Certificate in Front-End Web Design',
             'Certificate in Internship Program',
             'Certificate in Microsoft Office (Word, Excel, PowerPoint)',
+            'Certificate in C and C++',
         ];
 
-    // Keep the intro focused on the platform course and product offering.
-    $aboutRole = 'Web / App Developer';
+    // Show the updated developer role beneath the profile photo.
+    $aboutRole = 'Full Stack Developer';
     $aboutExperience = $isKhmer ? 'Courses និង Products' : 'Courses And Products';
     $aboutKicker = $isKhmer ? 'អំពីយើង' : 'About Us';
     $aboutObjectiveTitle = $isKhmer ? 'គោលបំណង Platform' : 'Platform Objective';
@@ -42,6 +44,8 @@
                     'បានអនុវត្ត state management, API integration, form handling និង navigation flow សម្រាប់ mobile screens។',
                     'បានរៀនភ្ជាប់ Flutter app ជាមួយ back-end services, JSON APIs និង authentication features។',
                     'បានអភិវឌ្ឍជំនាញ mobile development តាមរយៈ app structure, component organization និង user experience details។',
+                    // Reflect completed Java and Spring Boot learning.
+                    'បានបញ្ចប់ការសិក្សា Java និង Spring Boot ដើម្បីបង្កើត REST APIs និងផ្តល់ទិន្នន័យ JSON សម្រាប់ mobile apps។',
                 ],
             ],
             [
@@ -66,6 +70,8 @@
                     'បានសរសេរ back-end APIs ដោយប្រើ PHP (MVC - OOP) និង Laravel framework។',
                     'បានភ្ជាប់ MySQL ជាមួយ Laravel សម្រាប់ CRUD operations និង data management។',
                     'បានអនុវត្ត authentication, session handling, form validation និង REST APIs ជាមួយ JSON។',
+                    // Include Node.js and Express.js API development.
+                    'បានបង្កើត REST APIs ដោយប្រើ Node.js និង Express.js សម្រាប់ទទួល requests និងផ្តល់ JSON responses។',
                 ],
             ],
             [
@@ -110,6 +116,8 @@
                     'Practiced state management, API integration, form handling, and navigation flow for mobile app screens.',
                     'Learned how to connect Flutter apps with back-end services, JSON APIs, and authentication features.',
                     'Improved mobile development skills by working on app structure, component organization, and user experience details.',
+                    // Keep the English timeline aligned with completed API learning.
+                    'Completed learning Java and Spring Boot to build REST APIs and provide JSON data for mobile apps.',
                 ],
             ],
             [
@@ -134,6 +142,8 @@
                     'Wrote back-end APIs using PHP (MVC - OOP) and the Laravel framework.',
                     'Connected MySQL with Laravel for CRUD operations and data management.',
                     'Practiced authentication, session handling, form validation, and REST APIs with JSON.',
+                    // Keep the English timeline aligned with Node.js API experience.
+                    'Built REST APIs with Node.js and Express.js to handle requests and return JSON responses.',
                 ],
             ],
             [
