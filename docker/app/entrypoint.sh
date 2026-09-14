@@ -37,6 +37,8 @@ php artisan view:clear || true
 # Apply the current migrations explicitly because the production database was imported without legacy migration history.
 php artisan migrate --path=database/migrations/2026_07_12_000023_create_provinces_and_add_delivery_fields.php --force
 php artisan migrate --path=database/migrations/2026_07_12_000024_add_image_path_to_shop_order_items.php --force
+# Apply missing subscription schema on each deploy without rerunning legacy migrations.
+php artisan migrate --path=database/migrations/2026_09_14_000001_create_subscription_schema.php --force
 
 php-fpm -D
 exec nginx -g "daemon off;"
