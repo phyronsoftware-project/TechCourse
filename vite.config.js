@@ -5,7 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            // Build the searchable category picker only for the shop page.
+            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/shop-category.js'],
             refresh: true,
         }),
         tailwindcss(),

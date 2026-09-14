@@ -15,7 +15,15 @@ class ShopController extends Controller
 {
     public function index(Request $request): View
     {
-        $activeCategory = $request->string('category')->toString();
+        // Accept multiple category slugs while preserving existing single-category URLs.
+        $requestedCategories = $request->input('category', []);
+        $activeCategories = collect(is_array($requestedCategories) ? $requestedCategories : [$requestedCategories])
+            ->filter(fn ($category) => is_string($category) && trim($category) !== '')
+            ->map(fn ($category) => trim($category))
+            ->unique()
+            ->take(30)
+            ->values()
+            ->all();
         $search = $request->string('search')->toString();
 
         $products = collect();
@@ -34,10 +42,13 @@ class ShopController extends Controller
                     ->with(['category', 'images'])
                     ->when(Schema::hasColumn('shop_products', 'status'), fn ($builder) => $builder->where('status', 'active'));
 
-                if ($activeCategory !== '') {
-                    $query->whereHas('category', function ($builder) use ($activeCategory) {
-                        $builder->where('slug', $activeCategory)
-                            ->orWhere('name', $activeCategory);
+                // Match products in any selected category without changing text search behavior.
+                if ($activeCategories !== []) {
+                    $query->whereHas('category', function ($builder) use ($activeCategories) {
+                        $builder->where(function ($categoryQuery) use ($activeCategories) {
+                            $categoryQuery->whereIn('slug', $activeCategories)
+                                ->orWhereIn('name', $activeCategories);
+                        });
                     });
                 }
 
@@ -61,7 +72,7 @@ class ShopController extends Controller
         return view('web.pages.shop.index', [
             'products' => $products,
             'categories' => $categories,
-            'activeCategory' => $activeCategory,
+            'activeCategories' => $activeCategories,
             'search' => $search,
             'provinces' => Schema::hasTable('provinces')
                 ? Province::query()->where('is_active', true)->orderBy('name_en')->get()

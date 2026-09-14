@@ -5,20 +5,25 @@
 @php
     $authUser = auth()->user();
     $shopProducts = $products instanceof \Illuminate\Contracts\Pagination\Paginator ? $products : collect();
-    $activeCategoryLabel = $categories->firstWhere('slug', $activeCategory)?->name
-        ?? $categories->firstWhere('name', $activeCategory)?->name
-        ?? __('All');
+    // Keep the shop filter labels localized without changing shared translations.
+    $categoryPlaceholder = app()->getLocale() === 'km' ? 'ជ្រើសប្រភេទទំនិញ...' : 'Select categories...';
+    $categoryHeading = app()->getLocale() === 'km' ? 'ស្វែងរកតាមប្រភេទ' : 'Browse by category';
+    $categoryHint = app()->getLocale() === 'km' ? 'អាចជ្រើសបានច្រើនប្រភេទ' : 'Select multiple categories';
     $selectedProvince = $provinces->firstWhere('id', $authUser?->province_id);
     $shopCartKhqrCardId = 'shop-cart-khqr-card';
 @endphp
 
 @section('content')
+    {{-- Load the searchable multi-select only on the shop page. --}}
+    @vite('resources/js/shop-category.js')
     <style>
+        /* Separate the shop filter card from the header. */
         .shop-page {
             width: min(1320px, calc(100% - 32px));
             margin: 0 auto;
             display: grid;
             gap: 18px;
+            padding-top: 24px;
             padding-bottom: 42px;
         }
 
@@ -64,91 +69,183 @@
             gap: 14px;
         }
 
+        /* Frame the category filter as one compact shop toolbar. */
         .shop-search {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 11px;
+            padding: 16px 18px;
+            border-radius: 20px;
+            border: 1px solid #d6e5f8;
+            background: linear-gradient(120deg, #ffffff, #f6faff);
+            box-shadow: 0 10px 24px rgba(24, 75, 158, 0.05);
+        }
+
+        /* Give the filter a clear label and a small multi-select hint. */
+        .shop-filter-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             gap: 12px;
-            padding: 18px;
-            border-radius: 24px;
-            border: 1px solid #dce7f3;
-            background: #ffffff;
-            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.04);
+            min-width: 0;
         }
 
-        .shop-search input {
-            width: 100%;
-            min-height: 48px;
-            border-radius: 14px;
-            border: 1px solid #d5e2ef;
-            background: #ffffff;
-            padding: 0 15px;
-            font-size: 0.92rem;
-            color: #0f172a;
-            outline: none;
+        .shop-filter-head__label {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            color: #163d78;
+            font-size: 0.88rem;
+            font-weight: 800;
         }
 
-        .shop-search input:focus {
-            border-color: #8ab7eb;
-            box-shadow: 0 0 0 4px rgba(29, 140, 255, 0.08);
+        .shop-filter-head__label i {
+            display: grid;
+            place-items: center;
+            width: 27px;
+            height: 27px;
+            border-radius: 8px;
+            background: #e7f0ff;
+            color: #2167d8;
+            font-size: 0.73rem;
         }
 
-        .shop-search button {
-            min-width: 120px;
+        .shop-filter-head__hint {
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Keep a submit control only when JavaScript is unavailable. */
+        .shop-search > button {
+            margin-top: 12px;
             min-height: 48px;
             border: 0;
             border-radius: 14px;
             background: linear-gradient(135deg, #1d8cff, #1570ef);
-            color: #1c2e64;
-            position: relative;
+            color: #ffffff;
             font-size: 0.9rem;
             font-weight: 700;
             cursor: pointer;
         }
 
-        .shop-category-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+        /* Keep selected category tags clear and the dropdown easy to discover. */
+        .shop-category-picker {
+            position: relative;
+            min-width: 0;
         }
 
-        .shop-category-mobile {
-            display: none;
+        .shop-category-picker::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 18px;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid #5475a4;
+            border-bottom: 2px solid #5475a4;
+            transform: translateY(-70%) rotate(45deg);
+            pointer-events: none;
         }
 
-        .shop-category-mobile select {
+        .shop-category-picker > select {
             width: 100%;
-            min-height: 44px;
-            border-radius: 14px;
+            min-height: 52px;
             border: 1px solid #d5e2ef;
-            background: #ffffff;
-            padding: 0 14px;
-            color: #0f172a;
-            font-size: 0.84rem;
-            font-weight: 700;
-            outline: none;
+            border-radius: 12px;
         }
 
-        .shop-category-chip {
-            min-height: 38px;
-            padding: 0 14px;
+        .shop-category-picker .ts-control {
+            min-height: 52px;
+            padding: 7px 38px 7px 11px;
+            border: 1px solid #cbdcf2;
+            border-radius: 12px;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 0.88rem;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025);
+        }
+
+        .shop-category-picker .ts-wrapper.focus .ts-control {
+            border-color: #8ab7eb;
+            box-shadow: 0 0 0 3px rgba(29, 140, 255, 0.12);
+        }
+
+        .shop-category-picker .ts-wrapper.multi .ts-control > .item {
+            margin: 2px 5px 2px 0;
+            padding: 4px 9px;
+            border: 1px solid #bdd3f6;
             border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            background: #ffffff;
-            border: 1px solid #d9e4ef;
-            color: #0f172a;
+            background: #e8f1ff;
+            color: #194a91;
             font-size: 0.82rem;
-            font-weight: 700;
-            transition: 0.2s ease;
+            font-weight: 750;
         }
 
-        .shop-category-chip:hover,
-        .shop-category-chip.is-active {
-            background: #eff6ff;
-            border-color: #bfd6ef;
-            color: #0f2f57;
+        .shop-category-picker .ts-wrapper.multi .ts-control > .item .remove {
+            margin-left: 7px;
+            border-left-color: #b6cdf1;
+            color: #194a91;
+        }
+
+        .shop-category-picker .ts-wrapper.multi .ts-control > .item .remove:hover {
+            background: #d5e7ff;
+            color: #123b77;
+        }
+
+        .shop-category-picker .ts-control > input {
+            width: auto;
+            min-height: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .shop-category-picker .ts-dropdown {
+            z-index: 20;
+            overflow: hidden;
+            margin-top: 6px;
+            padding: 5px;
+            border: 1px solid #d2e0f3;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 16px 32px rgba(15, 42, 86, 0.14);
+        }
+
+        .shop-category-picker .ts-dropdown .option {
+            margin: 2px 0;
+            padding: 9px 11px;
+            border-radius: 8px;
+            color: #24344e;
+            font-weight: 650;
+        }
+
+        .shop-category-picker .ts-dropdown .active {
+            background: #eaf2ff;
+            color: #184b9e;
+        }
+
+        html[data-web-theme='dark'] .shop-category-picker .ts-wrapper.multi .ts-control > .item {
+            border-color: #365b8a;
+            background: #19375e;
+            color: #ffffff;
+        }
+
+        html[data-web-theme='dark'] .shop-category-picker .ts-control {
+            border-color: #26313a;
+            background: #0e1113;
+            color: #ffffff;
+        }
+
+        html[data-web-theme='dark'] .shop-category-picker .ts-dropdown {
+            border-color: #26313a;
+            background: #0e1113;
+            color: #ffffff;
+        }
+
+        html[data-web-theme='dark'] .shop-filter-head__label i,
+        html[data-web-theme='dark'] .shop-category-picker .ts-dropdown .active {
+            background: #19375e;
         }
 
         .shop-grid {
@@ -1115,14 +1212,6 @@
                 gap: 12px;
             }
 
-            .shop-category-row {
-                display: none;
-            }
-
-            .shop-category-mobile {
-                display: block;
-            }
-
             .shop-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 10px;
@@ -1182,7 +1271,6 @@
             }
 
             .shop-search {
-                grid-template-columns: 1fr;
                 padding: 12px;
             }
 
@@ -1210,6 +1298,11 @@
                 width: min(100%, calc(100% - 6px));
             }
 
+            /* Keep the filter heading concise on narrow screens. */
+            .shop-filter-head__hint {
+                display: none;
+            }
+
             .shop-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 8px;
@@ -1229,8 +1322,7 @@
                 border-radius: 18px;
             }
 
-            .shop-search input,
-            .shop-search button {
+            .shop-search > button {
                 min-height: 42px;
             }
 
@@ -1251,32 +1343,20 @@
 
     <section class="shop-page">
         <div class="shop-toolbar">
+            {{-- Category changes filter products automatically; the dropdown provides its own search. --}}
             <form action="{{ route('shop.index') }}" method="GET" class="shop-search">
-                <input type="text" name="search" value="{{ $search }}" placeholder="{{ __('Search adapter, keyboard, mouse, memory...') }}">
-                @if ($activeCategory !== '')
-                    <input type="hidden" name="category" value="{{ $activeCategory }}">
-                @endif
-                <button type="submit">{{ __('Search') }}</button>
-            </form>
-
-            <div class="shop-category-row">
-                <a href="{{ route('shop.index', array_filter(['search' => $search ?: null])) }}" class="shop-category-chip {{ $activeCategory === '' ? 'is-active' : '' }}">{{ __('All') }}</a>
-                @foreach ($categories as $category)
-                    <a href="{{ route('shop.index', array_filter(['category' => $category->slug, 'search' => $search ?: null])) }}" class="shop-category-chip {{ $activeCategory === $category->slug ? 'is-active' : '' }}">{{ $category->name }}</a>
-                @endforeach
-            </div>
-
-            <form action="{{ route('shop.index') }}" method="GET" class="shop-category-mobile">
-                @if ($search !== '')
-                    <input type="hidden" name="search" value="{{ $search }}">
-                @endif
-
-                <select name="category" aria-label="{{ __('Category') }}" onchange="this.form.submit()">
-                    <option value="">{{ __('All') }}</option>
-                    @foreach ($categories as $category)
-                        <option value="{{ $category->slug }}" @selected($activeCategory === $category->slug)>{{ $category->name }}</option>
-                    @endforeach
-                </select>
+                <div class="shop-filter-head">
+                    <span class="shop-filter-head__label"><i class="fa-solid fa-filter" aria-hidden="true"></i>{{ $categoryHeading }}</span>
+                    <span class="shop-filter-head__hint">{{ $categoryHint }}</span>
+                </div>
+                <div class="shop-category-picker">
+                    <select name="category[]" multiple data-shop-category-select data-placeholder="{{ $categoryPlaceholder }}" data-remove-label="{{ app()->getLocale() === 'km' ? 'ដកប្រភេទទំនិញចេញ' : 'Remove category' }}" aria-label="{{ __('Category') }}">
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->slug }}" @selected(in_array($category->slug, $activeCategories, true) || in_array($category->name, $activeCategories, true))>{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <noscript><button type="submit">{{ __('Search') }}</button></noscript>
             </form>
         </div>
 
