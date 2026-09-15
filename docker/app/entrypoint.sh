@@ -41,6 +41,8 @@ php artisan migrate --path=database/migrations/2026_07_12_000024_add_image_path_
 php artisan migrate --path=database/migrations/2026_09_14_000001_create_subscription_schema.php --force
 # Repair payment columns required by course and subscription KHQR checkout.
 php artisan migrate --path=database/migrations/2026_09_15_000002_repair_payment_checkout_schema.php --force
+# Create the payment history audit table required by checkout event logging.
+php artisan migrate --path=database/migrations/2026_09_15_000003_repair_payment_histories_schema.php --force
 
 php-fpm -D
 exec nginx -g "daemon off;"

@@ -28,80 +28,252 @@
                 };
             </script>
         @endif
+
+        <style>
+            /* Match the full admin login canvas to the TechCourse logo palette. */
+            :root {
+                color-scheme: dark;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .admin-login-page {
+                position: relative;
+                display: flex;
+                min-height: 100vh;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                padding: 40px 24px;
+                background:
+                    radial-gradient(circle at 18% 18%, rgba(0, 190, 255, 0.28), transparent 31%),
+                    radial-gradient(circle at 82% 82%, rgba(26, 86, 255, 0.34), transparent 35%),
+                    linear-gradient(145deg, #03132f 0%, #063c9d 52%, #087bea 100%);
+            }
+
+            .admin-login-page::before {
+                position: absolute;
+                width: 420px;
+                height: 420px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+                content: '';
+                transform: translate(-46vw, -34vh);
+            }
+
+            .admin-login {
+                position: relative;
+                z-index: 1;
+                width: min(100%, 390px);
+            }
+
+            .admin-login__header {
+                margin-bottom: 30px;
+                text-align: center;
+            }
+
+            .admin-login__logo {
+                display: block;
+                width: 66px;
+                height: 66px;
+                margin: 0 auto 18px;
+                object-fit: contain;
+                filter: drop-shadow(0 12px 24px rgba(1, 12, 43, 0.28));
+            }
+
+            .admin-login__title {
+                margin: 0;
+                color: #ffffff;
+                font-size: clamp(1.65rem, 5vw, 2rem);
+                font-weight: 700;
+                letter-spacing: -0.025em;
+            }
+
+            .admin-login__subtitle {
+                max-width: 340px;
+                margin: 9px auto 0;
+                color: rgba(231, 241, 255, 0.78);
+                font-size: 0.88rem;
+                line-height: 1.55;
+            }
+
+            .admin-login__form {
+                display: grid;
+                gap: 18px;
+            }
+
+            .admin-login__label {
+                display: block;
+                margin-bottom: 7px;
+                color: #f8fbff;
+                font-size: 0.84rem;
+                font-weight: 600;
+            }
+
+            .admin-login__input {
+                width: 100%;
+                height: 44px;
+                border: 1px solid rgba(255, 255, 255, 0.32);
+                border-radius: 10px;
+                outline: none;
+                background: rgba(3, 23, 63, 0.28);
+                padding: 0 14px;
+                color: #ffffff;
+                font: inherit;
+                font-size: 0.9rem;
+                transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+            }
+
+            .admin-login__input:-webkit-autofill,
+            .admin-login__input:-webkit-autofill:hover,
+            .admin-login__input:-webkit-autofill:focus {
+                -webkit-text-fill-color: #ffffff;
+                box-shadow: 0 0 0 1000px #073785 inset;
+                caret-color: #ffffff;
+            }
+
+            .admin-login__input:focus {
+                border-color: rgba(255, 255, 255, 0.9);
+                background: rgba(3, 23, 63, 0.4);
+                box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+            }
+
+            .admin-login__alert {
+                margin: 0;
+                border-left: 3px solid #fda4af;
+                padding: 9px 12px;
+                color: #fff1f2;
+                font-size: 0.82rem;
+                line-height: 1.5;
+            }
+
+            .admin-login__button {
+                display: flex;
+                width: 100%;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+                margin-top: 2px;
+                border: 0;
+                border-radius: 10px;
+                background: #ffffff;
+                color: #0756c7;
+                cursor: pointer;
+                font: inherit;
+                font-size: 0.92rem;
+                font-weight: 700;
+                transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+            }
+
+            .admin-login__button:hover {
+                background: #eef6ff;
+                box-shadow: 0 12px 28px rgba(0, 20, 67, 0.22);
+                transform: translateY(-1px);
+            }
+
+            .admin-login__button:focus-visible {
+                outline: 3px solid rgba(255, 255, 255, 0.35);
+                outline-offset: 3px;
+            }
+
+            .admin-login__demo {
+                margin: 20px 0 0;
+                color: rgba(225, 237, 255, 0.68);
+                font-size: 0.75rem;
+                line-height: 1.6;
+                text-align: center;
+            }
+
+            .admin-login__demo strong {
+                color: rgba(255, 255, 255, 0.9);
+                font-weight: 600;
+            }
+
+            @media (max-width: 480px) {
+                .admin-login-page {
+                    align-items: flex-start;
+                    padding: 15vh 20px 36px;
+                }
+
+                .admin-login__header {
+                    margin-bottom: 25px;
+                }
+
+                .admin-login__logo {
+                    width: 58px;
+                    height: 58px;
+                }
+            }
+        </style>
     </head>
-    <body class="min-h-screen bg-[#f7f7f8] font-sans text-slate-900 antialiased {{ app()->getLocale() === 'km' ? 'font-[Noto_Sans_Khmer]' : '' }}">
-        <main class="relative flex min-h-screen items-center justify-center overflow-hidden px-5 py-8">
-            <div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.10),transparent_25%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.10),transparent_25%),linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]"></div>
+    <body class="font-sans antialiased {{ app()->getLocale() === 'km' ? 'font-[Noto_Sans_Khmer]' : '' }}">
+        <!-- Present a compact admin login without a surrounding card. -->
+        <main class="admin-login-page">
+            <section class="admin-login" aria-labelledby="admin-login-title">
+                <header class="admin-login__header">
+                    <img src="{{ asset('logo/logo copy.png') }}" alt="TechCourse" class="admin-login__logo">
+                    <h1 id="admin-login-title" class="admin-login__title">{{ __('Admin sign in') }}</h1>
+                    <p class="admin-login__subtitle">{{ __('Sign in to open the TechCourse dashboard and admin tools.') }}</p>
+                </header>
 
-            <div class="w-full max-w-[500px]">
-                <div class="rounded-[24px] border border-slate-200 bg-white px-6 py-8 shadow-[0_16px_40px_rgba(15,23,42,0.08)] sm:px-10 sm:py-9">
-                    <div class="mb-6 flex flex-col items-center text-center">
-                        <div class="mb-4 flex h-[76px] w-[76px] items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
-                            <svg class="h-9 w-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <rect x="4" y="10" width="16" height="10" rx="2" />
-                                <path d="M8 10V7a4 4 0 1 1 8 0v3" />
-                            </svg>
-                        </div>
-                        <h1 class="text-[1.8rem] font-bold tracking-[-0.02em] text-slate-950 sm:text-[1.95rem]">{{ __('Admin sign in') }}</h1>
-                        <p class="mt-2.5 text-[14px] text-slate-500 sm:text-[15px]">{{ __('Sign in to open the TechCourse dashboard and admin tools.') }}</p>
-                    </div>
+                <form action="{{ route('login.store') }}" method="POST" class="admin-login__form">
+                    @csrf
 
-                    <form action="{{ route('login.store') }}" method="POST" class="space-y-5">
-                        @csrf
-
-                        <div>
-                            <label for="email" class="mb-2 block text-[14px] font-semibold text-slate-900 sm:text-[15px]">{{ __('Email') }}</label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autocomplete="username"
-                                value="{{ old('email') }}"
-                                class="h-12 w-full rounded-[14px] border border-slate-200 bg-[#fafafa] px-4 text-[15px] text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white"
-                                required
-                            >
-                        </div>
-
-                        <div>
-                            <label for="password" class="mb-2 block text-[14px] font-semibold text-slate-900 sm:text-[15px]">{{ __('Password') }}</label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autocomplete="current-password"
-                                class="h-12 w-full rounded-[14px] border border-slate-200 bg-[#fafafa] px-4 text-[15px] text-slate-900 outline-none transition focus:border-indigo-400 focus:bg-white"
-                                required
-                            >
-                        </div>
-
-                        @if (session('error'))
-                            <p class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">{{ session('error') }}</p>
-                        @endif
-
-                        @if ($errors->any())
-                            <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
-                                @foreach ($errors->all() as $error)
-                                    <p>{{ $error }}</p>
-                                @endforeach
-                            </div>
-                        @endif
-
-                        <button
-                            type="submit"
-                            class="flex h-12 w-full items-center justify-center rounded-[14px] bg-indigo-700 text-base font-medium text-white transition hover:bg-indigo-800"
+                    <div>
+                        <label for="email" class="admin-login__label">{{ __('Email') }}</label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            autocomplete="username"
+                            value="{{ old('email') }}"
+                            class="admin-login__input"
+                            required
                         >
-                            {{ __('Sign in') }}
-                        </button>
-                    </form>
-
-                    <div class="mt-6 rounded-[14px] bg-[#f3f3f4] px-4 py-3.5 text-center text-[13px] text-slate-500">
-                        {{ __('Demo admin login from your SQL file:') }}
-                        <span class="font-semibold text-slate-700">admin@techcourse.test</span>
-                        /
-                        <span class="font-semibold text-slate-700">password</span>
                     </div>
-                </div>
-            </div>
+
+                    <div>
+                        <label for="password" class="admin-login__label">{{ __('Password') }}</label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            class="admin-login__input"
+                            required
+                        >
+                    </div>
+
+                    @if (session('error'))
+                        <p class="admin-login__alert" role="alert">{{ session('error') }}</p>
+                    @endif
+
+                    @if ($errors->any())
+                        <div class="admin-login__alert" role="alert">
+                            @foreach ($errors->all() as $error)
+                                <p>{{ $error }}</p>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <button type="submit" class="admin-login__button">
+                        {{ __('Sign in') }}
+                    </button>
+                </form>
+
+                <p class="admin-login__demo">
+                    {{ __('Demo admin login from your SQL file:') }}
+                    <strong>admin@techcourse.test</strong>
+                    /
+                    <strong>password</strong>
+                </p>
+            </section>
         </main>
     </body>
 </html>
