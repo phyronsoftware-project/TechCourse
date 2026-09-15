@@ -650,6 +650,14 @@
             font-weight: 800;
         }
 
+        /* Keep locked lesson badges compact and recognizable without text. */
+        .lesson-list-badge.is-locked {
+            width: 30px;
+            min-width: 30px;
+            padding: 0;
+            font-size: 12px;
+        }
+
         .lesson-list-row.is-active .lesson-list-title,
         .lesson-list-row.is-active .lesson-list-copy,
         .lesson-list-row.is-active .lesson-list-date {
@@ -900,9 +908,16 @@
                                 <p class="lesson-list-copy">{{ \Illuminate\Support\Str::limit(strip_tags((string) $lesson->description), 10) }}</p>
                                 <div class="lesson-list-date">{{ optional($lesson->created_at)->format('d M Y') ?: __('New') }}</div>
                             </div>
-                            <span class="lesson-list-badge">
-                                <span class="lesson-list-badge__mark" aria-hidden="true">•</span>
-                                {{ $lesson->is_preview ? __('Free') : (($courseNeedsPayment ?? false) && !($hasCourseAccess ?? false) ? __('Locked') : gmdate('i:s', (int) ($lesson->duration_seconds ?: 0))) }}
+                            <span
+                                class="lesson-list-badge {{ $lessonLocked ? 'is-locked' : '' }}"
+                                @if ($lessonLocked) aria-label="{{ __('Locked') }}" title="{{ __('Locked') }}" @endif
+                            >
+                                @if ($lessonLocked)
+                                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                                @else
+                                    <span class="lesson-list-badge__mark" aria-hidden="true">•</span>
+                                    {{ $lesson->is_preview ? __('Free') : gmdate('i:s', (int) ($lesson->duration_seconds ?: 0)) }}
+                                @endif
                             </span>
                         </a>
                     @endforeach

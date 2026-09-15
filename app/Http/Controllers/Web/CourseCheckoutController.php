@@ -18,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -64,7 +65,6 @@ class CourseCheckoutController extends Controller
 
         $checkoutQrProvider = $this->resolveCheckoutQrProvider();
         [$order, $payment] = $this->ensurePendingCheckout($courseModel, $checkoutQrProvider);
-        $khqrError = null;
         $khqrPreviewUrl = $this->resolveKhqrPreviewUrl($payment);
         $khqrDeepLink = $payment->khqr_deeplink;
         $khqrReferenceMd5 = $payment->khqr_md5;
@@ -77,7 +77,13 @@ class CourseCheckoutController extends Controller
             $khqrDeepLink = $payment->khqr_deeplink;
             $khqrReferenceMd5 = $payment->khqr_md5;
         } catch (Throwable $exception) {
-            $khqrError = $exception->getMessage();
+            // Keep checkout infrastructure details in server logs instead of exposing them to customers.
+            Log::error('Course KHQR preparation failed.', [
+                'course_id' => $courseModel->id,
+                'order_id' => $order->id,
+                'payment_id' => $payment->id,
+                'exception' => $exception,
+            ]);
         }
 
         return view('web.pages.courses.checkout', [
@@ -91,7 +97,6 @@ class CourseCheckoutController extends Controller
             'khqrPreviewUrl' => $khqrPreviewUrl,
             'khqrDeepLink' => $khqrDeepLink,
             'khqrReferenceMd5' => $khqrReferenceMd5,
-            'khqrError' => $khqrError,
         ]);
     }
 
@@ -121,9 +126,16 @@ class CourseCheckoutController extends Controller
                 ],
             );
         } catch (Throwable $exception) {
+            // Log the full verification failure while returning a customer-safe message.
+            Log::error('Course Bakong verification failed.', [
+                'course_id' => $courseModel->id,
+                'payment_id' => $payment->id,
+                'exception' => $exception,
+            ]);
+
             return redirect()
                 ->route('courses.checkout', $courseModel->slug ?: $courseModel->id)
-                ->with('error', $exception->getMessage());
+                ->with('error', __('Unable to verify the payment right now. Please try again shortly.'));
         }
 
         $normalizedStatus = $bakongOpenApiService->normalizeTrackingStatus($verification);
@@ -200,9 +212,15 @@ class CourseCheckoutController extends Controller
                 ],
             ]);
         } catch (Throwable $exception) {
+            // Prevent polling responses from exposing database or provider internals.
+            Log::error('Course Bakong payment status check failed.', [
+                'payment_id' => $payment->id,
+                'exception' => $exception,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => $exception->getMessage(),
+                'message' => __('Unable to check payment status right now.'),
                 'data' => ['status' => $payment->fresh()->status],
             ], 503);
         }

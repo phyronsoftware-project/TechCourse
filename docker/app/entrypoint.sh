@@ -43,6 +43,8 @@ php artisan migrate --path=database/migrations/2026_09_14_000001_create_subscrip
 php artisan migrate --path=database/migrations/2026_09_15_000002_repair_payment_checkout_schema.php --force
 # Create the payment history audit table required by checkout event logging.
 php artisan migrate --path=database/migrations/2026_09_15_000003_repair_payment_histories_schema.php --force
+# Expand QR image storage for full Base64 KHQR data generated during checkout.
+php artisan migrate --path=database/migrations/2026_09_15_000004_expand_payment_qr_image_url.php --force
 
 php-fpm -D
 exec nginx -g "daemon off;"

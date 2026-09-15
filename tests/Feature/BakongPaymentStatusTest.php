@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Web\CourseCheckoutController;
 use App\Models\Payment;
 use App\Models\ShopOrder;
 use App\Models\ShopOrderItem;
@@ -13,9 +14,11 @@ use App\Services\PaymentHistoryService;
 use App\Services\ShopBakongPaymentService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Mockery;
+use RuntimeException;
 use Tests\TestCase;
 
 class BakongPaymentStatusTest extends TestCase
@@ -109,6 +112,35 @@ class BakongPaymentStatusTest extends TestCase
         $this->assertSame('pending', $checked->status);
         $this->assertSame(17, data_get($checked->bakong_response, 'check_transaction_by_md5.errorCode'));
         Http::assertSentCount(2);
+    }
+
+    public function test_course_status_error_does_not_expose_technical_details(): void
+    {
+        $payment = Payment::query()->create([
+            'user_id' => 10,
+            'payment_no' => 'PAY-PRIVATE-ERROR',
+            'payment_provider' => 'bakong_open_api',
+            'amount' => 20,
+            'currency' => 'USD',
+            'khqr_md5' => 'test-md5',
+            'status' => 'pending',
+            'expired_at' => now()->addMinute(),
+        ]);
+
+        Auth::shouldReceive('id')->once()->andReturn(10);
+
+        $service = Mockery::mock(BakongPaymentService::class);
+        $service->shouldReceive('checkPaymentStatus')
+            ->once()
+            ->andThrow(new RuntimeException("SQLSTATE[22001]: Data too long for column 'qr_image_url'."));
+
+        // Return a safe polling response while the complete exception remains server-side.
+        $response = app(CourseCheckoutController::class)->status($payment, $service);
+
+        $this->assertSame(503, $response->getStatusCode());
+        $this->assertSame('Unable to check payment status right now.', $response->getData(true)['message']);
+        $this->assertStringNotContainsString('SQLSTATE', $response->getContent());
+        $this->assertStringNotContainsString('qr_image_url', $response->getContent());
     }
 
     public function test_shop_payment_success_marks_order_paid_with_real_hash(): void

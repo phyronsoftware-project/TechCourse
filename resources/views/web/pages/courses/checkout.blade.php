@@ -697,9 +697,6 @@
                     {{ __('Payment status') }}: <span data-payment-status-text>{{ ucfirst($payment->status) }}</span>
                 </div>
 
-                @if (!empty($khqrError))
-                    <div class="checkout-pay-copy">{{ $khqrError }}</div>
-                @endif
             </div>
         </div>
     </section>
@@ -723,7 +720,7 @@
                 'status' => $payment->status,
                 'showStatusMeta' => true,
                 'showCenterBadge' => true,
-                'statusMessage' => $khqrError ?: '',
+                'statusMessage' => '',
                 'emptyMessage' => __('Please check your Bakong account config and generate the KHQR again.'),
             ])
 

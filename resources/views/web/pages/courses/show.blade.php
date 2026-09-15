@@ -636,6 +636,14 @@
             font-weight: 800;
         }
 
+        /* Keep locked lesson badges compact and recognizable without text. */
+        .learning-lesson-badge.is-locked {
+            width: 30px;
+            min-width: 30px;
+            padding: 0;
+            font-size: 12px;
+        }
+
         .learning-lesson-item.is-active .learning-lesson-name,
         .learning-lesson-item.is-active .learning-lesson-copy,
         .learning-lesson-item.is-active .learning-lesson-date {
@@ -911,13 +919,15 @@
                                     <p class="learning-lesson-copy">{{ \Illuminate\Support\Str::limit(strip_tags((string) $lesson->description), 10) }}</p>
                                     <div class="learning-lesson-date">{{ optional($lesson->created_at)->format('d M Y') ?: __('New') }}</div>
                                 </div>
-                                <span class="learning-lesson-badge">
+                                <span
+                                    class="learning-lesson-badge {{ $lessonLocked ? 'is-locked' : '' }}"
+                                    @if ($lessonLocked) aria-label="{{ __('Locked') }}" title="{{ __('Locked') }}" @endif
+                                >
                                     @if ($lesson->is_preview)
                                         <span class="learning-lesson-badge__mark" aria-hidden="true">•</span>
                                         {{ __('Free') }}
-                                    @elseif (($courseNeedsPayment ?? false) && !($hasCourseAccess ?? false))
-                                        <span class="learning-lesson-badge__mark" aria-hidden="true">•</span>
-                                        {{ __('Locked') }}
+                                    @elseif ($lessonLocked)
+                                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
                                     @else
                                         <span class="learning-lesson-badge__mark" aria-hidden="true">•</span>
                                         {{ gmdate('i:s', (int) ($lesson->duration_seconds ?: 0)) }}
