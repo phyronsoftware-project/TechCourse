@@ -8,10 +8,12 @@ use App\Models\ShopProduct;
 use App\Models\ShopProductImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Throwable;
 
 class ShopProductController extends Controller
 {
@@ -112,22 +114,47 @@ class ShopProductController extends Controller
 
     public function destroy(ShopProduct $shopProduct): RedirectResponse
     {
-        if ($shopProduct->image && !str_starts_with($shopProduct->image, 'http') && !str_starts_with($shopProduct->image, 'storage/')) {
-            Storage::disk('public')->delete($shopProduct->image);
-        }
+        try {
+            $imagePaths = DB::transaction(fn () => $this->deleteProduct($shopProduct));
 
-        $shopProduct->load('images');
-        foreach ($shopProduct->images as $image) {
-            if ($image->image_path && !str_starts_with($image->image_path, 'http') && !str_starts_with($image->image_path, 'storage/')) {
-                Storage::disk('public')->delete($image->image_path);
+            if ($imagePaths !== []) {
+                Storage::disk('public')->delete($imagePaths);
             }
+        } catch (Throwable) {
+            return back()->with('error', 'Unable to delete this shop product right now.');
         }
-        $shopProduct->images()->delete();
-        $shopProduct->delete();
 
         return redirect()
             ->route('admin.shop-products.index')
             ->with('success', 'Shop product deleted successfully.');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['required', 'integer', 'distinct', 'exists:shop_products,id'],
+        ]);
+
+        $products = ShopProduct::query()->whereIn('id', $data['ids'])->get();
+
+        try {
+            // Delete selected products atomically and clean their stored images after commit.
+            $imagePaths = DB::transaction(function () use ($products) {
+                return $products
+                    ->flatMap(fn (ShopProduct $product) => $this->deleteProduct($product))
+                    ->values()
+                    ->all();
+            });
+
+            if ($imagePaths !== []) {
+                Storage::disk('public')->delete($imagePaths);
+            }
+        } catch (Throwable) {
+            return back()->with('error', 'Unable to delete the selected shop products right now.');
+        }
+
+        return back()->with('success', $products->count() . ' shop products deleted successfully.');
     }
 
     protected function validateProduct(Request $request, ?ShopProduct $shopProduct = null): array
@@ -190,5 +217,23 @@ class ShopProductController extends Controller
         }
 
         $product->images()->whereIn('id', $ids)->delete();
+    }
+
+    protected function deleteProduct(ShopProduct $product): array
+    {
+        // Reuse identical image cleanup for single and bulk product deletion.
+        $product->loadMissing('images');
+        $imagePaths = collect([$product->image])
+            ->merge($product->images->pluck('image_path'))
+            ->filter(fn ($path) => filled($path)
+                && ! str_starts_with($path, 'http')
+                && ! str_starts_with($path, 'storage/'))
+            ->values()
+            ->all();
+
+        $product->images()->delete();
+        $product->delete();
+
+        return $imagePaths;
     }
 }

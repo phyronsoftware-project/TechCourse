@@ -158,21 +158,11 @@ class CourseController extends Controller
     public function destroy(Course $course): RedirectResponse
     {
         try {
-            DB::transaction(function () use ($course) {
-                DB::table('lesson_progress')->where('course_id', $course->id)->delete();
-                DB::table('course_favorites')->where('course_id', $course->id)->delete();
-                DB::table('course_reviews')->where('course_id', $course->id)->delete();
-                DB::table('course_enrollments')->where('course_id', $course->id)->delete();
-                DB::table('order_items')->where('course_id', $course->id)->delete();
-                DB::table('course_resources')->where('course_id', $course->id)->delete();
-                DB::table('course_lessons')->where('course_id', $course->id)->delete();
+            $thumbnail = DB::transaction(fn () => $this->deleteCourse($course));
 
-                if ($course->thumbnail && !str_starts_with($course->thumbnail, 'http') && !str_starts_with($course->thumbnail, 'storage/')) {
-                    Storage::disk('public')->delete($course->thumbnail);
-                }
-
-                $course->delete();
-            });
+            if ($thumbnail) {
+                Storage::disk('public')->delete($thumbnail);
+            }
         } catch (Throwable) {
             return back()->with('error', 'Unable to delete this course right now.');
         }
@@ -180,5 +170,56 @@ class CourseController extends Controller
         return redirect()
             ->route('admin.courses.index')
             ->with('success', 'Course deleted successfully.');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['required', 'integer', 'distinct', 'exists:courses,id'],
+        ]);
+
+        $courses = Course::query()->whereIn('id', $data['ids'])->get();
+
+        try {
+            // Delete all selected database rows atomically before removing stored thumbnails.
+            $thumbnails = DB::transaction(function () use ($courses) {
+                return $courses
+                    ->map(fn (Course $course) => $this->deleteCourse($course))
+                    ->filter()
+                    ->values()
+                    ->all();
+            });
+
+            if ($thumbnails !== []) {
+                Storage::disk('public')->delete($thumbnails);
+            }
+        } catch (Throwable) {
+            return back()->with('error', 'Unable to delete the selected courses right now.');
+        }
+
+        return back()->with('success', $courses->count() . ' courses deleted successfully.');
+    }
+
+    protected function deleteCourse(Course $course): ?string
+    {
+        // Keep single and bulk deletion on the same related-record cleanup flow.
+        DB::table('lesson_progress')->where('course_id', $course->id)->delete();
+        DB::table('course_favorites')->where('course_id', $course->id)->delete();
+        DB::table('course_reviews')->where('course_id', $course->id)->delete();
+        DB::table('course_enrollments')->where('course_id', $course->id)->delete();
+        DB::table('order_items')->where('course_id', $course->id)->delete();
+        DB::table('course_resources')->where('course_id', $course->id)->delete();
+        DB::table('course_lessons')->where('course_id', $course->id)->delete();
+
+        $thumbnail = $course->thumbnail
+            && ! str_starts_with($course->thumbnail, 'http')
+            && ! str_starts_with($course->thumbnail, 'storage/')
+                ? $course->thumbnail
+                : null;
+
+        $course->delete();
+
+        return $thumbnail;
     }
 }

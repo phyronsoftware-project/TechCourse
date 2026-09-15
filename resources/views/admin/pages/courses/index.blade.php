@@ -44,10 +44,19 @@
             <a href="{{ route('admin.courses.create') }}" class="admin-btn admin-btn-primary">Create Course</a>
         </div>
 
+        @include('admin.components.bulk-delete', [
+            'formId' => 'course-bulk-delete-form',
+            'action' => route('admin.courses.bulk-destroy'),
+            'itemLabel' => 'courses',
+        ])
+
         <div class="admin-table-wrap">
             <table class="admin-table">
                 <thead>
                     <tr>
+                        <th class="admin-table-select">
+                            <input type="checkbox" class="admin-bulk-checkbox" data-bulk-select-all="course-bulk-delete-form" aria-label="Select all courses on this page">
+                        </th>
                         <th>ID</th>
                         <th>Thumbnail</th>
                         <th>Title</th>
@@ -65,6 +74,17 @@
                 <tbody>
                     @forelse ($courses as $course)
                         <tr>
+                            <td class="admin-table-select">
+                                <input
+                                    type="checkbox"
+                                    class="admin-bulk-checkbox"
+                                    name="ids[]"
+                                    value="{{ $course->id }}"
+                                    form="course-bulk-delete-form"
+                                    data-bulk-select-item="course-bulk-delete-form"
+                                    aria-label="Select {{ $course->title }}"
+                                >
+                            </td>
                             <td>{{ $course->id }}</td>
                             <td>
                                 @if ($course->thumbnail_url)
@@ -142,7 +162,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="12" class="admin-empty">No course rows loaded yet.</td>
+                            <td colspan="13" class="admin-empty">No course rows loaded yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

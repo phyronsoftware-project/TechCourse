@@ -56,10 +56,19 @@
             <a href="{{ route('admin.shop-products.create') }}" class="admin-btn admin-btn-primary">Create Product</a>
         </div>
 
+        @include('admin.components.bulk-delete', [
+            'formId' => 'product-bulk-delete-form',
+            'action' => route('admin.shop-products.bulk-destroy'),
+            'itemLabel' => 'shop products',
+        ])
+
         <div class="admin-table-wrap">
             <table class="admin-table">
                 <thead>
                     <tr>
+                        <th class="admin-table-select">
+                            <input type="checkbox" class="admin-bulk-checkbox" data-bulk-select-all="product-bulk-delete-form" aria-label="Select all products on this page">
+                        </th>
                         <th>ID</th>
                         <th>Image</th>
                         <th>Name</th>
@@ -74,6 +83,17 @@
                 <tbody>
                     @forelse ($products as $product)
                         <tr>
+                            <td class="admin-table-select">
+                                <input
+                                    type="checkbox"
+                                    class="admin-bulk-checkbox"
+                                    name="ids[]"
+                                    value="{{ $product->id }}"
+                                    form="product-bulk-delete-form"
+                                    data-bulk-select-item="product-bulk-delete-form"
+                                    aria-label="Select {{ $product->name }}"
+                                >
+                            </td>
                             <td>{{ $product->id }}</td>
                             <td>
                                 @if ($product->image_url)
@@ -127,7 +147,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="admin-empty">No shop product rows loaded yet.</td>
+                            <td colspan="10" class="admin-empty">No shop product rows loaded yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

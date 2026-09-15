@@ -61,6 +61,8 @@ Route::middleware(['auth', 'admin'])
         Route::resource('shop-categories', ShopCategoryController::class)
             ->parameters(['shop-categories' => 'shopCategory'])
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        // Delete selected shop products in one validated admin request.
+        Route::delete('shop-products/bulk-destroy', [ShopProductController::class, 'bulkDestroy'])->name('shop-products.bulk-destroy');
         Route::resource('shop-products', ShopProductController::class)
             ->parameters(['shop-products' => 'shopProduct'])
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
@@ -68,6 +70,8 @@ Route::middleware(['auth', 'admin'])
         Route::get('shop-orders/{shopOrder}', [ShopOrderController::class, 'show'])->name('shop-orders.show');
         Route::post('shop-orders/{shopOrder}/delivered', [ShopOrderController::class, 'markDelivered'])->name('shop-orders.delivered');
         Route::get('shop-payments', [ShopPaymentController::class, 'index'])->name('shop-payments.index');
+        // Delete selected courses before resource binding handles a course identifier.
+        Route::delete('courses/bulk-destroy', [CourseController::class, 'bulkDestroy'])->name('courses.bulk-destroy');
         Route::resource('courses', CourseController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
         Route::resource('banners', BannerController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::resource('social-media', SocialMediaController::class)->parameters(['social-media' => 'social_medium'])->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
