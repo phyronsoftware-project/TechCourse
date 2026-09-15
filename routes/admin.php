@@ -31,8 +31,10 @@ use App\Http\Controllers\Web\AuthController;
 use Illuminate\Support\Facades\Route;
 
 $adminPrefix = 'admin/phyron/v1';
+$adminLoginPrefix = 'phyron/100203/v1';
 
-Route::prefix($adminPrefix)->middleware('guest')->group(function () {
+// Keep the admin sign-in entry separate from public user authentication.
+Route::prefix($adminLoginPrefix)->middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:auth')->name('login.store');
 });

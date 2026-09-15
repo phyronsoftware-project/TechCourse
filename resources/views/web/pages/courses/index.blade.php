@@ -293,6 +293,19 @@
             gap: 8px;
         }
 
+        /* Keep course pagination compact without changing shared pagination elsewhere. */
+        .course-index .web-pagination-wrap,
+        .course-index .web-pagination-pages {
+            gap: 7px;
+        }
+
+        .course-index .web-pagination-wrap .web-page-btn {
+            min-width: 33px;
+            height: 33px;
+            padding: 0 8px;
+            font-size: 12px;
+        }
+
         .web-page-btn {
             min-width: 36px;
             height: 36px;

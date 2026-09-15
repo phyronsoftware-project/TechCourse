@@ -32,7 +32,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->redirectGuestsTo(function (Request $request): string {
-            return $request->is('admin/phyron/v1*') ? '/admin/phyron/v1/login' : '/login';
+            // Send protected admin requests to the private admin login entry.
+            return $request->is('admin/phyron/v1*') ? '/phyron/100203/v1/login' : '/login';
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
