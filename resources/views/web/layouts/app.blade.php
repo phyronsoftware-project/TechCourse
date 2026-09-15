@@ -3038,6 +3038,15 @@
                 color: #f8fafc !important;
             }
 
+            /* Let the desktop navigation inherit the transitioning header surface instead of flashing as a black block. */
+            @media (min-width: 993px) {
+                html[data-web-theme='dark'] body.web-shell .navbar.offcanvas-right {
+                    background: transparent !important;
+                    border-color: transparent !important;
+                    box-shadow: none !important;
+                }
+            }
+
             /* Keep the profile-to-notification divider visible in dark mode. */
             html[data-web-theme='dark'] body.web-shell .header-auth-divider {
                 background: #64748b;
@@ -3167,6 +3176,16 @@
                 color: #f8fafc !important;
             }
 
+            /* Keep the profile control transparent while the header changes theme to prevent a dark rectangle flash. */
+            html[data-web-theme='dark'] body.web-shell .header-auth-user,
+            html[data-web-theme='dark'] body.web-shell .header-auth-user:hover,
+            html[data-web-theme='dark'] body.web-shell .header-profile__toggle {
+                background: transparent !important;
+                background-image: none !important;
+                border-color: transparent !important;
+                box-shadow: none !important;
+            }
+
             html[data-web-theme='dark'] body.web-shell .web-main *,
             html[data-web-theme='dark'] body.web-shell :where(
                 .brand-link,
@@ -3184,6 +3203,11 @@
                 .contact-info-footer a
             ) {
                 color: #f8fafc !important;
+            }
+
+            /* Preserve the blue Course word in the brand while Tech stays readable in dark mode. */
+            html[data-web-theme='dark'] body.web-shell .brand-logo__text span {
+                color: #2563eb !important;
             }
 
             /* Keep notification cards black and readable in dark mode. */
@@ -3207,6 +3231,37 @@
             html[data-web-theme='dark'] body.web-shell .header-notification__item-message,
             html[data-web-theme='dark'] body.web-shell .header-notification__item-time {
                 color: #cbd5e1 !important;
+            }
+
+            /* Keep flash and dynamic alert messages readable against the requested dark surface. */
+            html[data-web-theme='dark'] body.web-shell .web-alert {
+                background: #0e1113 !important;
+                background-image: none !important;
+                border-color: #334155 !important;
+                color: #f8fafc !important;
+                box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38);
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-alert__icon {
+                background: #171c20 !important;
+                box-shadow: none;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-alert__title {
+                color: #ffffff !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-alert__message {
+                color: #d7dee7 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-alert__close {
+                color: #cbd5e1 !important;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .web-alert__close:hover {
+                background: #20272d !important;
+                color: #ffffff !important;
             }
 
             /* Keep dark text and icons readable when a badge keeps its light background. */

@@ -78,6 +78,16 @@
             display: none;
         }
 
+        /* Rotate the dropdown arrow with the same timing as the menu transition. */
+        .course-toolbar-trigger .fa-chevron-down {
+            transition: transform 0.22s ease;
+            transform-origin: center;
+        }
+
+        .course-toolbar-menu[open]:not(.is-closing) .course-toolbar-trigger .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
         .course-toolbar-dropdown {
             position: absolute;
             top: calc(100% + 8px);
@@ -91,12 +101,55 @@
             display: grid;
             gap: 4px;
             z-index: 15;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-8px) scale(0.98);
+            transform-origin: top left;
+        }
+
+        /* Animate both opening and delayed closing before details removes its open state. */
+        .course-toolbar-menu[open]:not(.is-closing) .course-toolbar-dropdown {
+            visibility: visible;
+            pointer-events: auto;
+            animation: course-toolbar-dropdown-in 0.22s ease forwards;
+        }
+
+        .course-toolbar-menu.is-closing .course-toolbar-dropdown {
+            visibility: visible;
+            pointer-events: none;
+            animation: course-toolbar-dropdown-out 0.18s ease forwards;
         }
 
         .course-toolbar-menu--sort .course-toolbar-dropdown {
             left: auto;
             right: 0;
             min-width: 180px;
+            transform-origin: top right;
+        }
+
+        @keyframes course-toolbar-dropdown-in {
+            from {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes course-toolbar-dropdown-out {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.98);
+            }
         }
 
         .course-toolbar-option {
@@ -378,6 +431,15 @@
                 gap: 18px;
             }
         }
+
+        @media (prefers-reduced-motion: reduce) {
+            .course-toolbar-trigger .fa-chevron-down,
+            .course-toolbar-menu[open] .course-toolbar-dropdown,
+            .course-toolbar-menu.is-closing .course-toolbar-dropdown {
+                animation-duration: 0.01ms;
+                transition-duration: 0.01ms;
+            }
+        }
     </style>
 
     <section class="course-index">
@@ -388,7 +450,7 @@
 
         <section class="course-toolbar" aria-label="Course tools">
             <details class="course-toolbar-menu">
-                <summary class="course-toolbar-trigger">
+                <summary class="course-toolbar-trigger" aria-expanded="false">
                     <i class="fa-solid fa-filter"></i>
                     {{ request()->filled('category') ? $currentCategoryLabel : __('All Categories') }}
                     <i class="fa-solid fa-chevron-down"></i>
@@ -417,7 +479,7 @@
             </details>
 
             <details class="course-toolbar-menu course-toolbar-menu--sort">
-                <summary class="course-toolbar-trigger">
+                <summary class="course-toolbar-trigger" aria-expanded="false">
                     <i class="fa-solid fa-arrow-down-wide-short"></i>
                     {{ __('Sort') }}: {{ $sortLabel }}
                     <i class="fa-solid fa-chevron-down"></i>
@@ -522,3 +584,92 @@
         </section>
     </section>
 @endsection
+
+@push('web_scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toolbarMenus = Array.from(document.querySelectorAll('.course-toolbar-menu'));
+            const closeTimers = new WeakMap();
+
+            // Cancel a pending close when the visitor moves back into the dropdown.
+            const cancelToolbarClose = (menu) => {
+                window.clearTimeout(closeTimers.get(menu));
+                menu.classList.remove('is-closing');
+
+                if (menu.open) {
+                    menu.querySelector('.course-toolbar-trigger')?.setAttribute('aria-expanded', 'true');
+                }
+            };
+
+            // Close details only after its exit animation has finished.
+            const closeToolbarMenu = (menu, restoreFocus = false) => {
+                if (!menu.open || menu.classList.contains('is-closing')) {
+                    return;
+                }
+
+                const summary = menu.querySelector('.course-toolbar-trigger');
+                window.clearTimeout(closeTimers.get(menu));
+                menu.classList.add('is-closing');
+                summary?.setAttribute('aria-expanded', 'false');
+
+                const timer = window.setTimeout(() => {
+                    menu.open = false;
+                    menu.classList.remove('is-closing');
+
+                    if (restoreFocus) {
+                        summary?.focus();
+                    }
+                }, 180);
+
+                closeTimers.set(menu, timer);
+            };
+
+            toolbarMenus.forEach((menu) => {
+                const summary = menu.querySelector('.course-toolbar-trigger');
+                let leaveTimer;
+
+                summary?.addEventListener('click', (event) => {
+                    if (menu.open) {
+                        event.preventDefault();
+                        closeToolbarMenu(menu);
+                        return;
+                    }
+
+                    toolbarMenus.forEach((otherMenu) => {
+                        if (otherMenu !== menu) {
+                            closeToolbarMenu(otherMenu);
+                        }
+                    });
+
+                    summary.setAttribute('aria-expanded', 'true');
+                });
+
+                // Hide the dropdown smoothly when the cursor returns to the page body.
+                menu.addEventListener('mouseleave', () => {
+                    leaveTimer = window.setTimeout(() => closeToolbarMenu(menu), 120);
+                });
+
+                menu.addEventListener('mouseenter', () => {
+                    window.clearTimeout(leaveTimer);
+                    cancelToolbarClose(menu);
+                });
+            });
+
+            document.addEventListener('click', (event) => {
+                toolbarMenus.forEach((menu) => {
+                    if (!menu.contains(event.target)) {
+                        closeToolbarMenu(menu);
+                    }
+                });
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key !== 'Escape') {
+                    return;
+                }
+
+                toolbarMenus.forEach((menu) => closeToolbarMenu(menu, true));
+            });
+        });
+    </script>
+@endpush

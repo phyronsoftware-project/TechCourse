@@ -34,6 +34,7 @@ php artisan package:discover --ansi || true
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
+
 # Apply the current migrations explicitly because the production database was imported without legacy migration history.
 php artisan migrate --path=database/migrations/2026_07_12_000023_create_provinces_and_add_delivery_fields.php --force
 php artisan migrate --path=database/migrations/2026_07_12_000024_add_image_path_to_shop_order_items.php --force

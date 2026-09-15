@@ -222,6 +222,24 @@
             background: #b91c1c;
         }
 
+        /* Match KHQR alerts to the dark website palette while keeping their text visible. */
+        html[data-web-theme='dark'] .khqr-toast,
+        html[data-web-theme='dark'] .khqr-toast--success,
+        html[data-web-theme='dark'] .khqr-toast--error {
+            background: #0e1113;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.38);
+        }
+
+        html[data-web-theme='dark'] .khqr-toast--success {
+            border-color: #22c55e;
+        }
+
+        html[data-web-theme='dark'] .khqr-toast--error {
+            border-color: #ef4444;
+        }
+
         @media (max-width: 355px) {
             .khqr-card {
                 width: 90vw;
