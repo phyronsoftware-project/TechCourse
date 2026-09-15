@@ -96,7 +96,13 @@ class BakongPaymentService
         $this->assertStatusConfig();
 
         try {
-            $result = $this->callCheckTransactionByMd5((string) $payment->khqr_md5);
+            // Check the active QR first, then recover a previously displayed QR when a refresh changed its MD5.
+            [$result, $confirmedMd5] = $this->checkPaymentMd5Candidates($payment);
+
+            if ($confirmedMd5 !== (string) $payment->khqr_md5 && $this->isBakongPaid($result)) {
+                $payment->forceFill(['khqr_md5' => $confirmedMd5])->save();
+            }
+
             $payment = $this->storeBakongResponse($payment, $result);
             $recentStatusCheckExists = $payment->histories()
                 ->where('event', 'status_checked')
@@ -261,8 +267,12 @@ class BakongPaymentService
 
         foreach ($paths as $path) {
             try {
+                // Keep Render PHP-FPM workers responsive and avoid IPv6 connectivity issues to Bakong.
                 $response = Http::acceptJson()
-                    ->timeout(15)
+                    ->asJson()
+                    ->connectTimeout(5)
+                    ->timeout(8)
+                    ->withOptions(['force_ip_resolve' => 'v4'])
                     ->withToken((string) config('bakong.open_api_token'))
                     ->post($baseUrl.$path, $payload);
 
@@ -272,6 +282,18 @@ class BakongPaymentService
 
                 if ($response->status() === 401) {
                     throw new RuntimeException('Bakong API rejected the token.', 401);
+                }
+
+                // Treat the provider request limit as pending instead of a checkout failure.
+                if ($response->status() === 429) {
+                    $quotaResponse = [
+                        'data' => null,
+                        'errorCode' => 17,
+                        'responseCode' => 1,
+                        'responseMessage' => 'Bakong request limit reached.',
+                    ];
+
+                    continue;
                 }
 
                 if (! $response->successful()) {
@@ -305,6 +327,16 @@ class BakongPaymentService
                 return $data;
             } catch (Throwable $exception) {
                 $lastException = $exception;
+
+                // Preserve the real transport failure in Render logs without exposing the token or full MD5.
+                Log::warning('Bakong API request failed.', [
+                    'endpoint' => $path,
+                    'md5_suffix' => substr($md5, -6),
+                    'exception_class' => $exception::class,
+                    'error' => $exception->getMessage(),
+                ]);
+
+                break;
             }
         }
 
@@ -316,7 +348,51 @@ class BakongPaymentService
             throw $lastException;
         }
 
-        throw new RuntimeException('Unable to check payment status right now.', 503);
+        throw new RuntimeException('Unable to check payment status right now.', 503, $lastException);
+    }
+
+    // Recover payments made against a QR that was replaced by an earlier checkout refresh.
+    protected function checkPaymentMd5Candidates(Payment $payment): array
+    {
+        $currentMd5 = (string) $payment->khqr_md5;
+        $result = $this->callCheckTransactionByMd5($currentMd5);
+
+        if ($this->isBakongPaid($result) || ! $this->isTransactionNotFound($result)) {
+            return [$result, $currentMd5];
+        }
+
+        $historicalMd5s = $payment->histories()
+            ->where('event', 'khqr_regenerated')
+            ->limit(5)
+            ->get()
+            ->map(fn ($history) => (string) data_get($history->payload, 'khqr_md5', ''))
+            ->filter()
+            ->unique()
+            ->reject(fn (string $md5) => hash_equals($currentMd5, $md5));
+
+        foreach ($historicalMd5s as $historicalMd5) {
+            $historicalResult = $this->callCheckTransactionByMd5($historicalMd5);
+
+            if ($this->isBakongPaid($historicalResult)) {
+                return [$historicalResult, $historicalMd5];
+            }
+
+            if (! $this->isTransactionNotFound($historicalResult)) {
+                break;
+            }
+        }
+
+        return [$result, $currentMd5];
+    }
+
+    // Recognize the official response that means the QR has not received a transaction yet.
+    protected function isTransactionNotFound(array $response): bool
+    {
+        $message = strtolower((string) data_get($response, 'responseMessage', ''));
+
+        return (int) data_get($response, 'errorCode', 0) === 1
+            || str_contains($message, 'not found')
+            || str_contains($message, 'could not be found');
     }
 
     protected function storeBakongResponse(Payment $payment, array $response): Payment

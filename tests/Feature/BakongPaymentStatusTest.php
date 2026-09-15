@@ -114,6 +114,84 @@ class BakongPaymentStatusTest extends TestCase
         Http::assertSentCount(2);
     }
 
+    public function test_course_payment_connection_failure_does_not_retry_the_local_endpoint(): void
+    {
+        Http::fake([
+            'https://api-bakong.test/v1/check_transaction_by_md5' => Http::failedConnection('Connection timed out.'),
+            'https://api-bakong.test/local/v1/check_transaction_by_md5' => Http::response(null, 403),
+        ]);
+
+        $payment = Payment::query()->create([
+            'payment_no' => 'PAY-TEST-CONNECTION',
+            'payment_provider' => 'bakong_open_api',
+            'amount' => 20,
+            'currency' => 'USD',
+            'khqr_md5' => 'current-md5',
+            'status' => 'pending',
+            'expired_at' => now()->addMinute(),
+        ]);
+
+        // Stop after the official endpoint fails so one poll cannot block two outbound requests.
+        try {
+            (new BakongPaymentService(
+                Mockery::mock(BakongKhqrService::class),
+                app(PaymentHistoryService::class),
+            ))->checkPaymentStatus($payment);
+
+            $this->fail('A Bakong connection failure should produce a temporary service error.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame(503, $exception->getCode());
+            $this->assertSame('pending', $payment->fresh()->status);
+            Http::assertSentCount(1);
+        }
+    }
+
+    public function test_course_payment_recovers_a_paid_historical_qr_md5(): void
+    {
+        Http::fake(function ($request) {
+            if ($request->data()['md5'] === 'paid-old-md5') {
+                return Http::response($this->paidResponse());
+            }
+
+            return Http::response([
+                'data' => null,
+                'errorCode' => 1,
+                'responseCode' => 1,
+                'responseMessage' => 'Transaction could not be found. Please check and try again.',
+            ]);
+        });
+
+        $payment = Payment::query()->create([
+            'payment_no' => 'PAY-TEST-HISTORY',
+            'payment_provider' => 'bakong_open_api',
+            'amount' => 20,
+            'currency' => 'USD',
+            'khqr_md5' => 'current-unpaid-md5',
+            'status' => 'pending',
+            'expired_at' => now()->addMinute(),
+        ]);
+
+        // Keep old generated references available for reconciliation after an earlier page refresh.
+        DB::table('payment_histories')->insert([
+            'payment_id' => $payment->id,
+            'event' => 'khqr_regenerated',
+            'payment_status' => 'pending',
+            'payload' => json_encode(['khqr_md5' => 'paid-old-md5']),
+            'created_at' => now()->subMinute(),
+            'updated_at' => now()->subMinute(),
+        ]);
+
+        $checked = (new BakongPaymentService(
+            Mockery::mock(BakongKhqrService::class),
+            app(PaymentHistoryService::class),
+        ))->checkPaymentStatus($payment);
+
+        $this->assertSame('success', $checked->status);
+        $this->assertSame('paid-old-md5', $checked->khqr_md5);
+        $this->assertSame(str_repeat('a', 64), $checked->transaction_hash);
+        Http::assertSentCount(2);
+    }
+
     public function test_course_status_error_does_not_expose_technical_details(): void
     {
         $payment = Payment::query()->create([

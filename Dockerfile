@@ -17,6 +17,8 @@ FROM php:8.4-fpm-alpine
 RUN apk add --no-cache \
     bash \
     ca-certificates \
+    curl \
+    curl-dev \
     fcgi \
     freetype-dev \
     icu-dev \
@@ -31,8 +33,9 @@ RUN apk add --no-cache \
     nginx \
     ffmpeg
 
+# Use PHP cURL for reliable outbound HTTPS requests to Bakong Open API.
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) pdo_mysql mbstring intl gd zip bcmath
+    && docker-php-ext-install -j$(nproc) pdo_mysql mbstring intl gd zip bcmath curl
 
 WORKDIR /var/www/html
 

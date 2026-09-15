@@ -271,23 +271,13 @@ class CourseCheckoutController extends Controller
 
                     $existingPayload = is_array($existingPayment->response_payload) ? $existingPayment->response_payload : [];
 
-                    // Reset old QR leftovers so the refreshed checkout uses the latest selected provider only.
-                    $existingPayment->forceFill([
+                    // Preserve a valid pending QR so refreshing checkout cannot replace a QR the customer just paid.
+                    $paymentUpdates = [
                         'payment_provider' => $paymentProvider,
                         'payment_no' => $existingPayment->payment_no ?: $this->generatePaymentNumber(),
-                        'transaction_id' => null,
-                        'transaction_hash' => null,
-                        'merchant_id' => null,
-                        'abapay_deeplink' => null,
-                        'khqr_deeplink' => null,
-                        'qr_image_url' => null,
                         'amount' => $amount,
                         'currency' => $currency,
-                        'khqr_string' => null,
-                        'khqr_md5' => null,
-                        'bakong_response' => null,
                         'payment_option' => $paymentOption,
-                        'expired_at' => now()->addMinutes(max(1, (int) config('bakong.dynamic_expire_minutes', 10))),
                         'response_payload' => array_merge(
                             collect($existingPayload)
                                 ->except([
@@ -307,7 +297,24 @@ class CourseCheckoutController extends Controller
                                 'note' => 'Pending Bakong KHQR checkout prepared from frontend course lock flow.',
                             ],
                         ),
-                    ])->save();
+                    ];
+
+                    if (! $this->hasReusableKhqr($existingPayment)) {
+                        $paymentUpdates = array_merge($paymentUpdates, [
+                            'transaction_id' => null,
+                            'transaction_hash' => null,
+                            'merchant_id' => null,
+                            'abapay_deeplink' => null,
+                            'khqr_deeplink' => null,
+                            'qr_image_url' => null,
+                            'khqr_string' => null,
+                            'khqr_md5' => null,
+                            'bakong_response' => null,
+                            'expired_at' => now()->addMinutes(max(1, (int) config('bakong.dynamic_expire_minutes', 10))),
+                        ]);
+                    }
+
+                    $existingPayment->forceFill($paymentUpdates)->save();
 
                     // Keep each reopened pending checkout visible in backend history.
                     $this->paymentHistoryService->log($existingPayment->fresh('order'), 'checkout_refreshed', 'Pending Bakong checkout refreshed for course payment.', [
@@ -371,9 +378,14 @@ class CourseCheckoutController extends Controller
 
     protected function ensureKhqrPrepared(Course $course, Order $order, Payment $payment, BakongKhqrService $bakongKhqrService): Payment
     {
+        // Reuse the current QR until expiry so page refreshes keep one stable Bakong reference.
+        if ($this->hasReusableKhqr($payment)) {
+            return $payment;
+        }
+
         $existingPayload = is_array($payment->response_payload) ? $payment->response_payload : [];
 
-        // Regenerate a fresh Bakong KHQR on every checkout open so customers do not scan an older QR.
+        // Generate a new Bakong KHQR only when no valid pending QR remains.
         $response = $bakongKhqrService->generateCheckoutKhqr([
             'amount' => (float) $payment->amount,
             'currency' => 'USD',
@@ -411,6 +423,16 @@ class CourseCheckoutController extends Controller
         ]);
 
         return $payment->fresh();
+    }
+
+    // A pending KHQR can be safely reused while all display and verification fields remain valid.
+    protected function hasReusableKhqr(Payment $payment): bool
+    {
+        return in_array($payment->status, ['initiated', 'pending'], true)
+            && filled($payment->khqr_string)
+            && filled($payment->khqr_md5)
+            && filled($payment->qr_image_url)
+            && $payment->expired_at?->isFuture() === true;
     }
 
     // Reuse one course lookup path for checkout actions.
