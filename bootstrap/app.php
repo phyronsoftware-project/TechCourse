@@ -35,6 +35,11 @@ return Application::configure(basePath: dirname(__DIR__))
             // Send protected admin requests to the private admin login entry.
             return $request->is('admin/phyron/v1*') ? '/phyron/100203/v1/login' : '/login';
         });
+
+        $middleware->redirectUsersTo(function (Request $request): string {
+            // Send an authenticated admin away from guest forms and into the dashboard.
+            return $request->user()?->role === 'admin' ? '/admin/phyron/v1' : '/';
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (TooManyRequestsHttpException $exception, Request $request) {
