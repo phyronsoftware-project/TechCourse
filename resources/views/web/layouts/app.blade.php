@@ -3038,6 +3038,11 @@
                 color: #f8fafc !important;
             }
 
+            /* Keep the profile-to-notification divider visible in dark mode. */
+            html[data-web-theme='dark'] body.web-shell .header-auth-divider {
+                background: #64748b;
+            }
+
             html[data-web-theme='dark'] body.web-shell .web-main :where(
                 [class$='-card'],
                 [class*='-card '],

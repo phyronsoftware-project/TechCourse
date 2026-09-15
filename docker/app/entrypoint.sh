@@ -39,6 +39,8 @@ php artisan migrate --path=database/migrations/2026_07_12_000023_create_province
 php artisan migrate --path=database/migrations/2026_07_12_000024_add_image_path_to_shop_order_items.php --force
 # Apply missing subscription schema on each deploy without rerunning legacy migrations.
 php artisan migrate --path=database/migrations/2026_09_14_000001_create_subscription_schema.php --force
+# Repair payment columns required by course and subscription KHQR checkout.
+php artisan migrate --path=database/migrations/2026_09_15_000002_repair_payment_checkout_schema.php --force
 
 php-fpm -D
 exec nginx -g "daemon off;"
