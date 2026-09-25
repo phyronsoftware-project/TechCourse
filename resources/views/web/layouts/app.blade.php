@@ -3507,6 +3507,34 @@
                 display: none;
             }
 
+            /* Keep the desktop bell compact and anchor its unread badge to the corner. */
+            .mobile-header-tools .header-notification {
+                position: relative;
+            }
+
+            .mobile-header-tools .header-auth-btn-notification {
+                width: 44px;
+                min-width: 44px;
+                height: 44px;
+                min-height: 44px;
+                padding: 0;
+                border-radius: 14px;
+            }
+
+            .mobile-header-tools .header-notification__badge {
+                top: -5px;
+                right: -5px;
+                min-width: 16px;
+                height: 16px;
+                padding: 0 4px;
+                font-size: 9px;
+                box-shadow: 0 0 0 2px #ffffff;
+            }
+
+            html[data-web-theme='dark'] body.web-shell .mobile-header-tools .header-notification__badge {
+                box-shadow: 0 0 0 2px #0e1113;
+            }
+
             /* Keep the profile menu inside the mobile drawer instead of floating over it. */
             @media (max-width: 992px) { .header-profile { width: min(100%, 300px); } .header-profile__menu { position: static; width: 100%; margin-top: 8px; box-shadow: none; } .header-box ul li .header-profile__toggle { max-width: calc(100vw - 140px); } .navbar.offcanvas-right .drawer__menu li .header-profile__menu a { display: flex; align-items: center; width: 100%; padding: 9px 12px; } }
             @media (prefers-reduced-motion: reduce) { .header-notification__panel, .header-profile__menu, .header-profile__caret, .footer-store-modal, .footer-store-modal__card, .sol li a[data-tooltip]::after { transition-duration: .01ms; } }
