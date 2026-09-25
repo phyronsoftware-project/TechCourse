@@ -32,13 +32,6 @@
             ['icon' => 'fa-solid fa-laptop-code', 'label' => 'Web and mobile services'],
             ['icon' => 'fa-solid fa-headset', 'label' => 'Friendly support flow'],
         ];
-    $heroMockupLabel = $isKhmer ? 'TechCourse Overview' : 'TechCourse Overview';
-    $heroMockupTitle = $isKhmer ? 'Learning + Service ក្នុងកន្លែងតែមួយ' : 'Learning + Services In One Place';
-    $heroMockupCopy = $isKhmer
-        ? 'មើល course, service និងស្ថិតិទូទៅបានលឿនពីទំព័រដើម។'
-        : 'Quickly view courses, services, and overall platform activity from the homepage.';
-    $heroMockupFile = $isKhmer ? 'techcourse_home.php' : 'techcourse_home.php';
-    $heroMockupStatus = $isKhmer ? 'Homepage ready · Live sections' : 'Homepage ready · Live sections';
     $homeNoticeTitle = $isKhmer ? 'សេចក្ដីជូនដំណឹងសម្រាប់ Test Website' : 'Test Website Notice';
     $homeNoticeCopy = $isKhmer
         ? 'Website នេះសម្រាប់សាកល្បងតែប៉ុណ្ណោះ។ បើមានការទូទាត់ ឬប្រតិបត្តិការណាមួយ យើងអាចមិនទទួលយក complaint ឬ issue ពាក់ព័ន្ធនឹង test transaction ទេ។'
@@ -273,7 +266,11 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .home-hero__pattern, .home-hero__eyebrow-dot { animation: none; will-change: auto; }
+            .home-hero__pattern,
+            .home-hero__eyebrow-dot {
+                animation: none;
+                will-change: auto;
+            }
         }
 
         .home-hero__title {
@@ -369,196 +366,145 @@
             will-change: transform;
         }
 
-        .home-hero__window {
+        /* Present the developer portrait on a soft circular TechCourse background. */
+        .home-hero__portrait-stage {
             position: relative;
-            overflow: hidden;
-            border-radius: 22px;
-            background: linear-gradient(180deg, #1a2331 0%, #111827 100%);
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.14);
-            transition: transform 0.14s ease-out, box-shadow 0.14s ease-out;
+            min-height: 450px;
+            border-radius: 46% 54% 48% 52% / 52% 44% 56% 48%;
+            transform-style: preserve-3d;
+            transition: transform 0.14s ease-out;
             will-change: transform;
+            isolation: isolate;
         }
 
-        .home-hero__window-bar {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            padding: 9px 11px;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-            background: rgba(15, 23, 42, 0.88);
+        .home-hero__portrait-stage::before {
+            content: '';
+            position: absolute;
+            top: 48px;
+            left: 50%;
+            width: 340px;
+            height: 340px;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            background:
+                radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.96) 0 7%, transparent 28%),
+                linear-gradient(145deg, #dbeafe 0%, #93c5fd 48%, #2563eb 100%);
+            border: 1px solid rgba(255, 255, 255, 0.84);
+            box-shadow:
+                0 34px 72px rgba(37, 99, 235, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            z-index: -2;
         }
 
-        .home-hero__window-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
+        .home-hero__portrait-stage::after {
+            content: '';
+            position: absolute;
+            top: 27px;
+            left: 50%;
+            width: 382px;
+            height: 382px;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            border: 1px dashed rgba(37, 99, 235, 0.28);
+            z-index: -3;
         }
 
-        .home-hero__window-dot.is-red { background: #fb7185; }
-        .home-hero__window-dot.is-yellow { background: #fbbf24; }
-        .home-hero__window-dot.is-green { background: #34d399; }
-
-        .home-hero__window-label {
-            margin-left: 8px;
-            color: #94a3b8;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: none;
-        }
-
-        .home-hero__window-tag {
-            margin-left: auto;
-            min-height: 22px;
-            padding: 0 8px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(99, 102, 241, 0.12);
-            color: #93c5fd;
-            font-size: 0.64rem;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-        }
-
-        .home-hero__window-body {
-            padding: 12px 14px 10px;
-            display: grid;
-            gap: 10px;
-        }
-
-        .home-hero__window-copy {
-            display: grid;
-            gap: 8px;
-        }
-
-        .home-hero__window-title {
-            margin: 0;
-            color: #f8fafc;
-            font-size: 0.86rem;
-            line-height: 1.3;
-            font-weight: 800;
-        }
-
-        .home-hero__window-text {
-            margin: 0;
-            color: rgba(226, 232, 240, 0.76);
-            font-size: 0.7rem;
-            line-height: 1.52;
-        }
-
-        .home-hero__code {
-            margin: 0;
-            padding: 10px 12px 14px;
-            border-radius: 0;
-            background: rgba(15, 23, 42, 0.16);
-            border: 0;
-            color: #e2e8f0;
-            font-size: 0.64rem;
-            line-height: 1.62;
-            overflow-x: auto;
-        }
-
-        .home-hero__code code {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        }
-
-        .home-hero__code .is-keyword {
-            color: #93c5fd;
-        }
-
-        .home-hero__code .is-string {
-            color: #86efac;
-        }
-
-        .home-hero__code .is-number {
-            color: #f9a8d4;
-        }
-
-        .home-hero__window-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0 14px 5px;
-            color: #86efac;
-            font-size: 0.64rem;
-            font-weight: 700;
-            border-top: 1px solid rgba(148, 163, 184, 0.12);
-        }
-
-        .home-hero__window-status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 999px;
-            background: #4ade80;
-            box-shadow: 0 0 0 6px rgba(74, 222, 128, 0.12);
-        }
-
-        .home-hero__window-glare {
+        /* Fade the portrait into the blue circle without exposing its lower caption. */
+        .home-hero__portrait-image {
+            position: absolute;
+            top: 2px;
+            left: 50%;
+            width: min(400px, 94%);
+            height: auto;
+            transform: translateX(-50%);
+            -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 66%, transparent 74%);
+            mask-image: linear-gradient(to bottom, #000 0%, #000 66%, transparent 74%);
+            z-index: 2;
+            user-select: none;
             pointer-events: none;
-            position: absolute;
-            inset: 0;
-            z-index: 6;
-            opacity: 0;
-            transition: opacity 0.28s ease;
-            border-radius: inherit;
-            background: linear-gradient(168deg, rgba(255, 255, 255, 0.18) 0%, transparent 52%);
         }
 
-        .home-hero__floating {
+        .home-hero__portrait-glare {
             position: absolute;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.96);
-            border: 1px solid rgba(219, 234, 254, 0.96);
-            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.12);
-            backdrop-filter: blur(10px);
-            transition: transform 0.2s ease-out;
+            top: 48px;
+            left: 50%;
+            width: 340px;
+            height: 340px;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.35), transparent 52%);
+            transition: opacity 0.28s ease;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .home-hero__skill {
+            position: absolute;
+            z-index: 5;
+            min-height: 48px;
+            padding: 7px 13px 7px 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            border: 1px solid rgba(191, 219, 254, 0.96);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #0f2f57;
+            box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            font-size: 0.76rem;
+            font-weight: 800;
+            white-space: nowrap;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease;
             will-change: transform;
         }
 
-        .home-hero__floating.is-top {
-            top: -10px;
-            left: -16px;
-            padding: 8px 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
+        .home-hero__skill:hover {
+            box-shadow: 0 20px 38px rgba(37, 99, 235, 0.2);
         }
 
-        .home-hero__floating.is-bottom {
-            right: -8px;
-            bottom: -12px;
-            padding: 10px 12px;
-            min-width: 164px;
-        }
-
-        .home-hero__floating-icon {
-            width: 30px;
-            height: 30px;
+        .home-hero__skill-icon {
+            width: 34px;
+            height: 34px;
             border-radius: 12px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: rgba(219, 234, 254, 0.94);
-            color: #2563eb;
             flex-shrink: 0;
-        }
-
-        .home-hero__floating-title {
-            margin: 0;
-            color: #0f172a;
+            background: linear-gradient(145deg, #dbeafe, #bfdbfe);
+            color: #1d4ed8;
             font-size: 0.82rem;
-            font-weight: 800;
-            line-height: 1.25;
         }
 
-        .home-hero__floating-copy {
-            margin: 4px 0 0;
-            color: #64748b;
-            font-size: 0.74rem;
-            line-height: 1.5;
+        .home-hero__skill.is-web { top: 42px; right: -8px; }
+        .home-hero__skill.is-app { top: 146px; left: -22px; }
+        .home-hero__skill.is-cicd { bottom: 78px; left: -2px; }
+        .home-hero__skill.is-spring { right: -10px; bottom: 28px; }
+
+        html[data-web-theme='dark'] .home-hero__portrait-stage::before {
+            background:
+                radial-gradient(circle at 36% 28%, rgba(96, 165, 250, 0.2) 0 8%, transparent 30%),
+                linear-gradient(145deg, #172554 0%, #1e3a8a 50%, #2563eb 100%);
+            border-color: rgba(96, 165, 250, 0.38);
+            box-shadow: 0 34px 76px rgba(37, 99, 235, 0.25);
+        }
+
+        html[data-web-theme='dark'] .home-hero__portrait-stage::after {
+            border-color: rgba(96, 165, 250, 0.42);
+        }
+
+        html[data-web-theme='dark'] .home-hero__skill {
+            background: rgba(14, 17, 19, 0.9);
+            border-color: #334155;
+            color: #f8fafc;
+            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.32);
+        }
+
+        html[data-web-theme='dark'] .home-hero__skill-icon {
+            background: rgba(37, 99, 235, 0.2);
+            color: #93c5fd;
         }
 
         .home-tracking {
@@ -1322,36 +1268,49 @@
                 font-size: 0.8rem;
             }
 
-            .home-hero__window-body {
-                padding: 14px 12px 12px;
-            }
-
-            .home-hero__code {
-                padding: 12px 12px 18px;
-                font-size: 0.7rem;
-                line-height: 1.74;
-            }
-
             .home-hero__mockup,
-            .home-hero__window,
-            .home-hero__floating {
+            .home-hero__portrait-stage,
+            .home-hero__skill {
                 transform: none !important;
             }
 
-            .home-hero__floating.is-top {
-                left: 10px;
-                top: 12px;
+            .home-hero__mockup {
+                max-width: 410px;
             }
 
-            .home-hero__floating.is-bottom {
-                right: 10px;
-                bottom: 12px;
+            .home-hero__portrait-stage {
+                min-height: 430px;
             }
 
-            .home-hero__floating.is-bottom,
-            .home-hero__floating.is-top {
-                position: static;
-                margin-top: 12px;
+            .home-hero__portrait-stage::before,
+            .home-hero__portrait-glare {
+                width: 310px;
+                height: 310px;
+            }
+
+            .home-hero__portrait-stage::after {
+                width: 348px;
+                height: 348px;
+            }
+
+            .home-hero__portrait-image {
+                width: min(370px, 92%);
+            }
+
+            .home-hero__skill.is-web { right: 0; }
+            .home-hero__skill.is-app { left: 0; }
+            .home-hero__skill.is-cicd { left: 2px; }
+            .home-hero__skill.is-spring { right: 0; }
+
+            .home-hero__skill {
+                min-height: 44px;
+                padding: 6px 10px 6px 7px;
+                font-size: 0.7rem;
+            }
+
+            .home-hero__skill-icon {
+                width: 30px;
+                height: 30px;
             }
 
             .home-notice-popup {
@@ -1446,6 +1405,49 @@
                 padding: 22px 18px;
             }
         }
+
+        @media (max-width: 420px) {
+            .home-hero__portrait-stage {
+                min-height: 400px;
+            }
+
+            .home-hero__portrait-stage::before,
+            .home-hero__portrait-glare {
+                top: 54px;
+                width: 270px;
+                height: 270px;
+            }
+
+            .home-hero__portrait-stage::after {
+                top: 38px;
+                width: 302px;
+                height: 302px;
+            }
+
+            .home-hero__portrait-image {
+                top: 18px;
+                width: min(330px, 94%);
+            }
+
+            .home-hero__skill {
+                min-height: 40px;
+                font-size: 0.65rem;
+            }
+
+            .home-hero__skill.is-web { top: 32px; }
+            .home-hero__skill.is-app { top: 132px; }
+            .home-hero__skill.is-cicd { bottom: 62px; }
+            .home-hero__skill.is-spring { bottom: 14px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .home-hero__mockup,
+            .home-hero__portrait-stage,
+            .home-hero__skill {
+                transition: none;
+                will-change: auto;
+            }
+        }
     </style>
 
     {{-- Home hero section follows the reference layout but uses TechCourse-specific content and actions. --}}
@@ -1490,55 +1492,46 @@
                 </div>
             </div>
 
-            {{-- Rellax stays only on decorative hero elements so the page remains stable. --}}
+            {{-- Keep the developer portrait and skill labels decorative without changing hero actions. --}}
             <div class="home-hero__mockup rellax" data-rellax-speed="-2" data-hero-mockup>
-                <div class="home-hero__window" data-hero-window>
-                    <div class="home-hero__window-bar">
-                        <span class="home-hero__window-dot is-red"></span>
-                        <span class="home-hero__window-dot is-yellow"></span>
-                        <span class="home-hero__window-dot is-green"></span>
-                        <span class="home-hero__window-label">{{ $heroMockupFile }}</span>
-                        <span class="home-hero__window-tag">PHP</span>
+                <div class="home-hero__portrait-stage" data-hero-visual>
+                    <img
+                        src="{{ asset('logo/me_removebg.png') }}"
+                        alt="Phon Phyron - Full Stack Developer"
+                        class="home-hero__portrait-image"
+                        width="794"
+                        height="898"
+                        fetchpriority="high"
+                    >
+                    <span class="home-hero__portrait-glare" data-hero-glare aria-hidden="true"></span>
+
+                    <div class="home-hero__skill is-web" data-hero-badge="web">
+                        <span class="home-hero__skill-icon">
+                            <i class="fa-solid fa-code" aria-hidden="true"></i>
+                        </span>
+                        <span>Web Developer</span>
                     </div>
 
-                    <div class="home-hero__window-body">
-                        <div class="home-hero__window-copy">
-                            <h2 class="home-hero__window-title">{{ $heroMockupTitle }}</h2>
-                            <p class="home-hero__window-text">{{ $heroMockupCopy }}</p>
-                        </div>
-
-                        {{-- Hero mockup uses a compact code-style panel to stay visually close to the shared video reference. --}}
-                        <pre class="home-hero__code"><code><span class="is-keyword">$courseList</span>   = <span class="is-string">'featured_courses'</span>;
-<span class="is-keyword">$serviceSet</span>  = <span class="is-string">'web_mobile_uiux'</span>;
-<span class="is-keyword">$audience</span>    = <span class="is-string">'learners_business'</span>;
-
-<span class="is-string">'courses'</span>      =&gt; <span class="is-number">{{ (int) ($trackingStats['courses'] ?? 0) }}</span>,
-<span class="is-string">'products'</span>     =&gt; <span class="is-number">{{ (int) ($trackingStats['products'] ?? 0) }}</span>,
-<span class="is-string">'support'</span>      =&gt; <span class="is-string">'friendly_flow'</span>,
-<span class="is-string">'platform'</span>     =&gt; <span class="is-string">'TechCourse'</span>;</code></pre>
-
-                        <div class="home-hero__window-status">
-                            <span class="home-hero__window-status-dot"></span>
-                            <span>{{ $heroMockupStatus }}</span>
-                        </div>
+                    <div class="home-hero__skill is-app" data-hero-badge="app">
+                        <span class="home-hero__skill-icon">
+                            <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
+                        </span>
+                        <span>App Developer</span>
                     </div>
 
-                    <div class="home-hero__window-glare" data-hero-glare></div>
-                </div>
-
-                <div class="home-hero__floating is-top rellax" data-rellax-speed="2" data-hero-badge="top">
-                    <span class="home-hero__floating-icon">
-                        <i class="fa-solid fa-circle-check"></i>
-                    </span>
-                    <div>
-                        <p class="home-hero__floating-title">{{ $isKhmer ? 'Platform Ready' : 'Platform Ready' }}</p>
-                        <p class="home-hero__floating-copy">{{ $isKhmer ? 'Course និង service flow នៅ homepage' : 'Course and service flow on homepage' }}</p>
+                    <div class="home-hero__skill is-cicd" data-hero-badge="cicd">
+                        <span class="home-hero__skill-icon">
+                            <i class="fa-solid fa-code-branch" aria-hidden="true"></i>
+                        </span>
+                        <span>CI/CD</span>
                     </div>
-                </div>
 
-                <div class="home-hero__floating is-bottom rellax" data-rellax-speed="1" data-hero-badge="bottom">
-                    <p class="home-hero__floating-title">{{ $isKhmer ? 'Featured Flow' : 'Featured Flow' }}</p>
-                    <p class="home-hero__floating-copy">{{ $isKhmer ? 'មើល courses និង services បានលឿន' : 'Open courses and services quickly' }}</p>
+                    <div class="home-hero__skill is-spring" data-hero-badge="spring">
+                        <span class="home-hero__skill-icon">
+                            <i class="fa-solid fa-leaf" aria-hidden="true"></i>
+                        </span>
+                        <span>Spring Boot</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1706,7 +1699,7 @@
             const homeNotice = document.querySelector('[data-home-notice-popup]');
             const homeNoticeBackdrop = document.querySelector('[data-home-notice-backdrop]');
             const heroMockup = document.querySelector('[data-hero-mockup]');
-            const heroWindow = document.querySelector('[data-hero-window]');
+            const heroVisual = document.querySelector('[data-hero-visual]');
             const heroGlare = document.querySelector('[data-hero-glare]');
             const heroBadges = Array.from(document.querySelectorAll('[data-hero-badge]'));
             const whyItems = Array.from(document.querySelectorAll('[data-why-item]'));
@@ -1738,12 +1731,16 @@
                 }
             }
 
-            // Add gentle pointer-follow motion so the hero mockup behaves closer to the shared reference video.
-            if (heroMockup && heroWindow && window.matchMedia('(pointer: fine)').matches) {
+            // Add gentle pointer-follow motion to the portrait and skill labels.
+            if (
+                heroMockup
+                && heroVisual
+                && window.matchMedia('(pointer: fine)').matches
+                && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ) {
                 const resetHeroMotion = () => {
                     heroMockup.style.transform = 'translate3d(0, 0, 0)';
-                    heroWindow.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
-                    heroWindow.style.boxShadow = '0 32px 68px rgba(15, 23, 42, 0.18)';
+                    heroVisual.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
 
                     heroBadges.forEach((badge) => {
                         badge.style.transform = 'translate3d(0, 0, 0)';
@@ -1769,8 +1766,7 @@
                     const badgeShiftY = offsetY * 12;
 
                     heroMockup.style.transform = `translate3d(${mockupShiftX}px, ${mockupShiftY}px, 0)`;
-                    heroWindow.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.01)`;
-                    heroWindow.style.boxShadow = '0 36px 84px rgba(15, 23, 42, 0.24)';
+                    heroVisual.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.01)`;
 
                     heroBadges.forEach((badge, index) => {
                         const direction = index === 0 ? -1 : 1;
