@@ -3479,18 +3479,350 @@
             .footer-store-modal__card h2 { margin: 18px 0 6px; font-size: 1.7rem; }
             .footer-store-modal__card p { margin: 0 0 22px; color: #64748b; }
             .footer-store-modal__done { width: 100%; min-height: 45px; border: 0; border-radius: 9px; background: #2563eb; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+
+            /* Keep notification available globally while phone-only controls stay responsive. */
+            .mobile-header-tools {
+                order: 3;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                flex: 0 0 auto;
+            }
+
+            .header-box .logo {
+                order: 1;
+            }
+
+            .header-box .navbar {
+                order: 2;
+            }
+
+            .mobile-menu-icon {
+                order: 4;
+            }
+
+            .mobile-language,
+            .mobile-theme-toggle,
+            .mobile-nav-icon {
+                display: none;
+            }
+
             /* Keep the profile menu inside the mobile drawer instead of floating over it. */
             @media (max-width: 992px) { .header-profile { width: min(100%, 300px); } .header-profile__menu { position: static; width: 100%; margin-top: 8px; box-shadow: none; } .header-box ul li .header-profile__toggle { max-width: calc(100vw - 140px); } .navbar.offcanvas-right .drawer__menu li .header-profile__menu a { display: flex; align-items: center; width: 100%; padding: 9px 12px; } }
             @media (prefers-reduced-motion: reduce) { .header-notification__panel, .header-profile__menu, .header-profile__caret, .footer-store-modal, .footer-store-modal__card, .sol li a[data-tooltip]::after { transition-duration: .01ms; } }
 
+            /* Build a compact phone header and a clear card-style navigation drawer. */
             @media (max-width: 992px) {
-                .theme-item,
-                .web-theme-toggle {
-                    width: 100%;
+                header {
+                    min-height: 76px;
                 }
 
-                .web-theme-toggle {
+                .header-box {
+                    width: calc(100% - 24px);
+                    min-height: 76px;
+                    padding: 0;
+                    gap: 8px;
+                    flex-wrap: nowrap;
+                    justify-content: flex-start;
+                }
+
+                .header-box .logo {
+                    flex: 1 1 auto;
+                    min-width: 0;
+                }
+
+                .brand-logo__image {
+                    height: 52px;
+                }
+
+                .brand-logo__text {
+                    font-size: 20px;
+                }
+
+                .mobile-header-tools {
+                    position: relative;
+                    z-index: 1002;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    flex: 0 0 auto;
+                }
+
+                body.menu-open .mobile-header-tools {
+                    opacity: 0;
+                    visibility: hidden;
+                    pointer-events: none;
+                }
+
+                .mobile-language {
+                    position: relative;
+                    display: block;
+                }
+
+                .mobile-language summary,
+                .mobile-theme-toggle {
+                    width: 40px !important;
+                    min-width: 40px !important;
+                    height: 40px !important;
+                    min-height: 40px !important;
+                    padding: 0 !important;
+                    border: 1px solid #d7e3f0;
+                    border-radius: 13px !important;
+                    background: #ffffff;
+                    color: #173f87;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 4px;
+                    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+                    cursor: pointer;
+                    list-style: none;
+                }
+
+                .mobile-language summary::-webkit-details-marker {
+                    display: none;
+                }
+
+                .mobile-language summary .lang-flag {
+                    width: 20px;
+                    height: 20px;
+                }
+
+                .mobile-language summary i {
+                    display: none;
+                }
+
+                .mobile-language__menu {
+                    position: absolute;
+                    top: calc(100% + 10px);
+                    right: 0;
+                    width: 156px;
+                    padding: 7px;
+                    border: 1px solid #d7e3f0;
+                    border-radius: 14px;
+                    background: #ffffff;
+                    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.16);
+                }
+
+                .mobile-language:not([open]) .mobile-language__menu {
+                    display: none;
+                }
+
+                .mobile-language__menu a {
+                    display: flex;
+                    align-items: center;
+                    gap: 9px;
+                    min-height: 40px;
+                    padding: 7px 9px;
+                    border-radius: 9px;
+                    color: #173f87;
+                    font-size: 12px;
+                    font-weight: 700;
+                    text-decoration: none;
+                }
+
+                .mobile-language__menu a:hover {
+                    background: #eff6ff;
+                }
+
+                .mobile-menu-icon {
+                    display: inline-flex;
+                    width: 44px;
+                    height: 44px;
+                    margin: 0;
+                    border-radius: 14px;
+                    flex: 0 0 auto;
+                }
+
+                .mobile-menu-icon__ring {
+                    border-radius: 13px;
+                }
+
+                .mobile-header-tools .header-auth-btn-notification {
+                    width: 40px;
+                    min-width: 40px;
+                    height: 40px;
+                    min-height: 40px;
+                    border-radius: 13px;
+                }
+
+                .mobile-header-tools .header-notification__panel {
+                    position: fixed;
+                    top: 68px;
+                    right: 12px;
+                    left: 12px;
+                    width: auto;
+                    max-height: calc(100vh - 84px);
+                }
+
+                .navbar.offcanvas-right {
+                    width: min(88vw, 360px);
+                    max-width: 360px;
+                    padding: 18px 16px 24px;
+                    border-left: 1px solid #d7e3f0;
+                    background: #f8fbff;
+                }
+
+                .drawer__header {
+                    margin-bottom: 14px;
+                }
+
+                .drawer__back {
+                    min-height: 42px;
                     border-radius: 12px;
+                }
+
+                .navbar.offcanvas-right .drawer__menu {
+                    gap: 8px;
+                }
+
+                .navbar.offcanvas-right .drawer__menu > .menu-item > a {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    min-height: 50px;
+                    padding: 8px 12px;
+                    border: 1px solid #e1eaf4;
+                    border-radius: 14px;
+                    background: #ffffff;
+                    color: #173f87;
+                    font-size: 14px;
+                    font-weight: 700;
+                    box-shadow: 0 7px 16px rgba(15, 23, 42, 0.035);
+                }
+
+                .mobile-nav-icon {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 10px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #eaf2ff;
+                    color: #2563eb;
+                    flex: 0 0 auto;
+                }
+
+                .navbar.offcanvas-right .drawer__menu > .menu-item > a.active-link {
+                    border-color: #bfdbfe;
+                    background: #eaf2ff;
+                    color: #1d4ed8;
+                }
+
+                .desktop-language-item,
+                .navbar.offcanvas-right .theme-item {
+                    display: none;
+                }
+
+                .navbar.offcanvas-right .auth-item {
+                    margin: 8px 0 0;
+                    padding-top: 14px;
+                    border-top: 1px solid #dce7f2;
+                }
+
+                .navbar.offcanvas-right .header-auth-actions {
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr);
+                    align-items: start;
+                    gap: 10px;
+                    width: 100%;
+                    margin: 0;
+                }
+
+                .navbar.offcanvas-right .header-profile {
+                    width: 100%;
+                    min-width: 0;
+                }
+
+                .navbar.offcanvas-right .header-box ul li .header-profile__toggle,
+                .navbar.offcanvas-right .header-profile__toggle {
+                    width: 100%;
+                    max-width: 100%;
+                    min-height: 58px;
+                    padding: 8px 10px;
+                    border: 1px solid #d7e3f0;
+                    border-radius: 14px;
+                    background: #ffffff;
+                }
+
+                .navbar.offcanvas-right .header-auth-user__content strong {
+                    font-size: 12px;
+                }
+
+                .navbar.offcanvas-right .header-auth-user__content span {
+                    font-size: 10px;
+                }
+
+                .navbar.offcanvas-right .header-auth-btn-register {
+                    width: 100%;
+                    grid-column: 1 / -1;
+                }
+
+                html[data-web-theme='dark'] body.web-shell .mobile-language summary,
+                html[data-web-theme='dark'] body.web-shell .mobile-theme-toggle,
+                html[data-web-theme='dark'] body.web-shell .mobile-language__menu,
+                html[data-web-theme='dark'] body.web-shell .navbar.offcanvas-right .drawer__menu > .menu-item > a,
+                html[data-web-theme='dark'] body.web-shell .navbar.offcanvas-right .header-profile__toggle {
+                    background: #0e1113 !important;
+                    border-color: #33414c !important;
+                }
+
+                html[data-web-theme='dark'] body.web-shell .mobile-language__menu a {
+                    color: #f8fafc;
+                }
+
+                html[data-web-theme='dark'] body.web-shell .navbar.offcanvas-right {
+                    background: #090d10 !important;
+                    border-color: #26313a;
+                }
+
+                html[data-web-theme='dark'] body.web-shell .mobile-nav-icon {
+                    background: rgba(37, 99, 235, 0.2);
+                    color: #93c5fd !important;
+                }
+
+                html[data-web-theme='dark'] body.web-shell .navbar.offcanvas-right .auth-item {
+                    border-color: #26313a;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .header-box {
+                    width: calc(100% - 18px);
+                    gap: 6px;
+                }
+
+                .brand-logo {
+                    gap: 3px;
+                }
+
+                .brand-logo__image {
+                    height: 42px;
+                }
+
+                .brand-logo__text {
+                    font-size: 17px;
+                }
+
+                .mobile-language summary,
+                .mobile-theme-toggle,
+                .mobile-header-tools .header-auth-btn-notification {
+                    width: 36px !important;
+                    min-width: 36px !important;
+                    height: 36px !important;
+                    min-height: 36px !important;
+                }
+
+                .mobile-menu-icon {
+                    width: 40px;
+                    height: 40px;
+                }
+            }
+
+            /* Preserve room for all four phone controls on very narrow screens. */
+            @media (max-width: 360px) {
+                .brand-logo__text {
+                    display: none;
                 }
             }
         </style>
@@ -3563,7 +3895,8 @@
                 const profileWrap = document.querySelector('[data-web-profile]');
                 const profileToggle = document.querySelector('[data-web-profile-toggle]');
                 const profileMenu = document.querySelector('[data-web-profile-menu]');
-                const themeToggle = document.querySelector('[data-web-theme-toggle]');
+                const themeToggles = document.querySelectorAll('[data-web-theme-toggle]');
+                const mobileLanguage = document.querySelector('.mobile-language');
                 const scrollTopButton = document.querySelector('[data-scroll-top]');
                 const loadingIndicator = document.querySelector('[data-web-loading]');
                 const webAlert = document.querySelector('[data-web-alert]');
@@ -3584,7 +3917,8 @@
                         delete root.dataset.webTheme;
                     }
 
-                    if (themeToggle) {
+                    // Keep desktop and phone theme controls synchronized.
+                    themeToggles.forEach((themeToggle) => {
                         const opensDarkMode = selectedTheme === 'light';
                         const label = opensDarkMode ? @json(__('Dark mode')) : @json(__('Light mode'));
                         const icon = themeToggle.querySelector('i');
@@ -3596,20 +3930,22 @@
                         if (icon) {
                             icon.className = opensDarkMode ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
                         }
-                    }
+                    });
                 };
 
                 applyWebTheme(root.dataset.webTheme === 'dark' ? 'dark' : 'light');
 
-                themeToggle?.addEventListener('click', () => {
-                    const nextTheme = root.dataset.webTheme === 'dark' ? 'light' : 'dark';
-                    applyWebTheme(nextTheme);
+                themeToggles.forEach((themeToggle) => {
+                    themeToggle.addEventListener('click', () => {
+                        const nextTheme = root.dataset.webTheme === 'dark' ? 'light' : 'dark';
+                        applyWebTheme(nextTheme);
 
-                    try {
-                        window.localStorage.setItem('techcourse-web-theme', nextTheme);
-                    } catch (error) {
-                        // Keep the selected theme for this page when storage is unavailable.
-                    }
+                        try {
+                            window.localStorage.setItem('techcourse-web-theme', nextTheme);
+                        } catch (error) {
+                            // Keep the selected theme for this page when storage is unavailable.
+                        }
+                    });
                 });
 
                 // Reverse lesson boxes without changing the existing lesson routes or data.
@@ -3827,9 +4163,18 @@
 
                 if (menuToggle) {
                     menuToggle.addEventListener('click', () => {
+                        mobileLanguage?.removeAttribute('open');
+                        closeNotificationPanel();
                         body.classList.add('menu-open');
                     });
                 }
+
+                // Close the compact phone language menu after clicking elsewhere.
+                document.addEventListener('click', (event) => {
+                    if (mobileLanguage && !mobileLanguage.contains(event.target)) {
+                        mobileLanguage.removeAttribute('open');
+                    }
+                });
 
                 if (menuClose) {
                     menuClose.addEventListener('click', closeMenu);
@@ -3881,6 +4226,7 @@
                     notificationToggle.addEventListener('click', async (event) => {
                         event.stopPropagation();
                         if (notificationWrap.classList.contains('is-open')) { closeNotificationPanel(); return; }
+                        mobileLanguage?.removeAttribute('open');
                         closeProfileMenu();
                         window.clearTimeout(notificationCloseTimer);
                         notificationPanel.hidden = false;

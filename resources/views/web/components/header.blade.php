@@ -15,13 +15,14 @@
 
     $currentLanguage = collect($languages)->firstWhere('code', $locale) ?? $languages[0];
 
+    // Keep mobile navigation icons paired with the existing routes.
     $navItems = [
-        ['label' => __('Home'), 'href' => route('home'), 'active' => request()->routeIs('home')],
-        ['label' => __('Course'), 'href' => route('courses.index'), 'active' => request()->routeIs('courses.*')],
-        ['label' => __('Plans'), 'href' => route('subscriptions.index'), 'active' => request()->routeIs('subscriptions.*')],
-        ['label' => app()->getLocale() === 'km' ? 'បច្ចេកវិទ្យា' : 'Technology', 'href' => route('service'), 'active' => request()->routeIs('service')],
-        ['label' => __('Shop'), 'href' => route('shop.index'), 'active' => request()->routeIs('shop.*')],
-        ['label' => __('About Us'), 'href' => route('about'), 'active' => request()->routeIs('about')],
+        ['label' => __('Home'), 'href' => route('home'), 'active' => request()->routeIs('home'), 'icon' => 'fa-solid fa-house'],
+        ['label' => __('Course'), 'href' => route('courses.index'), 'active' => request()->routeIs('courses.*'), 'icon' => 'fa-solid fa-graduation-cap'],
+        ['label' => __('Plans'), 'href' => route('subscriptions.index'), 'active' => request()->routeIs('subscriptions.*'), 'icon' => 'fa-solid fa-crown'],
+        ['label' => app()->getLocale() === 'km' ? 'បច្ចេកវិទ្យា' : 'Technology', 'href' => route('service'), 'active' => request()->routeIs('service'), 'icon' => 'fa-solid fa-code'],
+        ['label' => __('Shop'), 'href' => route('shop.index'), 'active' => request()->routeIs('shop.*'), 'icon' => 'fa-solid fa-bag-shopping'],
+        ['label' => __('About Us'), 'href' => route('about'), 'active' => request()->routeIs('about'), 'icon' => 'fa-solid fa-circle-info'],
     ];
 
     $authUser = auth()->user();
@@ -35,6 +36,102 @@
                 <img src="{{ asset('logo/logo copy.png') }}" alt="TechCourse" class="brand-logo__image">
                 <span class="brand-logo__text">Tech<span>Course</span></span>
             </a>
+        </div>
+
+        {{-- Keep language and theme controls visible outside the phone drawer. --}}
+        <div class="mobile-header-tools">
+            <details class="mobile-language">
+                <summary aria-label="{{ __('Language') }}">
+                    <img src="{{ $currentLanguage['flag'] }}" alt="{{ $currentLanguage['label'] }}" class="lang-flag">
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                </summary>
+                <div class="mobile-language__menu">
+                    @foreach ($languages as $language)
+                        <a href="{{ route('language.switch', $language['code']) }}">
+                            <img src="{{ $language['flag'] }}" alt="{{ $language['label'] }}" class="lang-flag">
+                            <span>{{ $language['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </details>
+
+            <button type="button" class="web-theme-toggle mobile-theme-toggle" data-web-theme-toggle aria-label="{{ __('Dark mode') }}" title="{{ __('Dark mode') }}" aria-pressed="false">
+                <i class="fa-solid fa-moon" aria-hidden="true"></i>
+            </button>
+
+            {{-- Keep the authenticated notification control outside the phone drawer. --}}
+            @auth
+                <div class="header-notification" data-web-notification>
+                    <button
+                        type="button"
+                        class="header-auth-btn header-auth-btn-icon header-auth-btn-notification"
+                        data-web-notification-toggle
+                        data-web-notification-read-url="{{ route('web.notifications.read-all') }}"
+                        data-web-notification-csrf="{{ csrf_token() }}"
+                        aria-expanded="false"
+                        aria-label="{{ __('Notifications') }}"
+                        title="{{ __('Notifications') }}"
+                    >
+                        <i class="fa-regular fa-bell"></i>
+                        @if (($headerNotificationUnreadCount ?? 0) > 0)
+                            <span class="header-notification__badge" data-web-notification-badge>{{ $headerNotificationUnreadCount > 99 ? '99+' : $headerNotificationUnreadCount }}</span>
+                        @endif
+                    </button>
+
+                    <div class="header-notification__panel" data-web-notification-panel hidden>
+                        <div class="header-notification__panel-head">
+                            <strong>{{ __('Notifications') }}</strong>
+                            <span>{{ __('New updates will appear here.') }}</span>
+                        </div>
+
+                        @if (($headerNotifications ?? collect())->isNotEmpty())
+                            <div class="header-notification__list">
+                                @foreach ($headerNotifications as $notification)
+                                    @if ($notification->link_url)
+                                        <a href="{{ $notification->link_url }}" class="header-notification__item {{ !($notification->is_read ?? false) ? 'is-unread' : '' }}" data-web-menu-close>
+                                            <span class="header-notification__item-icon header-notification__item-icon--{{ $notification->style }}">
+                                                <i class="fa-solid fa-bell"></i>
+                                            </span>
+                                            <span class="header-notification__item-content">
+                                                <span class="header-notification__item-head">
+                                                    <strong>{{ $notification->title }}</strong>
+                                                    @if ($notification->created_at)
+                                                        <small class="header-notification__item-time">{{ $notification->created_at->diffForHumans() }}</small>
+                                                    @endif
+                                                </span>
+                                                <span class="header-notification__item-message">{{ $notification->message }}</span>
+                                            </span>
+                                        </a>
+                                    @else
+                                        <div class="header-notification__item {{ !($notification->is_read ?? false) ? 'is-unread' : '' }}">
+                                            <span class="header-notification__item-icon header-notification__item-icon--{{ $notification->style }}">
+                                                <i class="fa-solid fa-bell"></i>
+                                            </span>
+                                            <span class="header-notification__item-content">
+                                                <span class="header-notification__item-head">
+                                                    <strong>{{ $notification->title }}</strong>
+                                                    @if ($notification->created_at)
+                                                        <small class="header-notification__item-time">{{ $notification->created_at->diffForHumans() }}</small>
+                                                    @endif
+                                                </span>
+                                                <span class="header-notification__item-message">{{ $notification->message }}</span>
+                                            </span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="header-notification__empty">
+                                <span class="header-notification__empty-icon">
+                                    <i class="fa-regular fa-bell-slash"></i>
+                                </span>
+                                <strong>{{ __('No notifications yet') }}</strong>
+                                <p>{{ __('You do not have any notifications right now.') }}</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endauth
         </div>
 
         <button type="button" class="mobile-menu-icon" data-web-menu-toggle aria-label="{{ __('Open menu') }}">
@@ -61,12 +158,13 @@
                             class="{{ $item['active'] ? 'active-link' : '' }}"
                             data-web-menu-close
                         >
-                            {{ $item['label'] }}
+                            <i class="{{ $item['icon'] }} mobile-nav-icon" aria-hidden="true"></i>
+                            <span>{{ $item['label'] }}</span>
                         </a>
                     </li>
                 @endforeach
 
-                <li>
+                <li class="desktop-language-item">
                     <div class="lang-container" data-web-lang>
                         <button type="button" class="lang-toggle" data-web-lang-toggle aria-expanded="false">
                             <span class="lang-toggle__left">
@@ -121,79 +219,6 @@
                                         @csrf
                                         <button type="submit"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>{{ __('Logout') }}</button>
                                     </form>
-                                </div>
-                            </div>
-
-                            <span class="header-auth-divider" aria-hidden="true"></span>
-
-                            <div class="header-notification" data-web-notification>
-                                <button
-                                    type="button"
-                                    class="header-auth-btn header-auth-btn-icon header-auth-btn-notification"
-                                    data-web-notification-toggle
-                                    data-web-notification-read-url="{{ route('web.notifications.read-all') }}"
-                                    data-web-notification-csrf="{{ csrf_token() }}"
-                                    aria-expanded="false"
-                                    aria-label="{{ __('Notifications') }}"
-                                    title="{{ __('Notifications') }}"
-                                >
-                                    <i class="fa-regular fa-bell"></i>
-                                    @if (($headerNotificationUnreadCount ?? 0) > 0)
-                                        <span class="header-notification__badge" data-web-notification-badge>{{ $headerNotificationUnreadCount > 99 ? '99+' : $headerNotificationUnreadCount }}</span>
-                                    @endif
-                                </button>
-
-                                <div class="header-notification__panel" data-web-notification-panel hidden>
-                                    <div class="header-notification__panel-head">
-                                        <strong>{{ __('Notifications') }}</strong>
-                                        <span>{{ __('New updates will appear here.') }}</span>
-                                    </div>
-
-                                    @if (($headerNotifications ?? collect())->isNotEmpty())
-                                        <div class="header-notification__list">
-                                            @foreach ($headerNotifications as $notification)
-                                                @if ($notification->link_url)
-                                                    <a href="{{ $notification->link_url }}" class="header-notification__item {{ !($notification->is_read ?? false) ? 'is-unread' : '' }}" data-web-menu-close>
-                                                        <span class="header-notification__item-icon header-notification__item-icon--{{ $notification->style }}">
-                                                            <i class="fa-solid fa-bell"></i>
-                                                        </span>
-                                                        <span class="header-notification__item-content">
-                                                            <span class="header-notification__item-head">
-                                                                <strong>{{ $notification->title }}</strong>
-                                                                @if ($notification->created_at)
-                                                                    <small class="header-notification__item-time">{{ $notification->created_at->diffForHumans() }}</small>
-                                                                @endif
-                                                            </span>
-                                                            <span class="header-notification__item-message">{{ $notification->message }}</span>
-                                                        </span>
-                                                    </a>
-                                                @else
-                                                    <div class="header-notification__item {{ !($notification->is_read ?? false) ? 'is-unread' : '' }}">
-                                                        <span class="header-notification__item-icon header-notification__item-icon--{{ $notification->style }}">
-                                                            <i class="fa-solid fa-bell"></i>
-                                                        </span>
-                                                        <span class="header-notification__item-content">
-                                                            <span class="header-notification__item-head">
-                                                                <strong>{{ $notification->title }}</strong>
-                                                                @if ($notification->created_at)
-                                                                    <small class="header-notification__item-time">{{ $notification->created_at->diffForHumans() }}</small>
-                                                                @endif
-                                                            </span>
-                                                            <span class="header-notification__item-message">{{ $notification->message }}</span>
-                                                        </span>
-                                                    </div>
-                                                @endif
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <div class="header-notification__empty">
-                                            <span class="header-notification__empty-icon">
-                                                <i class="fa-regular fa-bell-slash"></i>
-                                            </span>
-                                            <strong>{{ __('No notifications yet') }}</strong>
-                                            <p>{{ __('You do not have any notifications right now.') }}</p>
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
 

@@ -149,14 +149,14 @@
 
 @section('content')
     <style>
-        /* Keep the hero linked closely to the fixed header. */
+        /* Keep the desktop hero at the requested 600px presentation height. */
         .home-hero {
             position: relative;
             overflow: hidden;
             width: 100vw;
             margin-left: calc(50% - 50vw);
             margin-top: 0;
-            min-height: 540px;
+            min-height: 600px;
             padding: 20px 0 46px;
             background:
                 linear-gradient(180deg, #f8fbff 0%, #edf4ff 18%, #eef4ff 58%, #f6f9ff 100%);
@@ -219,7 +219,7 @@
             z-index: 1;
             width: min(1180px, calc(100% - 36px));
             margin: 0 auto;
-            min-height: calc(540px - 76px);
+            min-height: calc(600px - 66px);
             display: grid;
             grid-template-columns: minmax(0, 1.04fr) minmax(300px, 0.88fr);
             gap: 28px;
@@ -634,122 +634,133 @@
             border: 0;
         }
 
+        /* Present live platform totals as compact analytics cards with distinct accents. */
         .home-tracking-card {
+            --tracking-accent: 96 165 250;
             position: relative;
-            min-height: 154px;
-            padding: 18px 14px 16px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
-            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.2);
+            min-height: 178px;
+            padding: 20px;
+            border-radius: 22px;
+            border: 1px solid rgb(var(--tracking-accent) / 0.22);
+            background: linear-gradient(145deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.025));
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             overflow: hidden;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
         }
 
         .home-tracking-card:last-child {
-            border-right: 1px solid rgba(255, 255, 255, 0.12);
+            border-right-color: rgb(var(--tracking-accent) / 0.22);
+        }
+
+        .home-tracking-card:hover {
+            transform: translateY(-5px);
+            border-color: rgb(var(--tracking-accent) / 0.48);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3), 0 0 28px rgb(var(--tracking-accent) / 0.08);
         }
 
         .home-tracking-card::before {
             content: "";
             position: absolute;
             inset: 0;
-            opacity: 1;
+            background: radial-gradient(circle at 5% 0%, rgb(var(--tracking-accent) / 0.24), transparent 54%);
             pointer-events: none;
         }
 
-        .home-tracking-card.is-blue::before {
-            background:
-                radial-gradient(circle at top left, rgba(59, 130, 246, 0.3), transparent 56%),
-                linear-gradient(180deg, rgba(37, 99, 235, 0.08), transparent 70%);
+        .home-tracking-card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, transparent, rgb(var(--tracking-accent) / 0.9), transparent);
+            pointer-events: none;
         }
 
-        .home-tracking-card.is-emerald::before {
-            background:
-                radial-gradient(circle at top left, rgba(16, 185, 129, 0.28), transparent 56%),
-                linear-gradient(180deg, rgba(5, 150, 105, 0.08), transparent 70%);
+        .home-tracking-card.is-blue {
+            --tracking-accent: 96 165 250;
         }
 
-        .home-tracking-card.is-violet::before {
-            background:
-                radial-gradient(circle at top left, rgba(139, 92, 246, 0.28), transparent 56%),
-                linear-gradient(180deg, rgba(124, 58, 237, 0.08), transparent 70%);
+        .home-tracking-card.is-emerald {
+            --tracking-accent: 52 211 153;
         }
 
-        .home-tracking-card.is-rose::before {
-            background:
-                radial-gradient(circle at top left, rgba(244, 63, 94, 0.28), transparent 56%),
-                linear-gradient(180deg, rgba(225, 29, 72, 0.08), transparent 70%);
+        .home-tracking-card.is-violet {
+            --tracking-accent: 167 139 250;
+        }
+
+        .home-tracking-card.is-rose {
+            --tracking-accent: 251 113 133;
         }
 
         .home-tracking-card__body {
             position: relative;
             z-index: 1;
             display: grid;
-            justify-items: center;
-            text-align: center;
-            align-content: center;
-            gap: 10px;
+            align-content: space-between;
+            gap: 14px;
             height: 100%;
         }
 
         .home-tracking-card__top {
-            display: grid;
-            justify-items: center;
-            gap: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
         }
 
         .home-tracking-card__icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: #e5eefb;
+            border: 1px solid rgb(var(--tracking-accent) / 0.22);
+            background: rgb(var(--tracking-accent) / 0.12);
+            color: rgb(var(--tracking-accent));
             font-size: 1rem;
-            box-shadow: none;
-        }
-
-        .home-tracking-card.is-blue .home-tracking-card__icon {
-            color: #7dd3fc;
-        }
-
-        .home-tracking-card.is-emerald .home-tracking-card__icon {
-            color: #6ee7b7;
-        }
-
-        .home-tracking-card.is-violet .home-tracking-card__icon {
-            color: #c4b5fd;
-        }
-
-        .home-tracking-card.is-rose .home-tracking-card__icon {
-            color: #fda4af;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .home-tracking-card__source {
-            display: none;
+            min-height: 24px;
+            padding: 0 9px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.055);
+            color: rgba(226, 232, 240, 0.72);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.58rem;
+            font-weight: 700;
+            white-space: nowrap;
         }
 
         .home-tracking-card__label {
             margin: 0;
-            max-width: 180px;
-            color: rgba(241, 245, 249, 0.82);
-            font-size: 0.96rem;
-            font-weight: 600;
-            line-height: 1.7;
-            text-align: center;
+            color: rgba(226, 232, 240, 0.76);
+            font-size: 0.84rem;
+            font-weight: 700;
+            line-height: 1.5;
+            text-align: left;
         }
 
         .home-tracking-card__value {
             margin: 0;
             color: #ffffff;
             font-family: var(--font-lato);
-            font-size: clamp(1.85rem, 2.5vw, 2.5rem);
-            font-weight: 800;
+            font-size: clamp(2rem, 2.7vw, 2.65rem);
+            font-weight: 900;
             line-height: 1;
             letter-spacing: -0.04em;
+            text-align: left;
+            text-shadow: 0 8px 22px rgb(var(--tracking-accent) / 0.16);
         }
 
         .home-tracking-card__text {
@@ -758,6 +769,16 @@
 
         .home-tracking-card__meta {
             display: none;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .home-tracking-card {
+                transition: none;
+            }
+
+            .home-tracking-card:hover {
+                transform: none;
+            }
         }
 
         .home-services {
@@ -1242,6 +1263,16 @@
                 gap: 20px;
             }
 
+            /* Lead with the developer portrait before the hero description on phones. */
+            .home-hero__mockup {
+                grid-row: 1;
+                margin-top: 0;
+            }
+
+            .home-hero__content {
+                grid-row: 2;
+            }
+
             .home-hero__title {
                 font-size: clamp(1.05rem, 5.4vw, 1.35rem);
             }
@@ -1348,25 +1379,24 @@
             }
 
             .home-tracking-card {
-                min-height: auto;
-                padding: 18px 14px 16px;
-                border-right: 1px solid rgba(255, 255, 255, 0.12);
-                border-bottom: 0;
-                background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+                min-height: 158px;
+                padding: 18px;
+                border-right-color: rgb(var(--tracking-accent) / 0.22);
+                background: linear-gradient(145deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.025));
             }
 
             .home-tracking-card:last-child {
-                border-right: 1px solid rgba(255, 255, 255, 0.12);
+                border-right-color: rgb(var(--tracking-accent) / 0.22);
             }
 
             .home-tracking-card__icon {
-                width: 38px;
-                height: 38px;
+                width: 40px;
+                height: 40px;
                 font-size: 0.92rem;
             }
 
             .home-tracking-card__value {
-                font-size: 1.5rem;
+                font-size: 1.8rem;
             }
 
             .home-services {

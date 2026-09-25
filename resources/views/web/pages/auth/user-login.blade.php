@@ -46,15 +46,44 @@
                 min-height: 100%;
             }
 
+            /* Match the user authentication canvas to the admin login palette. */
             body {
+                position: relative;
+                overflow-x: hidden;
                 background:
-                    radial-gradient(circle at top left, rgba(24, 149, 188, 0.08), transparent 28%),
-                    linear-gradient(180deg, #fafdff 0%, #f2f8ff 100%);
+                    radial-gradient(circle at 18% 18%, rgba(0, 190, 255, 0.28), transparent 31%),
+                    radial-gradient(circle at 82% 82%, rgba(26, 86, 255, 0.34), transparent 35%),
+                    linear-gradient(145deg, #03132f 0%, #063c9d 52%, #087bea 100%);
+                background-attachment: fixed;
                 color: var(--text-strong);
                 font-family: var(--font-body);
             }
 
+            body::before,
+            body::after {
+                position: fixed;
+                z-index: 0;
+                width: 420px;
+                height: 420px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 50%;
+                content: '';
+                pointer-events: none;
+            }
+
+            body::before {
+                top: -170px;
+                left: -150px;
+            }
+
+            body::after {
+                right: -180px;
+                bottom: -190px;
+            }
+
             .auth-page {
+                position: relative;
+                z-index: 1;
                 min-height: 100vh;
                 display: flex;
                 align-items: center;
