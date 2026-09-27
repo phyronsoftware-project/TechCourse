@@ -258,11 +258,17 @@
             .auth-captcha {
                 display: flex;
                 justify-content: flex-start;
+                width: 244px;
+                height: 63px;
                 margin-top: 0;
+                overflow: hidden;
             }
 
+            /* Scale the official widget without changing its verification behavior. */
             .auth-captcha .g-recaptcha {
-                transform: none;
+                width: 304px;
+                height: 78px;
+                transform: scale(0.8);
                 transform-origin: left top;
             }
 
@@ -345,7 +351,7 @@
                 gap: 10px;
                 align-items: start;
                 justify-items: center;
-                max-width: 320px;
+                max-width: 260px;
                 margin: 0 auto;
             }
 
@@ -367,22 +373,23 @@
                 text-decoration: none;
             }
 
+            /* Keep social login icons compact while retaining comfortable click targets. */
             .auth-social i {
-                width: 50px;
-                height: 50px;
+                width: 38px;
+                height: 38px;
                 border-radius: 999px;
                 border: 1.5px solid var(--field-border);
                 background: #ffffff;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 20px;
+                font-size: 16px;
                 box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
             }
 
             .auth-social__icon {
-                width: 50px;
-                height: 50px;
+                width: 38px;
+                height: 38px;
                 border-radius: 999px;
                 border: 1.5px solid var(--field-border);
                 background: #ffffff;
@@ -468,6 +475,15 @@
                 align-items: center;
                 gap: 12px;
                 text-align: center;
+            }
+
+            /* Clip Telegram's rectangular iframe to its rounded login button. */
+            .auth-telegram-modal__body iframe {
+                display: block;
+                overflow: hidden;
+                border: 0 !important;
+                border-radius: 999px;
+                background: transparent !important;
             }
 
             .auth-telegram-modal__note {
@@ -580,14 +596,14 @@
                 }
 
                 .auth-social i {
-                    width: 50px;
-                    height: 50px;
-                    font-size: 22px;
+                    width: 38px;
+                    height: 38px;
+                    font-size: 16px;
                 }
 
                 .auth-social__icon {
-                    width: 50px;
-                    height: 50px;
+                    width: 38px;
+                    height: 38px;
                 }
 
                 .auth-submit {
@@ -615,7 +631,13 @@
 
                 .auth-captcha {
                     justify-content: flex-start;
-                    overflow-x: auto;
+                    width: 219px;
+                    height: 56px;
+                    overflow: hidden;
+                }
+
+                .auth-captcha .g-recaptcha {
+                    transform: scale(0.72);
                 }
             }
         </style>
