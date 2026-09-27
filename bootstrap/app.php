@@ -38,7 +38,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectUsersTo(function (Request $request): string {
             // Send an authenticated admin away from guest forms and into the dashboard.
-            return $request->user()?->role === 'admin' ? '/admin/phyron/v1' : '/';
+            return in_array($request->user()?->role, ['admin', 'super_admin'], true)
+                ? '/admin/phyron/v1'
+                : '/';
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {

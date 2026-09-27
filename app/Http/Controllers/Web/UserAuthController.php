@@ -76,6 +76,13 @@ class UserAuthController extends Controller
                 ->onlyInput('email');
         }
 
+        // Keep administrator accounts on the private admin authentication flow.
+        if (in_array($user->role, ['admin', 'super_admin'], true)) {
+            return redirect()
+                ->route('login')
+                ->with('warning', 'This email belongs to an admin account. Please continue from the admin login form.');
+        }
+
         try {
             $this->startEmailVerification(
                 request: $request,

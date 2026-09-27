@@ -37,6 +37,9 @@ $adminLoginPrefix = 'phyron/100203/v1';
 Route::prefix($adminLoginPrefix)->middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:auth')->name('login.store');
+    // Keep admin Google OAuth isolated from the public user callback.
+    Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle'])->name('admin.google.redirect');
+    Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('admin.google.callback');
 });
 
 Route::prefix($adminPrefix)->middleware('auth')->group(function () {

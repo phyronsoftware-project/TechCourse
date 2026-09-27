@@ -17,7 +17,8 @@ class AdminMiddleware
 
         $user = $request->user();
 
-        if (!$user || $user->role !== 'admin') {
+        // Keep both administrator roles inside the protected admin area.
+        if (!$user || !in_array($user->role, ['admin', 'super_admin'], true)) {
             abort(403, 'You do not have permission to access the admin panel.');
         }
 

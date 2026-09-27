@@ -12,6 +12,19 @@ class AdminLoginRouteTest extends TestCase
         // Keep public user login and the private admin login on separate URLs.
         $this->assertSame(url('/phyron/100203/v1/login'), route('login'));
         $this->assertSame(url('/login'), route('web.login'));
+        $this->assertSame(url('/phyron/100203/v1/auth/google/redirect'), route('admin.google.redirect'));
+        $this->assertSame(url('/phyron/100203/v1/auth/google/callback'), route('admin.google.callback'));
+    }
+
+    public function test_admin_login_shows_its_own_google_entry(): void
+    {
+        // Render the Google option only on the private admin login form.
+        config()->set('services.google.client_id', 'test-client');
+        config()->set('services.google.client_secret', 'test-secret');
+
+        $this->get('/phyron/100203/v1/login')
+            ->assertOk()
+            ->assertSee(route('admin.google.redirect'));
     }
 
     public function test_guest_admin_request_redirects_to_the_private_login_route(): void

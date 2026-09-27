@@ -182,6 +182,54 @@
                 outline-offset: 3px;
             }
 
+            /* Separate the admin Google option from credential sign-in. */
+            .admin-login__divider {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin: 18px 0 14px;
+                color: rgba(231, 241, 255, 0.68);
+                font-size: 0.78rem;
+            }
+
+            .admin-login__divider::before,
+            .admin-login__divider::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: rgba(255, 255, 255, 0.22);
+            }
+
+            .admin-login__google {
+                display: flex;
+                width: 100%;
+                min-height: 44px;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 10px;
+                background: rgba(3, 23, 63, 0.28);
+                color: #ffffff;
+                font-size: 0.88rem;
+                font-weight: 700;
+                text-decoration: none;
+                transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+            }
+
+            .admin-login__google:hover {
+                border-color: rgba(255, 255, 255, 0.8);
+                background: rgba(3, 23, 63, 0.42);
+                transform: translateY(-1px);
+            }
+
+            .admin-login__google img {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+
             .admin-login__demo {
                 margin: 20px 0 0;
                 color: rgba(225, 237, 255, 0.68);
@@ -266,6 +314,14 @@
                         {{ __('Sign in') }}
                     </button>
                 </form>
+
+                @if (filled(config('services.google.client_id')) && filled(config('services.google.client_secret')))
+                    <div class="admin-login__divider">{{ __('or') }}</div>
+                    <a href="{{ route('admin.google.redirect') }}" class="admin-login__google">
+                        <img src="{{ asset('Logo-Socail/google.png') }}" alt="Google">
+                        <span>{{ __('Continue with Google') }}</span>
+                    </a>
+                @endif
 
                 <p class="admin-login__demo">
                     {{ __('Demo admin login from your SQL file:') }}
