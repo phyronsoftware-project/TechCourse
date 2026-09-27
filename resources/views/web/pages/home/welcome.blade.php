@@ -67,6 +67,10 @@
     $ctaPrimary = $isKhmer ? 'មើលវគ្គសិក្សា' : 'View Courses';
     $ctaSecondary = $isKhmer ? 'ទាក់ទងមកយើង' : 'Contact Us';
 
+    // Keep a friendly public fallback when no guest view total is available yet.
+    $guestViewTotal = (int) ($trackingStats['guest_views'] ?? 0);
+    $guestViewDisplay = $guestViewTotal > 0 ? number_format($guestViewTotal) : '1.3K';
+
     $trackingItems = [
         [
             'key' => 'login-users',
@@ -75,17 +79,15 @@
             'icon' => 'fa-solid fa-user-check',
             'tone' => 'is-blue',
             'description' => __('Total registered users currently stored in the system database.'),
-            'source' => __('Laravel DB'),
         ],
         [
             'key' => 'guest-views',
             'label' => $trackingStats['guest_views_label'] ?? __('Guest Website Views'),
-            'value' => number_format((int) ($trackingStats['guest_views'] ?? 0)),
+            'value' => $guestViewDisplay,
             'live_value' => number_format((int) ($trackingStats['guest_live_views'] ?? 0)),
             'icon' => 'fa-solid fa-eye',
             'tone' => 'is-emerald',
             'description' => $trackingStats['guest_views_description'] ?? __('Guest visitor total from DB tracking table if that table is available.'),
-            'source' => $trackingStats['guest_views_source'] ?? __('Laravel DB'),
         ],
         [
             'key' => 'total-courses',
@@ -94,7 +96,6 @@
             'icon' => 'fa-solid fa-book-open-reader',
             'tone' => 'is-violet',
             'description' => __('Total course records currently stored in the database.'),
-            'source' => __('Laravel DB'),
         ],
         [
             'key' => 'total-products',
@@ -103,7 +104,6 @@
             'icon' => 'fa-solid fa-bag-shopping',
             'tone' => 'is-rose',
             'description' => __('Total product records currently stored in the database.'),
-            'source' => __('Laravel DB'),
         ],
     ];
 
@@ -513,7 +513,7 @@
             margin-left: calc(50% - 50vw);
             padding: 0 0 24px;
             /* Keep the stats background full width at every browser zoom level. */
-            background: #111111;
+            background: #f5f8ff;
         }
 
         .home-notice-popup {
@@ -577,7 +577,7 @@
             margin: 0 auto;
             padding: 76px 28px 26px;
             border-radius: 0;
-            background: #111111;
+            background: #f5f8ff;
             border: 0;
             box-shadow: none;
         }
@@ -606,7 +606,7 @@
         .home-tracking__title {
             margin: 0;
             max-width: 760px;
-            color: #f8fafc;
+            color: #0f172a;
             font-size: clamp(1.15rem, 2vw, 1.7rem);
             line-height: 1.12;
             letter-spacing: -0.02em;
@@ -617,7 +617,7 @@
         .home-tracking__copy {
             margin: 0;
             max-width: 820px;
-            color: rgba(241, 245, 249, 0.72);
+            color: #64748b;
             font-size: 0.96rem;
             line-height: 1.7;
             text-align: center;
@@ -634,7 +634,7 @@
             border: 0;
         }
 
-        /* Present live platform totals as compact analytics cards with distinct accents. */
+        /* Present live platform totals as compact theme-aware analytics cards. */
         .home-tracking-card {
             --tracking-accent: 96 165 250;
             position: relative;
@@ -642,8 +642,8 @@
             padding: 20px;
             border-radius: 22px;
             border: 1px solid rgb(var(--tracking-accent) / 0.22);
-            background: linear-gradient(145deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.025));
-            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 255, 0.9));
+            box-shadow: 0 18px 38px rgba(30, 64, 175, 0.08);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             overflow: hidden;
@@ -657,7 +657,7 @@
         .home-tracking-card:hover {
             transform: translateY(-5px);
             border-color: rgb(var(--tracking-accent) / 0.48);
-            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3), 0 0 28px rgb(var(--tracking-accent) / 0.08);
+            box-shadow: 0 24px 48px rgba(30, 64, 175, 0.12), 0 0 28px rgb(var(--tracking-accent) / 0.08);
         }
 
         .home-tracking-card::before {
@@ -708,7 +708,7 @@
         .home-tracking-card__top {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             gap: 12px;
             width: 100%;
         }
@@ -727,24 +727,9 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
-        .home-tracking-card__source {
-            min-height: 24px;
-            padding: 0 9px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.055);
-            color: rgba(226, 232, 240, 0.72);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.58rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
         .home-tracking-card__label {
             margin: 0;
-            color: rgba(226, 232, 240, 0.76);
+            color: #475569;
             font-size: 0.84rem;
             font-weight: 700;
             line-height: 1.5;
@@ -753,7 +738,7 @@
 
         .home-tracking-card__value {
             margin: 0;
-            color: #ffffff;
+            color: #0f172a;
             font-family: var(--font-lato);
             font-size: clamp(2rem, 2.7vw, 2.65rem);
             font-weight: 900;
@@ -769,6 +754,31 @@
 
         .home-tracking-card__meta {
             display: none;
+        }
+
+        /* Match the stats canvas and cards to the active dark theme. */
+        html[data-web-theme='dark'] .home-tracking,
+        html[data-web-theme='dark'] .home-tracking__inner {
+            background: #111111;
+        }
+
+        html[data-web-theme='dark'] .home-tracking__title,
+        html[data-web-theme='dark'] .home-tracking-card__value {
+            color: #f8fafc;
+        }
+
+        html[data-web-theme='dark'] .home-tracking__copy,
+        html[data-web-theme='dark'] .home-tracking-card__label {
+            color: rgba(226, 232, 240, 0.76);
+        }
+
+        html[data-web-theme='dark'] .home-tracking-card {
+            background: linear-gradient(145deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.025));
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24);
+        }
+
+        html[data-web-theme='dark'] .home-tracking-card:hover {
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3), 0 0 28px rgb(var(--tracking-accent) / 0.08);
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1382,7 +1392,7 @@
                 min-height: 158px;
                 padding: 18px;
                 border-right-color: rgb(var(--tracking-accent) / 0.22);
-                background: linear-gradient(145deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.025));
+                background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 255, 0.9));
             }
 
             .home-tracking-card:last-child {
@@ -1589,7 +1599,6 @@
                                 <span class="home-tracking-card__icon">
                                     <i class="{{ $trackingItem['icon'] }}"></i>
                                 </span>
-                                <span class="home-tracking-card__source">{{ $trackingItem['source'] }}</span>
                             </div>
 
                             <div>

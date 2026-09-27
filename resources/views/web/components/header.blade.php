@@ -3,12 +3,14 @@
     $languages = [
         [
             'code' => 'en',
-            'label' => __('English'),
+            // Keep the language name readable in English in every locale.
+            'label' => 'English',
             'flag' => asset('flags_language/us.png'),
         ],
         [
             'code' => 'km',
-            'label' => __('Khmer'),
+            // Show the native Khmer language name in every locale.
+            'label' => 'ខ្មែរ',
             'flag' => asset('flags_language/khmer.png'),
         ],
     ];

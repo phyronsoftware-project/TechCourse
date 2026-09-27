@@ -1286,10 +1286,11 @@
                 display: flex;
                 flex-direction: column;
                 position: absolute;
-                top: 100%;
+                /* Offset the panel directly because the shared header UL resets margins. */
+                top: calc(100% + 16px);
                 right: 0;
                 min-width: 180px;
-                margin-top: 12px;
+                margin-top: 0;
                 list-style: none;
                 background: linear-gradient(180deg, rgba(13, 21, 35, 0.98), rgba(9, 16, 28, 0.98));
                 border: 1px solid rgba(255, 255, 255, 0.08);
@@ -2368,6 +2369,7 @@
 
                 .lang-dropdown-menu {
                     position: static;
+                    top: auto;
                     margin-top: 8px;
                     width: 100%;
                     max-height: 0;
