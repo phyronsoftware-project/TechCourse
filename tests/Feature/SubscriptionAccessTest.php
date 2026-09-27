@@ -107,7 +107,7 @@ class SubscriptionAccessTest extends TestCase
         $student = User::query()->create(['name' => 'Student', 'email' => 'student2@example.com', 'password' => 'password']);
         $plan = SubscriptionPlan::query()->create(['name' => 'Basic', 'slug' => 'basic', 'price' => 3, 'duration_days' => 30, 'status' => 'active']);
 
-        $this->actingAs($admin)->post(route('admin.user-subscriptions.store'), [
+        $this->actingAs($admin, 'admin')->post(route('admin.user-subscriptions.store'), [
             'user_id' => $student->id,
             'plan_id' => $plan->id,
         ])->assertRedirect(route('admin.user-subscriptions.index'));

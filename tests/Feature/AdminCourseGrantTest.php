@@ -100,7 +100,7 @@ class AdminCourseGrantTest extends TestCase
         ];
 
         $this->withSession(['_token' => 'admin-grant-token'])
-            ->actingAs($admin)
+            ->actingAs($admin, 'admin')
             ->post(route('admin.enrollments.store'), $payload, ['X-CSRF-TOKEN' => 'admin-grant-token'])
             ->assertRedirect(route('admin.enrollments.index'));
 
@@ -117,7 +117,7 @@ class AdminCourseGrantTest extends TestCase
             ->where('course_id', $course->id)
             ->update(['status' => 'expired']);
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'admin')
             ->post(route('admin.enrollments.store'), $payload, ['X-CSRF-TOKEN' => 'admin-grant-token'])
             ->assertRedirect(route('admin.enrollments.index'));
 

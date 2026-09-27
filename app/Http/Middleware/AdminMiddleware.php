@@ -11,11 +11,14 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
+        // Authorize against the administrator session, not the public user session.
+        $guard = Auth::guard('admin');
+
+        if (!$guard->check()) {
             return redirect()->route('login');
         }
 
-        $user = $request->user();
+        $user = $guard->user();
 
         // Keep both administrator roles inside the protected admin area.
         if (!$user || !in_array($user->role, ['admin', 'super_admin'], true)) {

@@ -83,7 +83,7 @@ class AdminBulkDeleteTest extends TestCase
         DB::table('course_lessons')->insert(['course_id' => $first->id]);
 
         // Submit selected IDs once and retain every unselected course.
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'admin')
             ->delete(route('admin.courses.bulk-destroy'), ['ids' => [$first->id, $second->id]])
             ->assertRedirect()
             ->assertSessionHas('success', '2 courses deleted successfully.');
@@ -111,7 +111,7 @@ class AdminBulkDeleteTest extends TestCase
         Storage::disk('public')->put('shop/products/gallery/first.jpg', 'gallery');
 
         // Delete selected products and their gallery files through one endpoint.
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'admin')
             ->delete(route('admin.shop-products.bulk-destroy'), ['ids' => [$first->id, $second->id]])
             ->assertRedirect()
             ->assertSessionHas('success', '2 shop products deleted successfully.');

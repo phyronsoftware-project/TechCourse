@@ -40,8 +40,23 @@ class AdminLoginRouteTest extends TestCase
         $admin = new User(['role' => 'admin', 'status' => 'active']);
         $admin->id = 100203;
 
-        $this->actingAs($admin)
+        $this->actingAs($admin, 'admin')
             ->get('/phyron/100203/v1/login')
             ->assertRedirect('/admin/phyron/v1');
+    }
+
+    public function test_public_user_can_open_the_separate_admin_login(): void
+    {
+        // A public login must not occupy the independent administrator guard.
+        $user = new User(['role' => 'user', 'status' => 'active']);
+        $user->id = 100204;
+
+        $this->actingAs($user, 'web')
+            ->get('/admin/phyron/v1')
+            ->assertRedirect('/phyron/100203/v1/login');
+
+        $this->actingAs($user, 'web')
+            ->get('/phyron/100203/v1/login')
+            ->assertOk();
     }
 }

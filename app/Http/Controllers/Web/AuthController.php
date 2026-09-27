@@ -17,7 +17,10 @@ class AuthController extends Controller
 {
     public function create(): View|RedirectResponse
     {
-        if (Auth::check() && $this->isAdmin(Auth::user()?->role)) {
+        // Check only the independent administrator session.
+        $guard = Auth::guard('admin');
+
+        if ($guard->check() && $this->isAdmin($guard->user()?->role)) {
             return redirect()->route('admin.dashboard');
         }
 
@@ -31,7 +34,10 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (!Auth::attempt($credentials)) {
+        // Sign in without replacing the public website account.
+        $guard = Auth::guard('admin');
+
+        if (!$guard->attempt($credentials)) {
             Log::channel('security')->warning('Admin login failed due to invalid credentials.', [
                 'email' => $credentials['email'],
                 'ip' => $request->ip(),
@@ -45,7 +51,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        $user = $request->user();
+        $user = $guard->user();
 
         if (!$user || !$this->isAdmin($user->role)) {
             Log::channel('security')->warning('Admin dashboard access blocked for non-admin account.', [
@@ -55,8 +61,9 @@ class AuthController extends Controller
                 'ip' => $request->ip(),
             ]);
 
-            Auth::logout();
-            $request->session()->invalidate();
+            // Clear only the rejected admin identity and preserve the public session.
+            $guard->logout();
+            $request->session()->regenerate();
             $request->session()->regenerateToken();
 
             return redirect()
@@ -119,7 +126,8 @@ class AuthController extends Controller
                 ->with('error', 'This admin account is not active.');
         }
 
-        Auth::login($user, true);
+        // Store the approved Google account only in the administrator guard.
+        Auth::guard('admin')->login($user, true);
         $request->session()->regenerate();
 
         Log::channel('security')->info('Admin Google login successful.', [
@@ -134,14 +142,18 @@ class AuthController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
+        // Log the administrator out without ending the public website session.
+        $guard = Auth::guard('admin');
+        $user = $guard->user();
+
         Log::channel('security')->info('Admin logout successful.', [
-            'user_id' => $request->user()?->id,
-            'email' => $request->user()?->email,
+            'user_id' => $user?->id,
+            'email' => $user?->email,
             'ip' => $request->ip(),
         ]);
 
-        Auth::logout();
-        $request->session()->invalidate();
+        $guard->logout();
+        $request->session()->regenerate();
         $request->session()->regenerateToken();
 
         return redirect()->route('login');

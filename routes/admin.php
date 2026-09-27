@@ -34,7 +34,7 @@ $adminPrefix = 'admin/phyron/v1';
 $adminLoginPrefix = 'phyron/100203/v1';
 
 // Keep the admin sign-in entry separate from public user authentication.
-Route::prefix($adminLoginPrefix)->middleware('guest')->group(function () {
+Route::prefix($adminLoginPrefix)->middleware('guest:admin')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:auth')->name('login.store');
     // Keep admin Google OAuth isolated from the public user callback.
@@ -42,11 +42,13 @@ Route::prefix($adminLoginPrefix)->middleware('guest')->group(function () {
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('admin.google.callback');
 });
 
-Route::prefix($adminPrefix)->middleware('auth')->group(function () {
+// Authenticate admin logout with the independent administrator session.
+Route::prefix($adminPrefix)->middleware('auth:admin')->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 });
 
-Route::middleware(['auth', 'admin'])
+// Protect every admin page with the independent administrator guard and role check.
+Route::middleware(['auth:admin', 'admin'])
     ->prefix($adminPrefix)
     ->name('admin.')
     ->group(function () {
