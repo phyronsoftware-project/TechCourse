@@ -482,6 +482,8 @@
         .home-hero__skill.is-app { top: 146px; left: -22px; }
         .home-hero__skill.is-cicd { bottom: 78px; left: -2px; }
         .home-hero__skill.is-spring { right: -10px; bottom: 28px; }
+        /* Center the full-stack badge between the lower skill labels. */
+        .home-hero__skill.is-fullstack { left: calc(50% - 69px); bottom: -8px; }
 
         html[data-web-theme='dark'] .home-hero__portrait-stage::before {
             background:
@@ -1342,6 +1344,7 @@
             .home-hero__skill.is-app { left: 0; }
             .home-hero__skill.is-cicd { left: 2px; }
             .home-hero__skill.is-spring { right: 0; }
+            .home-hero__skill.is-fullstack { left: calc(50% - 65px); }
 
             .home-hero__skill {
                 min-height: 44px;
@@ -1478,6 +1481,7 @@
             .home-hero__skill.is-app { top: 132px; }
             .home-hero__skill.is-cicd { bottom: 62px; }
             .home-hero__skill.is-spring { bottom: 14px; }
+            .home-hero__skill.is-fullstack { bottom: -10px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1571,6 +1575,14 @@
                             <i class="fa-solid fa-leaf" aria-hidden="true"></i>
                         </span>
                         <span>Spring Boot</span>
+                    </div>
+
+                    {{-- Add full-stack expertise using the existing floating badge design. --}}
+                    <div class="home-hero__skill is-fullstack" data-hero-badge="fullstack">
+                        <span class="home-hero__skill-icon">
+                            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                        </span>
+                        <span>Full Stack</span>
                     </div>
                 </div>
             </div>

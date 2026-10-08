@@ -32,6 +32,7 @@
         : 'TechCourse was created to help users learn new skills and find products or tools that better fit their work and business needs. We do not claim the platform is perfect, but we try to keep courses and products together in one place to save time and make learning and choosing resources easier.';
     $certificateTitle = $isKhmer ? 'វិញ្ញាបនបត្រ' : 'Certificates';
 
+    // Keep Full Stack and API experience aligned across both page languages.
     $timelineItems = $isKhmer
         ? [
             [
@@ -42,7 +43,7 @@
                 'points' => [
                     'បានចាប់ផ្តើមបង្កើត mobile application ដោយប្រើ Flutter ដោយផ្តោតលើ UI ស្អាត responsive layout និង reusable widgets។',
                     'បានអនុវត្ត state management, API integration, form handling និង navigation flow សម្រាប់ mobile screens។',
-                    'បានរៀនភ្ជាប់ Flutter app ជាមួយ back-end services, JSON APIs និង authentication features។',
+                    'បានរៀនភ្ជាប់ Flutter app ជាមួយ REST APIs ដែលបង្កើតដោយ Laravel និង Spring Boot សម្រាប់ទិន្នន័យ JSON និង authentication។',
                     'បានអភិវឌ្ឍជំនាញ mobile development តាមរយៈ app structure, component organization និង user experience details។',
                     // Reflect completed Java and Spring Boot learning.
                     'បានបញ្ចប់ការសិក្សា Java និង Spring Boot ដើម្បីបង្កើត REST APIs និងផ្តល់ទិន្នន័យ JSON សម្រាប់ mobile apps។',
@@ -54,7 +55,7 @@
                 'meta' => 'Personal projects និងចំណេះដឹងថ្មីៗ',
                 'side' => 'left',
                 'points' => [
-                    'បានបង្កើត project ពេញលេញជាចម្បងដោយប្រើ Laravel សម្រាប់ back end។',
+                    'បានអភិវឌ្ឍ project Full Stack សម្រាប់ Web និង App ដោយប្រើ Laravel និង Spring Boot សម្រាប់ back end និង REST APIs។',
                     'បានធ្វើការលើ QR Code payments (ABA/Bakong), webhooks និង Telegram Bot services។',
                     'បាន implement shopping cart design, OAuth, order systems, notification systems និង guards សម្រាប់ authentication management។',
                 ],
@@ -67,7 +68,7 @@
                 'points' => [
                     'បានប្រើ Git និង GitHub សម្រាប់ code management និង deploy projects ទៅ Vercel, Render, Cloudways។',
                     'បានបង្កើត website ដោយប្រើ AJAX និង JSON សម្រាប់ fetch និង send data ពី MySQL។',
-                    'បានសរសេរ back-end APIs ដោយប្រើ PHP (MVC - OOP) និង Laravel framework។',
+                    'បានសរសេរ back-end APIs ដោយប្រើ PHP (MVC - OOP), Laravel និង Java ជាមួយ Spring Boot។',
                     'បានភ្ជាប់ MySQL ជាមួយ Laravel សម្រាប់ CRUD operations និង data management។',
                     'បានអនុវត្ត authentication, session handling, form validation និង REST APIs ជាមួយ JSON។',
                     // Include Node.js and Express.js API development.
@@ -91,7 +92,7 @@
                 'side' => 'right',
                 'points' => [
                     'បានសិក្សាមុខវិជ្ជាសំខាន់ៗក្នុង computer science ដូចជា Data Structures, Web Programming និង System Analysis។',
-                    'បានផ្តោតលើជំនាញដែលសមស្របនឹងសមត្ថភាពខ្លួន គឺ Web Programming។',
+                    'ក្រៅពីការសិក្សា បានពង្រឹងជំនាញ Full Stack សម្រាប់ Web និង App រួមមាន Frontend, Backend និង REST APIs ដោយប្រើ Laravel និង Spring Boot។',
                 ],
             ],
             [
@@ -114,7 +115,7 @@
                 'points' => [
                     'Started building mobile applications using Flutter with focus on clean UI, responsive layouts, and reusable widgets.',
                     'Practiced state management, API integration, form handling, and navigation flow for mobile app screens.',
-                    'Learned how to connect Flutter apps with back-end services, JSON APIs, and authentication features.',
+                    'Learned to connect Flutter apps to REST APIs built with Laravel and Spring Boot for JSON data and authentication.',
                     'Improved mobile development skills by working on app structure, component organization, and user experience details.',
                     // Keep the English timeline aligned with completed API learning.
                     'Completed learning Java and Spring Boot to build REST APIs and provide JSON data for mobile apps.',
@@ -126,7 +127,7 @@
                 'meta' => 'Personal projects and new knowledge',
                 'side' => 'left',
                 'points' => [
-                    'Built complete projects mostly using Laravel for the back end.',
+                    'Developed Full Stack projects for web and apps, using Laravel and Spring Boot for back-end services and REST APIs.',
                     'Worked on QR Code payments (ABA/Bakong), webhooks, and Telegram Bot services.',
                     'Implemented shopping cart design, OAuth, order systems, notification systems, and guards for authentication management.',
                 ],
@@ -139,7 +140,7 @@
                 'points' => [
                     'Used Git and GitHub for code management and deploying projects to Vercel, Render, Cloudways.',
                     'Built websites using AJAX and JSON to fetch and send data from MySQL.',
-                    'Wrote back-end APIs using PHP (MVC - OOP) and the Laravel framework.',
+                    'Wrote back-end APIs using PHP (MVC - OOP), Laravel, and Java with Spring Boot.',
                     'Connected MySQL with Laravel for CRUD operations and data management.',
                     'Practiced authentication, session handling, form validation, and REST APIs with JSON.',
                     // Keep the English timeline aligned with Node.js API experience.
@@ -163,7 +164,7 @@
                 'side' => 'right',
                 'points' => [
                     'Studied major computer science subjects such as Data Structures, Web Programming, and System Analysis.',
-                    'Focused on a skill that matched my ability, which is Web Programming.',
+                    'Alongside my studies, strengthened Full Stack skills for web and apps, including front-end, back-end, and REST APIs with Laravel and Spring Boot.',
                 ],
             ],
             [

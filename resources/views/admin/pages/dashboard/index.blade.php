@@ -18,33 +18,57 @@
             ->values()
             ->all();
 
-        $trendMax = max(
-            1,
-            (int) collect($trendData)->max('orders'),
-            (int) ceil(collect($trendData)->max('revenue') ?: 0)
-        );
+        // Scale orders and revenue independently because they use different units.
+        $orderMax = max(1, (int) collect($trendData)->max('orders'));
+        $revenueMax = max(1, (int) ceil(collect($trendData)->max('revenue') ?: 0));
         $chartWidth = 720;
         $chartHeight = 300;
-        $chartLeft = 42;
-        $chartRight = 22;
+        $chartLeft = 54;
+        $chartRight = 62;
         $chartTop = 22;
         $chartBottom = 38;
         $usableHeight = $chartHeight - $chartTop - $chartBottom;
         $step = count($trendData) > 1 ? ($chartWidth - $chartLeft - $chartRight) / (count($trendData) - 1) : 0;
-        $orderPoints = collect($trendData)->values()->map(function ($item, $index) use ($trendMax, $chartHeight, $chartLeft, $chartBottom, $usableHeight, $step) {
+        $orderPoints = collect($trendData)->values()->map(function ($item, $index) use ($orderMax, $chartHeight, $chartLeft, $chartBottom, $usableHeight, $step) {
             $x = $chartLeft + ($step * $index);
-            $y = $chartHeight - $chartBottom - (($item['orders'] / $trendMax) * $usableHeight);
+            $y = $chartHeight - $chartBottom - (($item['orders'] / $orderMax) * $usableHeight);
 
             return ['x' => round($x, 2), 'y' => round($y, 2), 'label' => $item['label'], 'value' => $item['orders']];
         });
-        $revenuePoints = collect($trendData)->values()->map(function ($item, $index) use ($trendMax, $chartHeight, $chartLeft, $chartBottom, $usableHeight, $step) {
+        $revenuePoints = collect($trendData)->values()->map(function ($item, $index) use ($revenueMax, $chartHeight, $chartLeft, $chartBottom, $usableHeight, $step) {
             $x = $chartLeft + ($step * $index);
-            $y = $chartHeight - $chartBottom - (($item['revenue'] / $trendMax) * $usableHeight);
+            $y = $chartHeight - $chartBottom - (($item['revenue'] / $revenueMax) * $usableHeight);
 
             return ['x' => round($x, 2), 'y' => round($y, 2), 'label' => $item['label'], 'value' => $item['revenue']];
         });
-        $orderLine = $orderPoints->map(fn ($point) => $point['x'] . ',' . $point['y'])->implode(' ');
-        $revenueLine = $revenuePoints->map(fn ($point) => $point['x'] . ',' . $point['y'])->implode(' ');
+
+        // Build rounded cubic paths instead of sharp point-to-point lines.
+        $buildSmoothPath = function ($points): string {
+            $values = collect($points)->values();
+            if ($values->isEmpty()) {
+                return '';
+            }
+
+            $path = 'M '.$values[0]['x'].' '.$values[0]['y'];
+            for ($index = 0; $index < $values->count() - 1; $index++) {
+                $previous = $values[$index - 1] ?? $values[$index];
+                $current = $values[$index];
+                $next = $values[$index + 1];
+                $following = $values[$index + 2] ?? $next;
+                $controlOneX = round($current['x'] + (($next['x'] - $previous['x']) / 6), 2);
+                $controlOneY = round($current['y'] + (($next['y'] - $previous['y']) / 6), 2);
+                $controlTwoX = round($next['x'] - (($following['x'] - $current['x']) / 6), 2);
+                $controlTwoY = round($next['y'] - (($following['y'] - $current['y']) / 6), 2);
+                $path .= " C {$controlOneX} {$controlOneY}, {$controlTwoX} {$controlTwoY}, {$next['x']} {$next['y']}";
+            }
+
+            return $path;
+        };
+        $chartBaseline = $chartHeight - $chartBottom;
+        $orderCurve = $buildSmoothPath($orderPoints);
+        $revenueCurve = $buildSmoothPath($revenuePoints);
+        $orderArea = $orderPoints->isNotEmpty() ? $orderCurve.' L '.$orderPoints->last()['x'].' '.$chartBaseline.' L '.$orderPoints->first()['x'].' '.$chartBaseline.' Z' : '';
+        $revenueArea = $revenuePoints->isNotEmpty() ? $revenueCurve.' L '.$revenuePoints->last()['x'].' '.$chartBaseline.' L '.$revenuePoints->first()['x'].' '.$chartBaseline.' Z' : '';
 
         $freeCount = (int) ($courseBreakdown['free'] ?? 0);
         $paidCount = (int) ($courseBreakdown['paid'] ?? 0);
@@ -224,6 +248,77 @@
         .tourism-analytics .chart-svg {
             width: 100%;
             height: 100%;
+            overflow: visible;
+        }
+
+        /* Present both chart series with clear labels and smooth visual depth. */
+        .tourism-analytics .chart-legend {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 14px;
+            margin: -2px 0 10px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .tourism-analytics .chart-legend__item {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .tourism-analytics .chart-legend__dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+            box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.04);
+        }
+
+        .tourism-analytics .chart-series-line {
+            vector-effect: non-scaling-stroke;
+            filter: drop-shadow(0 5px 7px rgba(15, 23, 42, 0.12));
+        }
+
+        /* Reveal the selected month's values while hovering or using the keyboard. */
+        .tourism-analytics .chart-hover-target {
+            fill: transparent;
+            cursor: crosshair;
+        }
+
+        .tourism-analytics .chart-hover-line,
+        .tourism-analytics .chart-hover-dot,
+        .tourism-analytics .chart-hover-detail {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease;
+        }
+
+        .tourism-analytics .chart-hover-group:hover .chart-hover-line,
+        .tourism-analytics .chart-hover-group:hover .chart-hover-dot,
+        .tourism-analytics .chart-hover-group:hover .chart-hover-detail,
+        .tourism-analytics .chart-hover-group:focus .chart-hover-line,
+        .tourism-analytics .chart-hover-group:focus .chart-hover-dot,
+        .tourism-analytics .chart-hover-group:focus .chart-hover-detail {
+            opacity: 1;
+        }
+
+        .tourism-analytics .chart-tooltip-box {
+            fill: #172b4d;
+            filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.2));
+        }
+
+        .tourism-analytics .chart-tooltip-title {
+            fill: #ffffff;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .tourism-analytics .chart-tooltip-value {
+            fill: #dbeafe;
+            font-size: 11px;
+            font-weight: 700;
         }
 
         .tourism-analytics .donut-wrap {
@@ -596,22 +691,74 @@
                     </div>
                     <div class="panel-filter">Showing: {{ $trendData->first()['label'] ?? '-' }} - {{ $trendData->last()['label'] ?? '-' }}</div>
                 </div>
+                <div class="chart-legend" aria-label="Chart legend">
+                    <span class="chart-legend__item"><span class="chart-legend__dot" style="background:#0b84a5;"></span>Orders</span>
+                    <span class="chart-legend__item"><span class="chart-legend__dot" style="background:#ef6351;"></span>Revenue</span>
+                </div>
                 <div class="chart-box">
-                    <svg viewBox="0 0 {{ $chartWidth }} {{ $chartHeight }}" class="chart-svg" preserveAspectRatio="none" aria-hidden="true">
+                    <svg viewBox="0 0 {{ $chartWidth }} {{ $chartHeight }}" class="chart-svg" preserveAspectRatio="none" role="img" aria-label="Monthly orders and revenue trend">
+                        <defs>
+                            <linearGradient id="ordersAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#0b84a5" stop-opacity="0.20" />
+                                <stop offset="100%" stop-color="#0b84a5" stop-opacity="0" />
+                            </linearGradient>
+                            <linearGradient id="revenueAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#ef6351" stop-opacity="0.16" />
+                                <stop offset="100%" stop-color="#ef6351" stop-opacity="0" />
+                            </linearGradient>
+                        </defs>
                         @for ($i = 0; $i < 5; $i++)
                             @php
                                 $y = $chartTop + ($i * (($chartHeight - $chartTop - $chartBottom) / 4));
+                                $orderTick = (int) round($orderMax * (4 - $i) / 4);
+                                $revenueTick = $revenueMax * (4 - $i) / 4;
                             @endphp
                             <line x1="{{ $chartLeft }}" y1="{{ $y }}" x2="{{ $chartWidth - $chartRight }}" y2="{{ $y }}" stroke="#edf3f7" stroke-width="1" />
+                            <text x="{{ $chartLeft - 9 }}" y="{{ $y + 4 }}" text-anchor="end" font-size="11" fill="#8aa0b6">{{ $orderTick }}</text>
+                            <text x="{{ $chartWidth - $chartRight + 9 }}" y="{{ $y + 4 }}" text-anchor="start" font-size="11" fill="#8aa0b6">${{ $revenueTick >= 1000 ? number_format($revenueTick / 1000, 1).'k' : number_format($revenueTick, 0) }}</text>
                         @endfor
-                        <polyline points="{{ $orderLine }}" fill="none" stroke="#0b84a5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-                        <polyline points="{{ $revenueLine }}" fill="none" stroke="#ef6351" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="{{ $orderArea }}" fill="url(#ordersAreaGradient)" />
+                        <path d="{{ $revenueArea }}" fill="url(#revenueAreaGradient)" />
+                        <path d="{{ $orderCurve }}" class="chart-series-line" fill="none" stroke="#0b84a5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="{{ $revenueCurve }}" class="chart-series-line" fill="none" stroke="#ef6351" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
                         @foreach ($orderPoints as $point)
                             <circle cx="{{ $point['x'] }}" cy="{{ $point['y'] }}" r="5" fill="#ffffff" stroke="#0b84a5" stroke-width="3" />
                             <text x="{{ $point['x'] }}" y="{{ $chartHeight - 12 }}" text-anchor="middle" font-size="12" fill="#8aa0b6">{{ \Illuminate\Support\Str::of($point['label'])->before(' ') }}</text>
                         @endforeach
                         @foreach ($revenuePoints as $point)
                             <circle cx="{{ $point['x'] }}" cy="{{ $point['y'] }}" r="4" fill="#ffffff" stroke="#ef6351" stroke-width="3" />
+                        @endforeach
+                        @foreach ($orderPoints as $index => $orderPoint)
+                            @php
+                                $revenuePoint = $revenuePoints[$index];
+                                $hoverWidth = $step > 0 ? $step : ($chartWidth - $chartLeft - $chartRight);
+                                $hoverX = max($chartLeft, $orderPoint['x'] - ($hoverWidth / 2));
+                                $hoverRight = min($chartWidth - $chartRight, $orderPoint['x'] + ($hoverWidth / 2));
+                                $tooltipWidth = 154;
+                                $tooltipHeight = 66;
+                                $tooltipX = max($chartLeft + 4, min($orderPoint['x'] - ($tooltipWidth / 2), $chartWidth - $chartRight - $tooltipWidth - 4));
+                                $tooltipY = max($chartTop + 4, min($orderPoint['y'], $revenuePoint['y']) - $tooltipHeight - 14);
+                            @endphp
+                            {{-- Show both series for the hovered month without JavaScript. --}}
+                            <g
+                                class="chart-hover-group"
+                                tabindex="0"
+                                role="button"
+                                aria-label="{{ $orderPoint['label'] }}: {{ $orderPoint['value'] }} orders and ${{ number_format((float) $revenuePoint['value'], 2) }} revenue"
+                            >
+                                <rect class="chart-hover-target" x="{{ $hoverX }}" y="{{ $chartTop }}" width="{{ max(1, $hoverRight - $hoverX) }}" height="{{ $usableHeight }}" />
+                                <line class="chart-hover-line" x1="{{ $orderPoint['x'] }}" y1="{{ $chartTop }}" x2="{{ $orderPoint['x'] }}" y2="{{ $chartBaseline }}" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 5" />
+                                <circle class="chart-hover-dot" cx="{{ $orderPoint['x'] }}" cy="{{ $orderPoint['y'] }}" r="8" fill="#ffffff" stroke="#0b84a5" stroke-width="4" />
+                                <circle class="chart-hover-dot" cx="{{ $revenuePoint['x'] }}" cy="{{ $revenuePoint['y'] }}" r="8" fill="#ffffff" stroke="#ef6351" stroke-width="4" />
+                                <g class="chart-hover-detail">
+                                    <rect class="chart-tooltip-box" x="{{ $tooltipX }}" y="{{ $tooltipY }}" width="{{ $tooltipWidth }}" height="{{ $tooltipHeight }}" rx="11" />
+                                    <text class="chart-tooltip-title" x="{{ $tooltipX + 12 }}" y="{{ $tooltipY + 19 }}">{{ $orderPoint['label'] }}</text>
+                                    <circle cx="{{ $tooltipX + 14 }}" cy="{{ $tooltipY + 36 }}" r="4" fill="#0b84a5" />
+                                    <text class="chart-tooltip-value" x="{{ $tooltipX + 24 }}" y="{{ $tooltipY + 40 }}">Orders: {{ number_format((int) $orderPoint['value']) }}</text>
+                                    <circle cx="{{ $tooltipX + 14 }}" cy="{{ $tooltipY + 53 }}" r="4" fill="#ef6351" />
+                                    <text class="chart-tooltip-value" x="{{ $tooltipX + 24 }}" y="{{ $tooltipY + 57 }}">Revenue: ${{ number_format((float) $revenuePoint['value'], 2) }}</text>
+                                </g>
+                            </g>
                         @endforeach
                     </svg>
                 </div>

@@ -412,7 +412,8 @@
             min-height: 47px;
             border: 1px solid #173f88;
             background: #173f88;
-            color: #1c2e64;
+            /* Keep the add-to-cart label readable on the primary background. */
+            color: #ffffff;
             position: relative;
             font-size: 0.88rem;
             font-weight: 800;
