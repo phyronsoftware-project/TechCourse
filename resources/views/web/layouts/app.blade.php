@@ -157,6 +157,7 @@
             header.header-hidden {
                 transform: translateY(-115%);
                 opacity: 0;
+                pointer-events: none;
             }
 
             .header-box {
@@ -1002,27 +1003,28 @@
                 }
             }
 
+            /* Keep the back-to-top control clear and easy to spot over page content. */
             .scroll-top-btn {
                 position: fixed;
                 right: 24px;
                 bottom: 24px;
-                width: 58px;
-                height: 58px;
-                border: 1px solid rgba(15, 23, 42, 0.1);
-                border-radius: 22px;
-                background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 249, 0.96));
-                color: #0f172a;
+                width: 56px;
+                height: 56px;
+                border: 1px solid rgba(255, 255, 255, 0.35);
+                border-radius: 50%;
+                background: linear-gradient(145deg, #2e7dff, #1742a4);
+                color: #ffffff;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 18px;
-                box-shadow: 0 22px 40px rgba(15, 23, 42, 0.14);
+                font-size: 20px;
+                box-shadow: 0 12px 28px rgba(23, 66, 164, 0.28), 0 0 0 4px rgba(46, 125, 255, 0.1);
                 cursor: pointer;
                 opacity: 0;
                 visibility: hidden;
                 pointer-events: none;
-                transform: translateY(14px) scale(0.92);
-                transition: opacity 0.24s ease, transform 0.24s ease, visibility 0.24s ease;
+                transform: translateY(14px) scale(0.9);
+                transition: opacity 0.28s ease, transform 0.28s ease, visibility 0.28s ease, box-shadow 0.28s ease;
                 z-index: 998;
             }
 
@@ -1034,16 +1036,21 @@
             }
 
             .scroll-top-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 26px 44px rgba(15, 23, 42, 0.18);
+                transform: translateY(-4px) scale(1.04);
+                box-shadow: 0 16px 32px rgba(23, 66, 164, 0.36), 0 0 0 5px rgba(46, 125, 255, 0.14);
             }
 
             .scroll-top-btn::before {
                 content: "";
                 position: absolute;
-                inset: 8px;
-                border-radius: 18px;
-                background: linear-gradient(135deg, rgba(15, 23, 42, 0.06), rgba(15, 23, 42, 0));
+                inset: 5px;
+                border: 1px solid rgba(255, 255, 255, 0.24);
+                border-radius: 50%;
+            }
+
+            .scroll-top-btn:focus-visible {
+                outline: 3px solid #0f172a;
+                outline-offset: 5px;
             }
 
             .scroll-top-btn i {
@@ -2656,15 +2663,25 @@
             }
 
             .web-main {
-                padding: 74px 0 0;
+                padding: 64px 0 0;
             }
 
+            /* Keep the fixed header compact while preserving the existing layout. */
             header {
-                background: rgba(255, 255, 255, 0.96);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+                min-height: 62px;
+                background: rgba(255, 255, 255, 0.92);
+                backdrop-filter: blur(16px) saturate(150%);
+                -webkit-backdrop-filter: blur(16px) saturate(150%);
+                box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
                 border-bottom: 1px solid #e5edf5;
+            }
+
+            .header-box {
+                min-height: 62px;
+            }
+
+            .brand-logo__image {
+                height: 54px;
             }
 
             .brand-link,
@@ -3427,11 +3444,139 @@
                 border-color: #33414c !important;
             }
 
+            /* Keep desktop navigation as a link list with a clear active underline. */
+            @media (min-width: 993px) {
+                .header-box .drawer__menu {
+                    gap: 7px;
+                }
+
+                .header-box .drawer__menu > .menu-item > a {
+                    position: relative;
+                    display: inline-flex;
+                    align-items: center;
+                    min-height: 44px;
+                    padding: 0 10px;
+                    border: 0;
+                    border-radius: 0;
+                    background: transparent;
+                    font-weight: 600;
+                    box-shadow: none;
+                    transition: color .2s ease;
+                }
+
+                .header-box .drawer__menu > .menu-item > a::after {
+                    content: "";
+                    position: absolute;
+                    right: 10px;
+                    bottom: 4px;
+                    left: 10px;
+                    height: 2px;
+                    border-radius: 2px;
+                    background: #2e7dff;
+                    transform: scaleX(0);
+                    transition: transform .2s ease;
+                }
+
+                .header-box .drawer__menu > .menu-item > a:is(:hover, :focus-visible, .active-link)::after {
+                    transform: scaleX(1);
+                }
+
+                .header-box .drawer__menu > .menu-item > a:is(:hover, .active-link) {
+                    background: transparent;
+                    color: #1d4ed8;
+                    box-shadow: none;
+                }
+
+                /* Keep the reference's outlined shape at a smaller header scale. */
+                header .lang-toggle,
+                header .web-theme-toggle,
+                header .header-auth-btn-register,
+                header .header-auth-btn-notification {
+                    min-height: 42px;
+                    border: 2px solid #dfe4ea;
+                    background: #ffffff;
+                    box-shadow: none;
+                    transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+                }
+
+                header .lang-toggle,
+                header .header-auth-btn-register {
+                    border-radius: 15px;
+                }
+
+                header .web-theme-toggle,
+                header .mobile-header-tools .header-auth-btn-notification {
+                    width: 42px;
+                    min-width: 42px;
+                    height: 42px;
+                    min-height: 42px;
+                    border-radius: 14px;
+                }
+
+                header .header-auth-btn-register {
+                    height: 42px !important;
+                    min-height: 42px !important;
+                    padding: 0 14px !important;
+                    border: 2px solid #dfe4ea !important;
+                    border-radius: 15px !important;
+                    background: #ffffff !important;
+                    box-shadow: none !important;
+                }
+
+                /* Keep header buttons visually steady under the pointer. */
+                header :is(.lang-toggle, .web-theme-toggle, .header-auth-btn-register, .header-auth-btn-notification):hover {
+                    border-color: #dfe4ea !important;
+                    background: #ffffff !important;
+                    box-shadow: none !important;
+                    transform: none !important;
+                }
+
+                header .header-auth-btn-notification:hover {
+                    color: #0f172a;
+                }
+
+                html[data-web-theme='dark'] body.web-shell header :is(.lang-toggle, .web-theme-toggle, .header-auth-btn-register, .header-auth-btn-notification) {
+                    background: #151d27 !important;
+                    border-color: #3b4653 !important;
+                    box-shadow: none;
+                }
+
+                html[data-web-theme='dark'] body.web-shell header :is(.lang-toggle, .web-theme-toggle, .header-auth-btn-register, .header-auth-btn-notification):hover {
+                    background: #151d27 !important;
+                    border-color: #3b4653 !important;
+                }
+
+                html[data-web-theme='dark'] body.web-shell .header-box .drawer__menu > .menu-item > a,
+                html[data-web-theme='dark'] body.web-shell .header-box .drawer__menu > .menu-item > a:hover,
+                html[data-web-theme='dark'] body.web-shell .header-box .drawer__menu > .menu-item > a.active-link,
+                html[data-web-theme='dark'] body.web-shell .header-box .drawer__menu > .menu-item > a.active-link:hover {
+                    background: transparent !important;
+                    border-color: transparent !important;
+                    box-shadow: none;
+                }
+
+                html[data-web-theme='dark'] body.web-shell .header-box .drawer__menu > .menu-item > a:is(:hover, .active-link) {
+                    color: #93c5fd !important;
+                }
+            }
+
             body.web-shell,
             body.web-shell .web-main,
             body.web-shell header,
             body.web-shell footer {
                 transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            }
+
+            /* Preserve the header slide animation alongside the shared theme transition. */
+            body.web-shell header {
+                transition: transform 0.34s cubic-bezier(.22, 1, .36, 1), opacity 0.34s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                body.web-shell header,
+                .scroll-top-btn {
+                    transition-duration: .01ms;
+                }
             }
 
             /* Slide the notification panel down from the header without changing its contents. */
@@ -3453,6 +3598,47 @@
             html[data-web-theme='dark'] body.web-shell .header-profile__menu { background: #0e1113; border-color: #26313a; }
             html[data-web-theme='dark'] body.web-shell .header-profile__menu :is(a, button) { color: #f8fafc; }
             html[data-web-theme='dark'] body.web-shell .header-profile__menu :is(a, button):hover { background: #182026; }
+
+            /* Show the desktop account action as a bordered avatar circle like the reference. */
+            @media (min-width: 993px) {
+                .header-box ul li .header-profile__toggle {
+                    width: 44px;
+                    min-width: 44px;
+                    max-width: 44px;
+                    height: 44px;
+                    min-height: 44px;
+                    justify-content: center;
+                    padding: 3px;
+                    border: 2px solid #dfe4ea;
+                    border-radius: 50%;
+                    background: #ffffff;
+                }
+
+                .header-profile__toggle .header-auth-user__avatar {
+                    width: 34px;
+                    height: 34px;
+                    border-radius: 50%;
+                }
+
+                .header-profile__toggle:hover {
+                    opacity: 1;
+                    transform: none;
+                }
+
+                .header-profile__toggle :is(.header-auth-user__content, .header-profile__caret) {
+                    display: none;
+                }
+
+                .header-profile__menu {
+                    right: 0;
+                    left: auto;
+                }
+
+                html[data-web-theme='dark'] body.web-shell .header-box ul li .header-profile__toggle {
+                    background: #151d27 !important;
+                    border-color: #3b4653 !important;
+                }
+            }
 
             /* Match the reference pagination while retaining normal server-side links. */
             .web-pagination-wrap, .web-pagination-pages { gap: 10px; }
@@ -3544,12 +3730,12 @@
             /* Build a compact phone header and a clear card-style navigation drawer. */
             @media (max-width: 992px) {
                 header {
-                    min-height: 76px;
+                    min-height: 64px;
                 }
 
                 .header-box {
                     width: calc(100% - 24px);
-                    min-height: 76px;
+                    min-height: 64px;
                     padding: 0;
                     gap: 8px;
                     flex-wrap: nowrap;
@@ -3562,7 +3748,7 @@
                 }
 
                 .brand-logo__image {
-                    height: 52px;
+                    height: 44px;
                 }
 
                 .brand-logo__text {
@@ -3936,6 +4122,7 @@
                 let profileCloseTimer;
                 let lastScrollY = window.scrollY;
                 const headerHideOffset = 160;
+                const headerScrollThreshold = 6;
 
                 // Toggle and remember the visitor's selected web color theme.
                 const applyWebTheme = (theme) => {
@@ -4298,6 +4485,7 @@
                     });
                 }
 
+                // Slide the header away on deliberate downward scroll and reveal it on upward scroll.
                 if (header) {
                     window.addEventListener('scroll', () => {
                         const currentScrollY = window.scrollY;
@@ -4311,6 +4499,10 @@
                         if (currentScrollY <= headerHideOffset) {
                             header.classList.remove('header-hidden');
                             lastScrollY = currentScrollY;
+                            return;
+                        }
+
+                        if (Math.abs(currentScrollY - lastScrollY) < headerScrollThreshold) {
                             return;
                         }
 
